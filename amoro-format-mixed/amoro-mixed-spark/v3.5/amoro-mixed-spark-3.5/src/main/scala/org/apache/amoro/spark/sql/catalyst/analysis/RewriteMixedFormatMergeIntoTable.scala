@@ -83,7 +83,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
             cond.references.filter(p => primarys.contains(p.name)).toSeq
           }
           val attrs = dedupAttrs(relation.output)
-          (keyAttrs, relation.copy(table = operationTable, output = attrs))
+          (keyAttrs, relation.copy(table = operationTable, output = attrs.toSeq))
         } else {
           val (keyAttrs, valuesRelation) = {
             if (mixedSparkTable.requireAdditionIdentifierColumns()) {
@@ -91,7 +91,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
               scanBuilder.withIdentifierColumns()
               val scan = scanBuilder.build()
               val outputAttr = toOutputAttrs(scan.readSchema(), relation.output)
-              val valuesRelation = DataSourceV2ScanRelation(relation, scan, outputAttr)
+              val valuesRelation = DataSourceV2ScanRelation(relation, scan, outputAttr.toSeq)
               val references = cond.references.toSeq
               (references, valuesRelation)
             } else {
@@ -107,7 +107,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
   protected def toOutputAttrs(
       schema: StructType,
       attrs: Seq[AttributeReference]): Seq[AttributeReference] = {
-    val nameToAttr = attrs.map(_.name).zip(attrs).toMap
+    val nameToAttr = attrs.toSeq.map(_.name).zip(attrs).toMap
     schema.map(f => AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()).map {
       a =>
         nameToAttr.get(a.name) match {
@@ -129,11 +129,15 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
       isKeyedTable: Boolean): WriteQueryProjections = {
     val (frontRowProjection, backRowProjection) = if (isKeyedTable) {
       val frontRowProjection =
-        Some(ProjectingInternalRow.newProjectInternalRow(plan, targetRowAttrs, isFront = true, 0))
+        Some(ProjectingInternalRow.newProjectInternalRow(
+          plan,
+          targetRowAttrs.toSeq,
+          isFront = true,
+          0))
       val backRowProjection =
         ProjectingInternalRow.newProjectInternalRow(
           source,
-          targetRowAttrs,
+          targetRowAttrs.toSeq,
           isFront = false,
           1 + rowIdAttrs.size)
       (frontRowProjection, backRowProjection)
@@ -141,13 +145,13 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
       val frontRowProjection =
         Some(ProjectingInternalRow.newProjectInternalRow(
           plan,
-          targetRowAttrs ++ rowIdAttrs,
+          targetRowAttrs.toSeq ++ rowIdAttrs.toSeq,
           isFront = true,
           0))
       val backRowProjection =
         ProjectingInternalRow.newProjectInternalRow(
           source,
-          targetRowAttrs,
+          targetRowAttrs.toSeq,
           isFront = false,
           1 + rowIdAttrs.size)
       (frontRowProjection, backRowProjection)
@@ -189,13 +193,13 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
     val joinHint = JoinHint(leftHint = Some(HintInfo(Some(NO_BROADCAST_HASH))), rightHint = None)
     val joinPlan = Join(targetTableProj, sourceTableProj, joinType, Some(cond), joinHint)
 
-    val matchedConditions = matchedActions.map(actionCondition)
+    val matchedConditions = matchedActions.toSeq.map(actionCondition)
     val matchedOutputs =
-      matchedActions.map(rowLevelWriteOutput(_, readRelation.output, source.output))
+      matchedActions.toSeq.map(rowLevelWriteOutput(_, readRelation.output, source.output).toSeq)
 
-    val notMatchedConditions = notMatchedActions.map(actionCondition)
+    val notMatchedConditions = notMatchedActions.toSeq.map(actionCondition)
     val notMatchedOutputs =
-      notMatchedActions.map(rowLevelWriteOutput(_, readRelation.output, source.output))
+      notMatchedActions.toSeq.map(rowLevelWriteOutput(_, readRelation.output, source.output).toSeq)
 
     val operationTypeAttr = AttributeReference(OPERATION_COLUMN, IntegerType, nullable = false)()
     val rowFromSourceAttr = resolveAttrRef(ROW_FROM_SOURCE_REF, joinPlan)
@@ -218,11 +222,11 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
       matchedOutputs = matchedOutputs,
       notMatchedConditions = notMatchedConditions,
       notMatchedOutputs = notMatchedOutputs,
-      rowIdAttrs = keyAttrs,
+      rowIdAttrs = keyAttrs.toSeq,
       matchedRowCheck = isMatchedRowCheckNeeded(matchedActions),
       unMatchedRowCheck = unMatchedRowNeedCheck,
       emitNotMatchedTargetRows = false,
-      output = mergeRowsOutput,
+      output = mergeRowsOutput.toSeq,
       joinPlan)
 
     // build a plan to write the row delta to the table
@@ -247,7 +251,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
 
   def dedupAttrs(attrs: Seq[AttributeReference]): Seq[AttributeReference] = {
     val exprIds = mutable.Set.empty[ExprId]
-    attrs.flatMap { attr =>
+    attrs.toSeq.flatMap { attr =>
       if (exprIds.contains(attr.exprId)) {
         None
       } else {
@@ -265,14 +269,14 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
     action match {
       case u: UpdateAction =>
         val finalSourceOutput = rebuildAttribute(sourceOutput, u.assignments)
-        Seq(Literal(UPDATE_OPERATION)) ++ targetOutput ++ finalSourceOutput
+        (Seq(Literal(UPDATE_OPERATION)) ++ targetOutput.toSeq ++ finalSourceOutput).toSeq
 
       case _: DeleteAction =>
-        Seq(Literal(DELETE_OPERATION)) ++ targetOutput ++ sourceOutput
+        (Seq(Literal(DELETE_OPERATION)) ++ targetOutput.toSeq ++ sourceOutput).toSeq
 
       case i: InsertAction =>
         val finalSourceOutput = rebuildAttribute(sourceOutput, i.assignments)
-        Seq(Literal(INSERT_OPERATION)) ++ targetOutput ++ finalSourceOutput
+        (Seq(Literal(INSERT_OPERATION)) ++ targetOutput.toSeq ++ finalSourceOutput).toSeq
 
       case other =>
         throw new UnsupportedOperationException(s"Unexpected action: $other")
@@ -282,7 +286,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
   private def rebuildAttribute(
       sourceOutput: Seq[Attribute],
       assignments: Seq[Assignment]): Seq[Expression] = {
-    val expressions = sourceOutput.map(v => {
+    val expressions = sourceOutput.toSeq.map(v => {
       val assignment = assignments.find(f => {
         f.key match {
           case a: Attribute =>
@@ -304,7 +308,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
       attrs: Seq[Attribute]): Seq[Attribute] = {
 
     // collect all outputs from matched and not matched actions (ignoring DELETEs)
-    val outputs = matchedOutputs.filter(_.nonEmpty) ++ notMatchedOutputs.filter(_.nonEmpty)
+    val outputs = matchedOutputs.filter(_.nonEmpty) ++ notMatchedOutputs.filter(_.nonEmpty).toSeq
 
     // build a correct nullability map for output attributes
     // an attribute is nullable if at least one matched or not matched action may produce null
@@ -312,7 +316,7 @@ case class RewriteMixedFormatMergeIntoTable(spark: SparkSession) extends Rule[Lo
       index -> outputs.exists(output => output(index).nullable)
     }.toMap
 
-    attrs.zipWithIndex.map { case (attr, index) =>
+    attrs.toSeq.zipWithIndex.map { case (attr, index) =>
       attr.withNullability(nullabilityMap(index))
     }
   }

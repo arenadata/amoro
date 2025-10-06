@@ -30,7 +30,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.CalendarInterval;
 import org.apache.spark.unsafe.types.UTF8String;
-import scala.collection.Seq;
+import scala.collection.immutable.Seq;
 
 import java.util.ArrayList;
 import java.util.Arrays;
