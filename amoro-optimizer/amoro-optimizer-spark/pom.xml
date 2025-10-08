@@ -33,8 +33,8 @@
     <url>https://amoro.apache.org</url>
 
     <properties>
-        <spark-optimizer.spark-version>3.3.3</spark-optimizer.spark-version>
-        <spark-optimizer.scala-version>2.12</spark-optimizer.scala-version>
+        <spark-optimizer.spark-version>3.5.4</spark-optimizer.spark-version>
+        <spark-optimizer.scala-version>2.13</spark-optimizer.scala-version>
     </properties>
 
     <dependencies>

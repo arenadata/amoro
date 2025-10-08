@@ -74,7 +74,7 @@
                                     <include>org.apache.zookeeper:zookeeper-jute</include>
                                     <include>org.apache.iceberg:iceberg-core</include>
                                     <include>org.apache.iceberg:iceberg-api</include>
-                                    <include>org.apache.iceberg:iceberg-spark-3.5_2.12</include>
+                                    <include>org.apache.iceberg:iceberg-spark-3.5_2.13</include>
                                     <include>org.apache.iceberg:iceberg-common</include>
                                     <include>org.apache.iceberg:iceberg-data</include>
                                     <include>org.apache.iceberg:iceberg-orc</include>
@@ -90,7 +90,7 @@
                                     <include>org.apache.iceberg:iceberg-arrow</include>
                                     <include>org.apache.iceberg:iceberg-hive-metastore</include>
                                     <include>org.apache.iceberg:iceberg-spark</include>
-                                    <include>org.apache.iceberg:iceberg-spark-extensions-3.5_2.12</include>
+                                    <include>org.apache.iceberg:iceberg-spark-extensions-3.5_2.13</include>
                                     <include>org.apache.iceberg:iceberg-bundled-guava</include>
                                     <include>org.apache.orc:*</include>
                                     <include>org.apache.thrift:libthrift</include>
@@ -117,7 +117,7 @@
                                     </excludes>
                                 </filter>
                                 <filter combine.children="append">
-                                    <artifact>org.apache.iceberg:iceberg-spark-3.5_2.12</artifact>
+                                    <artifact>org.apache.iceberg:iceberg-spark-3.5_2.13</artifact>
                                     <excludes>
                                         <exclude>META-INF/services/org.apache.spark.sql.sources.DataSourceRegister</exclude>
                                     </excludes>

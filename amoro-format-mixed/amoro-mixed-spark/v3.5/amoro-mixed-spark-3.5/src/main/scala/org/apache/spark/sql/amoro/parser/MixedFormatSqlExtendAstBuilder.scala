@@ -30,6 +30,7 @@ import org.apache.commons.codec.DecoderException
 import org.apache.commons.codec.binary.Hex
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.AnalysisException
+import org.apache.spark.sql.amoro.parser.QueryParsingErrors
 import org.apache.spark.sql.catalyst.{FunctionIdentifier, SQLConfHelper, TableIdentifier}
 import org.apache.spark.sql.catalyst.analysis.{MultiAlias, RelationTimeTravel, UnresolvedAlias, UnresolvedAttribute, UnresolvedExtractValue, UnresolvedFunction, UnresolvedGenerator, UnresolvedHaving, UnresolvedIdentifier, UnresolvedInlineTable, UnresolvedRegex, UnresolvedRelation, UnresolvedStar, UnresolvedSubqueryColumnAliases, UnresolvedTable, UnresolvedTableOrView, UnresolvedView}
 import org.apache.spark.sql.catalyst.catalog.BucketSpec
@@ -282,7 +283,7 @@ class MixedFormatSqlExtendAstBuilder()
     // Check for duplicate names.
     val duplicates = ctes.groupBy(_._1).filter(_._2.size > 1).keys
     if (duplicates.nonEmpty) {
-      throw QueryParsingErrors.duplicateCteDefinitionNamesError(
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.duplicateCteDefinitionNamesError(
         duplicates.mkString("'", "', '", "'"),
         ctx)
     }
@@ -354,7 +355,9 @@ class MixedFormatSqlExtendAstBuilder()
     } else {
       val ident = ctx.strictIdentifier()
       if (ctx.identifierList() != null) {
-        throw QueryParsingErrors.columnAliasInOperationNotAllowedError(op, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.columnAliasInOperationNotAllowedError(
+          op,
+          ctx)
       }
       if (ident != null) Some(ident.getText) else None
     }
@@ -418,7 +421,8 @@ class MixedFormatSqlExtendAstBuilder()
         // [EMPTY]
         query
       } else {
-        throw QueryParsingErrors.combinationQueryResultClausesUnsupportedError(ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.combinationQueryResultClausesUnsupportedError(
+          ctx)
       }
 
     // WINDOWS
@@ -438,7 +442,7 @@ class MixedFormatSqlExtendAstBuilder()
       ctx: QueryOrganizationContext,
       expressions: Seq[Expression],
       query: LogicalPlan): LogicalPlan = {
-    throw QueryParsingErrors.distributeByUnsupportedError(ctx)
+    throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.distributeByUnsupportedError(ctx)
   }
 
   override def visitTransformQuerySpecification(
@@ -521,7 +525,8 @@ class MixedFormatSqlExtendAstBuilder()
       windowClause: WindowClauseContext,
       relation: LogicalPlan): LogicalPlan = withOrigin(ctx) {
     if (transformClause.setQuantifier != null) {
-      throw QueryParsingErrors.transformNotSupportQuantifierError(transformClause.setQuantifier)
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.transformNotSupportQuantifierError(
+        transformClause.setQuantifier)
     }
     // Create the attributes.
     val (attributes, schemaLess) = if (transformClause.colTypeList != null) {
@@ -698,7 +703,8 @@ class MixedFormatSqlExtendAstBuilder()
         getRowFormatDelimited(c)
 
       case c: RowFormatSerdeContext =>
-        throw QueryParsingErrors.transformWithSerdeUnsupportedError(ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.transformWithSerdeUnsupportedError(
+          ctx)
 
       // SPARK-32106: When there is no definition about format, we return empty result
       // to use a built-in default Serde in SparkScriptTransformationExec.
@@ -732,7 +738,8 @@ class MixedFormatSqlExtendAstBuilder()
       val join = right.optionalMap(left) { (left, right) =>
         if (relation.LATERAL != null) {
           if (!relation.relationPrimary.isInstanceOf[AliasedQueryContext]) {
-            throw QueryParsingErrors.invalidLateralJoinRelationError(relation.relationPrimary)
+            throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidLateralJoinRelationError(
+              relation.relationPrimary)
           }
           LateralJoin(left, LateralSubquery(right), Inner, None)
         } else {
@@ -743,7 +750,8 @@ class MixedFormatSqlExtendAstBuilder()
     }
     if (ctx.pivotClause() != null) {
       if (!ctx.lateralView.isEmpty) {
-        throw QueryParsingErrors.lateralWithPivotInFromClauseNotAllowedError(ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.lateralWithPivotInFromClauseNotAllowedError(
+          ctx)
       }
       withPivot(ctx.pivotClause, from)
     } else {
@@ -797,7 +805,9 @@ class MixedFormatSqlExtendAstBuilder()
     }
     baseWindowTuples.groupBy(_._1).foreach { kv =>
       if (kv._2.size > 1) {
-        throw QueryParsingErrors.repetitiveWindowDefinitionError(kv._1, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.repetitiveWindowDefinitionError(
+          kv._1,
+          ctx)
       }
     }
     val baseWindowMap = baseWindowTuples.toMap
@@ -812,9 +822,13 @@ class MixedFormatSqlExtendAstBuilder()
           case Some(spec: WindowSpecDefinition) =>
             spec
           case Some(ref) =>
-            throw QueryParsingErrors.invalidWindowReferenceError(name, ctx)
+            throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidWindowReferenceError(
+              name,
+              ctx)
           case None =>
-            throw QueryParsingErrors.cannotResolveWindowReferenceError(name, ctx)
+            throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotResolveWindowReferenceError(
+              name,
+              ctx)
         }
       case spec: WindowSpecDefinition => spec
     }
@@ -878,13 +892,17 @@ class MixedFormatSqlExtendAstBuilder()
     if (groupingAnalytics.CUBE != null) {
       // CUBE(A, B, (A, B), ()) is not supported.
       if (groupingSets.exists(_.isEmpty)) {
-        throw QueryParsingErrors.invalidGroupingSetError("CUBE", groupingAnalytics)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidGroupingSetError(
+          "CUBE",
+          groupingAnalytics)
       }
       Cube(groupingSets.toSeq)
     } else if (groupingAnalytics.ROLLUP != null) {
       // ROLLUP(A, B, (A, B), ()) is not supported.
       if (groupingSets.exists(_.isEmpty)) {
-        throw QueryParsingErrors.invalidGroupingSetError("ROLLUP", groupingAnalytics)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidGroupingSetError(
+          "ROLLUP",
+          groupingAnalytics)
       }
       Rollup(groupingSets.toSeq)
     } else {
@@ -994,14 +1012,16 @@ class MixedFormatSqlExtendAstBuilder()
         }
 
         if (join.LATERAL != null && !join.right.isInstanceOf[AliasedQueryContext]) {
-          throw QueryParsingErrors.invalidLateralJoinRelationError(join.right)
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidLateralJoinRelationError(
+            join.right)
         }
 
         // Resolve the join type and join condition
         val (joinType, condition) = Option(join.joinCriteria) match {
           case Some(c) if c.USING != null =>
             if (join.LATERAL != null) {
-              throw QueryParsingErrors.lateralJoinWithUsingJoinUnsupportedError(ctx)
+              throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.lateralJoinWithUsingJoinUnsupportedError(
+                ctx)
             }
             (UsingJoin(baseJoinType, visitIdentifierList(c.identifierList)), None)
           case Some(c) if c.booleanExpression != null =>
@@ -1010,13 +1030,13 @@ class MixedFormatSqlExtendAstBuilder()
             throw new IllegalStateException(s"Unimplemented joinCriteria: $c")
           case None if join.NATURAL != null =>
             if (join.LATERAL != null) {
-              throw QueryParsingErrors.incompatibleJoinTypesError(
+              throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.incompatibleJoinTypesError(
                 joinType1 = ctx.LATERAL.toString,
                 joinType2 = "NATURAL",
                 ctx = ctx)
             }
             if (baseJoinType == Cross) {
-              throw QueryParsingErrors.incompatibleJoinTypesError(
+              throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.incompatibleJoinTypesError(
                 joinType1 = "NATURAL",
                 joinType2 = baseJoinType.toString,
                 ctx = ctx)
@@ -1027,7 +1047,9 @@ class MixedFormatSqlExtendAstBuilder()
         }
         if (join.LATERAL != null) {
           if (!Seq(Inner, Cross, LeftOuter).contains(joinType)) {
-            throw QueryParsingErrors.unsupportedLateralJoinTypeError(ctx, joinType.sql)
+            throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.unsupportedLateralJoinTypeError(
+              ctx,
+              joinType.sql)
           }
           LateralJoin(left, LateralSubquery(plan(join.right)), joinType, condition)
         } else {
@@ -1062,7 +1084,7 @@ class MixedFormatSqlExtendAstBuilder()
     }
 
     if (ctx.sampleMethod() == null) {
-      throw QueryParsingErrors.emptyInputForTableSampleError(ctx)
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.emptyInputForTableSampleError(ctx)
     }
 
     val seed = if (ctx.seed != null) {
@@ -1083,18 +1105,22 @@ class MixedFormatSqlExtendAstBuilder()
       case ctx: SampleByBytesContext =>
         val bytesStr = ctx.bytes.getText
         if (bytesStr.matches("[0-9]+[bBkKmMgG]")) {
-          throw QueryParsingErrors.tableSampleByBytesUnsupportedError("byteLengthLiteral", ctx)
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.tableSampleByBytesUnsupportedError(
+            "byteLengthLiteral",
+            ctx)
         } else {
-          throw QueryParsingErrors.invalidByteLengthLiteralError(bytesStr, ctx)
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidByteLengthLiteralError(
+            bytesStr,
+            ctx)
         }
 
       case ctx: SampleByBucketContext if ctx.ON() != null =>
         if (ctx.identifier != null) {
-          throw QueryParsingErrors.tableSampleByBytesUnsupportedError(
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.tableSampleByBytesUnsupportedError(
             "BUCKET x OUT OF y ON colname",
             ctx)
         } else {
-          throw QueryParsingErrors.tableSampleByBytesUnsupportedError(
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.tableSampleByBytesUnsupportedError(
             "BUCKET x OUT OF y ON function",
             ctx)
         }
@@ -1146,12 +1172,12 @@ class MixedFormatSqlExtendAstBuilder()
     }
     val timestamp = Option(ctx.timestamp).map(expression)
     if (timestamp.exists(_.references.nonEmpty)) {
-      throw QueryParsingErrors.invalidTimeTravelSpec(
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidTimeTravelSpec(
         "timestamp expression cannot refer to any columns",
         ctx.timestamp)
     }
     if (timestamp.exists(e => SubqueryExpression.hasSubquery(e))) {
-      throw QueryParsingErrors.invalidTimeTravelSpec(
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidTimeTravelSpec(
         "timestamp expression cannot contain subqueries",
         ctx.timestamp)
     }
@@ -1250,7 +1276,7 @@ class MixedFormatSqlExtendAstBuilder()
   }
 
   override def visitIdentifierSeq(ctx: IdentifierSeqContext): Seq[String] = withOrigin(ctx) {
-    ctx.ident.asScala.map(_.getText)
+    ctx.ident.asScala.map(_.getText).toSeq
   }
 
   /**
@@ -1500,7 +1526,8 @@ class MixedFormatSqlExtendAstBuilder()
           case _ =>
             val escapeChar = Option(ctx.escapeChar).map(string).map { str =>
               if (str.length != 1) {
-                throw QueryParsingErrors.invalidEscapeStringError(ctx)
+                throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidEscapeStringError(
+                  ctx)
               }
               str.charAt(0)
             }.getOrElse('\\')
@@ -1717,7 +1744,9 @@ class MixedFormatSqlExtendAstBuilder()
       case MixedFormatSqlExtendParser.TRAILING =>
         StringTrimRight(srcStr, trimStr)
       case other =>
-        throw QueryParsingErrors.trimOptionUnsupportedError(other, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.trimOptionUnsupportedError(
+          other,
+          ctx)
     }
   }
 
@@ -1786,7 +1815,9 @@ class MixedFormatSqlExtendAstBuilder()
       case Seq(db, fn) => FunctionIdentifier(fn, Option(db))
       case Seq(fn) => FunctionIdentifier(fn, None)
       case other =>
-        throw QueryParsingErrors.functionNameUnsupportedError(texts.mkString("."), ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.functionNameUnsupportedError(
+          texts.mkString("."),
+          ctx)
     }
   }
 
@@ -2029,7 +2060,10 @@ class MixedFormatSqlExtendAstBuilder()
 
     def toLiteral[T](f: UTF8String => Option[T], t: DataType): Literal = {
       f(UTF8String.fromString(value)).map(Literal(_, t)).getOrElse {
-        throw QueryParsingErrors.cannotParseValueTypeError(valueType, value, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotParseValueTypeError(
+          valueType,
+          value,
+          ctx)
       }
     }
 
@@ -2078,7 +2112,10 @@ class MixedFormatSqlExtendAstBuilder()
               IntervalUtils.stringToInterval(UTF8String.fromString(value))
             } catch {
               case e: IllegalArgumentException =>
-                val ex = QueryParsingErrors.cannotParseIntervalValueError(value, ctx)
+                val ex =
+                  org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotParseIntervalValueError(
+                    value,
+                    ctx)
                 ex.setStackTrace(e.getStackTrace)
                 throw ex
             }
@@ -2101,11 +2138,16 @@ class MixedFormatSqlExtendAstBuilder()
                 s"contains illegal character for hexBinary: $padding$value");
           }
         case other =>
-          throw QueryParsingErrors.literalValueTypeUnsupportedError(other, ctx)
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.literalValueTypeUnsupportedError(
+            other,
+            ctx)
       }
     } catch {
       case e: IllegalArgumentException =>
-        throw QueryParsingErrors.parsingValueTypeError(e, valueType, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.parsingValueTypeError(
+          e,
+          valueType,
+          ctx)
     }
   }
 
@@ -2178,7 +2220,7 @@ class MixedFormatSqlExtendAstBuilder()
     try {
       val rawBigDecimal = BigDecimal(rawStrippedQualifier)
       if (rawBigDecimal < minValue || rawBigDecimal > maxValue) {
-        throw QueryParsingErrors.invalidNumericLiteralRangeError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidNumericLiteralRangeError(
           rawStrippedQualifier,
           minValue,
           maxValue,
@@ -2353,7 +2395,9 @@ class MixedFormatSqlExtendAstBuilder()
     if (yearMonthFields.nonEmpty) {
       if (dayTimeFields.nonEmpty) {
         val literalStr = source(ctx)
-        throw QueryParsingErrors.mixedIntervalUnitsError(literalStr, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.mixedIntervalUnitsError(
+          literalStr,
+          ctx)
       }
       Literal(
         calendarInterval.months,
@@ -2409,7 +2453,7 @@ class MixedFormatSqlExtendAstBuilder()
     if (ctx.errorCapturingMultiUnitsInterval != null) {
       val innerCtx = ctx.errorCapturingMultiUnitsInterval
       if (innerCtx.unitToUnitInterval != null) {
-        throw QueryParsingErrors.moreThanOneFromToUnitInIntervalLiteralError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.moreThanOneFromToUnitInIntervalLiteralError(
           innerCtx.unitToUnitInterval)
       }
       visitMultiUnitsInterval(innerCtx.multiUnitsInterval)
@@ -2417,11 +2461,12 @@ class MixedFormatSqlExtendAstBuilder()
       val innerCtx = ctx.errorCapturingUnitToUnitInterval
       if (innerCtx.error1 != null || innerCtx.error2 != null) {
         val errorCtx = if (innerCtx.error1 != null) innerCtx.error1 else innerCtx.error2
-        throw QueryParsingErrors.moreThanOneFromToUnitInIntervalLiteralError(errorCtx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.moreThanOneFromToUnitInIntervalLiteralError(
+          errorCtx)
       }
       visitUnitToUnitInterval(innerCtx.body)
     } else {
-      throw QueryParsingErrors.invalidIntervalLiteralError(ctx)
+      throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidIntervalLiteralError(ctx)
     }
   }
 
@@ -2443,7 +2488,9 @@ class MixedFormatSqlExtendAstBuilder()
             // units and become valid ones, e.g. '1 day 2 hour'.
             // Ideally, we only ensure the value parts don't contain any units here.
             if (value.exists(Character.isLetter)) {
-              throw QueryParsingErrors.invalidIntervalFormError(value, ctx)
+              throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidIntervalFormError(
+                value,
+                ctx)
             }
             if (values(i).MINUS() == null) {
               value
@@ -2481,7 +2528,8 @@ class MixedFormatSqlExtendAstBuilder()
           s"-$interval"
         }
       }.getOrElse {
-        throw QueryParsingErrors.invalidFromToUnitValueError(ctx.intervalValue)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidFromToUnitValueError(
+          ctx.intervalValue)
       }
       try {
         val from = ctx.from.getText.toLowerCase(Locale.ROOT)
@@ -2496,7 +2544,10 @@ class MixedFormatSqlExtendAstBuilder()
               DayTimeIntervalType.stringToField(from),
               DayTimeIntervalType.stringToField(to))
           case _ =>
-            throw QueryParsingErrors.fromToIntervalUnsupportedError(from, to, ctx)
+            throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.fromToIntervalUnsupportedError(
+              from,
+              to,
+              ctx)
         }
       } catch {
         // Handle Exceptions thrown by CalendarInterval
@@ -2542,10 +2593,14 @@ class MixedFormatSqlExtendAstBuilder()
       case ("void", Nil) => NullType
       case ("interval", Nil) => CalendarIntervalType
       case (dt @ ("character" | "char" | "varchar"), Nil) =>
-        throw QueryParsingErrors.charTypeMissingLengthError(dt, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.charTypeMissingLengthError(
+          dt,
+          ctx)
       case (dt, params) =>
         val dtStr = if (params.nonEmpty) s"$dt(${params.mkString(",")})" else dt
-        throw QueryParsingErrors.dataTypeUnsupportedError(dtStr, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.dataTypeUnsupportedError(
+          dtStr,
+          ctx)
     }
   }
 
@@ -2556,7 +2611,10 @@ class MixedFormatSqlExtendAstBuilder()
       val endStr = ctx.to.getText.toLowerCase(Locale.ROOT)
       val end = YearMonthIntervalType.stringToField(endStr)
       if (end <= start) {
-        throw QueryParsingErrors.fromToIntervalUnsupportedError(startStr, endStr, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.fromToIntervalUnsupportedError(
+          startStr,
+          endStr,
+          ctx)
       }
       YearMonthIntervalType(start, end)
     } else {
@@ -2571,7 +2629,10 @@ class MixedFormatSqlExtendAstBuilder()
       val endStr = ctx.to.getText.toLowerCase(Locale.ROOT)
       val end = DayTimeIntervalType.stringToField(endStr)
       if (end <= start) {
-        throw QueryParsingErrors.fromToIntervalUnsupportedError(startStr, endStr, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.fromToIntervalUnsupportedError(
+          startStr,
+          endStr,
+          ctx)
       }
       DayTimeIntervalType(start, end)
     } else {
@@ -2825,7 +2886,10 @@ class MixedFormatSqlExtendAstBuilder()
         case ref: FieldReference =>
           ref
         case nonRef =>
-          throw QueryParsingErrors.partitionTransformNotExpectedError(name, nonRef.describe, ctx)
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.partitionTransformNotExpectedError(
+            name,
+            nonRef.describe,
+            ctx)
       }
     }
 
@@ -2834,7 +2898,10 @@ class MixedFormatSqlExtendAstBuilder()
         arguments: Seq[V2Expression]): FieldReference = {
       lazy val name: String = ctx.identifier.getText
       if (arguments.size > 1) {
-        throw QueryParsingErrors.wrongNumberArgumentsForTransformError(name, arguments.size, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.wrongNumberArgumentsForTransformError(
+          name,
+          arguments.size,
+          ctx)
       } else if (arguments.isEmpty) {
         throw new IllegalStateException(s"Not enough arguments for transform $name")
       } else {
@@ -2859,7 +2926,9 @@ class MixedFormatSqlExtendAstBuilder()
               case LiteralValue(longValue, LongType) =>
                 longValue.asInstanceOf[Long].toInt
               case lit =>
-                throw QueryParsingErrors.invalidBucketsNumberError(lit.describe, applyCtx)
+                throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.invalidBucketsNumberError(
+                  lit.describe,
+                  applyCtx)
             }
 
             val fields = arguments.tail.map(arg => getFieldReference(applyCtx, arg))
@@ -2908,25 +2977,25 @@ class MixedFormatSqlExtendAstBuilder()
     val legacyOn = conf.getConf(SQLConf.LEGACY_PROPERTY_NON_RESERVED)
     properties.filter {
       case (PROP_PROVIDER, _) if !legacyOn =>
-        throw QueryParsingErrors.cannotCleanReservedTablePropertyError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotCleanReservedTablePropertyError(
           PROP_PROVIDER,
           ctx,
           "please use the USING clause to specify it")
       case (PROP_PROVIDER, _) => false
       case (PROP_LOCATION, _) if !legacyOn =>
-        throw QueryParsingErrors.cannotCleanReservedTablePropertyError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotCleanReservedTablePropertyError(
           PROP_LOCATION,
           ctx,
           "please use the LOCATION clause to specify it")
       case (PROP_LOCATION, _) => false
       case (PROP_OWNER, _) if !legacyOn =>
-        throw QueryParsingErrors.cannotCleanReservedTablePropertyError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotCleanReservedTablePropertyError(
           PROP_OWNER,
           ctx,
           "it will be set to the current user")
       case (PROP_OWNER, _) => false
       case (PROP_EXTERNAL, _) if !legacyOn =>
-        throw QueryParsingErrors.cannotCleanReservedTablePropertyError(
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotCleanReservedTablePropertyError(
           PROP_EXTERNAL,
           ctx,
           "please use CREATE EXTERNAL TABLE")
@@ -2936,7 +3005,7 @@ class MixedFormatSqlExtendAstBuilder()
       case (k, _) =>
         val isReserved = CatalogV2Util.TABLE_RESERVED_PROPERTIES.contains(k)
         if (!legacyOn && isReserved) {
-          throw QueryParsingErrors.cannotCleanReservedTablePropertyError(
+          throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.cannotCleanReservedTablePropertyError(
             k,
             ctx,
             "please remove it from the TBLPROPERTIES list.")
@@ -2952,7 +3021,10 @@ class MixedFormatSqlExtendAstBuilder()
     var path = location
     val filtered = cleanTableProperties(ctx, options).filter {
       case (k, v) if k.equalsIgnoreCase("path") && path.nonEmpty =>
-        throw QueryParsingErrors.duplicatedTablePathsFoundError(path.get, v, ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.duplicatedTablePathsFoundError(
+          path.get,
+          v,
+          ctx)
       case (k, v) if k.equalsIgnoreCase("path") =>
         path = Some(v)
         false
@@ -2977,7 +3049,8 @@ class MixedFormatSqlExtendAstBuilder()
       case (null, storageHandler) =>
         operationNotAllowed("STORED BY", ctx)
       case _ =>
-        throw QueryParsingErrors.storedAsAndStoredByBothSpecifiedError(ctx)
+        throw org.apache.spark.sql.amoro.parser.QueryParsingErrors.storedAsAndStoredByBothSpecifiedError(
+          ctx)
     }
   }
 

@@ -36,7 +36,7 @@
     <properties>
         <hive.version>2.3.9</hive.version>
         <spark.version>3.5.3</spark.version>
-        <scala.version>2.12.15</scala.version>
+        <scala.version>2.13.8</scala.version>
         <scala.collection.compat>2.11.0</scala.collection.compat>
     </properties>
 
@@ -49,7 +49,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
+            <artifactId>spark-sql_2.13</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -110,7 +110,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
+            <artifactId>spark-core_2.13</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -151,7 +151,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_2.12</artifactId>
+            <artifactId>spark-hive_2.13</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -243,7 +243,7 @@
 
         <dependency>
             <groupId>org.apache.iceberg</groupId>
-            <artifactId>iceberg-spark-3.5_2.12</artifactId>
+            <artifactId>iceberg-spark-3.5_2.13</artifactId>
             <version>${iceberg.version}</version>
             <exclusions>
                 <exclusion>
@@ -259,7 +259,7 @@
 
         <dependency>
             <groupId>org.apache.iceberg</groupId>
-            <artifactId>iceberg-spark-extensions-3.5_2.12</artifactId>
+            <artifactId>iceberg-spark-extensions-3.5_2.13</artifactId>
             <version>${iceberg.version}</version>
             <exclusions>
                 <exclusion>
@@ -275,6 +275,13 @@
             <artifactId>paimon-spark-3.5</artifactId>
             <version>${paimon.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion><groupId>org.apache.paimon</groupId><artifactId>paimon-spark-common_2.12</artifactId></exclusion>
+                <exclusion><groupId>org.apache.spark</groupId><artifactId>spark-sql_2.12</artifactId></exclusion>
+                <exclusion><groupId>org.apache.spark</groupId><artifactId>spark-core_2.12</artifactId></exclusion>
+                <exclusion><groupId>org.apache.spark</groupId><artifactId>spark-catalyst_2.12</artifactId></exclusion>
+                <exclusion><groupId>org.scala-lang</groupId><artifactId>scala-library</artifactId></exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.paimon</groupId>

@@ -86,7 +86,7 @@
         <maven-javadoc-plugin.version>3.3.0</maven-javadoc-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
-        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <maven-shade-plugin.version>3.5.0</maven-shade-plugin.version>
         <maven-scala-plugin.version>4.8.1</maven-scala-plugin.version>
         <maven-antlr4-plugin.version>4.3</maven-antlr4-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
@@ -102,13 +102,13 @@
         <maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
 
         <iceberg.version>1.6.1</iceberg.version>
-        <paimon.version>0.9.0</paimon.version>
-        <hive.version>3.1.1</hive.version>
+        <paimon.version>1.1.0</paimon.version>
+        <hive.version>3.1.3</hive.version>
         <hadoop.version>3.4.0</hadoop.version>
         <kerby.version>2.0.3</kerby.version>
-        <scala.binary.version>2.12</scala.binary.version>
+        <scala.binary.version>2.13</scala.binary.version>
         <args4j.version>2.33</args4j.version>
-        <slf4j.version>1.7.30</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <log4j.version>2.20.0</log4j.version>
         <junit4.version>4.13.2</junit4.version>
         <junit5.version>5.9.1</junit5.version>
@@ -124,8 +124,8 @@
         <orc-core.version>1.8.3</orc-core.version>
         <awssdk.version>2.24.12</awssdk.version>
         <aliyun-sdk-oss.version>3.10.2</aliyun-sdk-oss.version>
-        <terminal.spark.version>3.3.2</terminal.spark.version>
-        <terminal.spark.major.version>3.3</terminal.spark.major.version>
+        <terminal.spark.version>3.5.4</terminal.spark.version>
+        <terminal.spark.major.version>3.5</terminal.spark.major.version>
         <dropwizard.metrics.version>4.2.19</dropwizard.metrics.version>
         <caffeine.version>2.9.3</caffeine.version>
         <snakeyaml.version>2.2</snakeyaml.version>
@@ -139,10 +139,10 @@
         <rocksdb.version>7.10.2</rocksdb.version>
         <kryo.version>4.0.3</kryo.version>
         <trino.version>406</trino.version>
-        <lucene.version>8.11.2</lucene.version>
+        <lucene.version>8.11.3</lucene.version>
         <bitmap.version>1.0.1</bitmap.version>
         <prometheus.version>0.16.0</prometheus.version>
-        <flink.version>1.20.0</flink.version>
+        <flink.version>1.20.1</flink.version>
         <fabric8-kubernetes-client.version.version>6.13.3</fabric8-kubernetes-client.version.version>
         <amoro-shade.version>0.7.0-incubating</amoro-shade.version>
         <amoro-shade-guava.version>32.1.1-jre</amoro-shade-guava.version>
@@ -930,6 +930,16 @@
                 <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.15.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -1235,6 +1245,12 @@
                     <version>${maven-shade-plugin.version}</version>
                     <configuration>
                         <filters combine.children="append">
+                            <filter>
+                                <artifact>com.fasterxml.jackson.core:jackson-core</artifact>
+                                <excludes>
+                                    <exclude>META-INF/versions/**</exclude>
+                                </excludes>
+                            </filter>
                             <filter>
                                 <artifact>*</artifact>
                                 <excludes>

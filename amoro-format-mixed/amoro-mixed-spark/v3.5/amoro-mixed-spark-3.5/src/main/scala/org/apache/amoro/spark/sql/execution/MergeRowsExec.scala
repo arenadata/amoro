@@ -102,26 +102,26 @@ case class MergeRowsExec(
   private def processPartition(rowIterator: Iterator[InternalRow]): Iterator[InternalRow] = {
     val inputAttrs = child.output
 
-    val isSourceRowPresentPred = createPredicate(isSourceRowPresent, inputAttrs)
-    val isTargetRowPresentPred = createPredicate(isTargetRowPresent, inputAttrs)
+    val isSourceRowPresentPred = createPredicate(isSourceRowPresent, inputAttrs.toList)
+    val isTargetRowPresentPred = createPredicate(isTargetRowPresent, inputAttrs.toList)
 
-    val matchedPreds = matchedConditions.map(createPredicate(_, inputAttrs))
+    val matchedPreds = matchedConditions.map(createPredicate(_, inputAttrs.toList))
     val matchedProjs = matchedOutputs.map {
       case output if output.nonEmpty =>
-        Some(createProjection(output, inputAttrs))
+        Some(createProjection(output, inputAttrs.toList))
       case _ => None
     }
     val matchedPairs = matchedPreds zip matchedProjs
 
-    val notMatchedPreds = notMatchedConditions.map(createPredicate(_, inputAttrs))
+    val notMatchedPreds = notMatchedConditions.map(createPredicate(_, inputAttrs.toList))
     val notMatchedProjs = notMatchedOutputs.map {
-      case output if output.nonEmpty => Some(createProjection(output, inputAttrs))
+      case output if output.nonEmpty => Some(createProjection(output, inputAttrs.toList))
       case _ => None
     }
     val nonMatchedPairs = notMatchedPreds zip notMatchedProjs
 
-    val projectTargetCols = createProjection(Nil, inputAttrs)
-    val rowIdProj = createProjection(rowIdAttrs, inputAttrs)
+    val projectTargetCols = createProjection(Nil, inputAttrs.toList)
+    val rowIdProj = createProjection(rowIdAttrs, inputAttrs.toList)
 
     def processRow(inputRow: InternalRow): InternalRow = {
       if (emitNotMatchedTargetRows && !isSourceRowPresentPred.eval(inputRow)) {
