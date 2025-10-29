@@ -22,9 +22,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <artifactId>amoro-parent</artifactId>
-        <version>0.8.1-incubating</version>
+        <version>0.8.1.1-4.2.0-0-dev1</version>
     </parent>
 
     <artifactId>amoro-metrics</artifactId>

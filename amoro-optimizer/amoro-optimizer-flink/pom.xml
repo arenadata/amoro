@@ -22,7 +22,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>amoro-optimizer</artifactId>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <version>0.8.1-incubating</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -41,7 +41,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-optimizer-common</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -169,7 +169,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>

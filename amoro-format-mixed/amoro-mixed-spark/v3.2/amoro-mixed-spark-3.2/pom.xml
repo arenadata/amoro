@@ -22,7 +22,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>amoro-mixed-spark</artifactId>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <version>0.8.1-incubating</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
@@ -197,7 +197,7 @@
 
         <!-- amoro dependency -->
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -221,7 +221,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-mixed-hive</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -237,7 +237,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-mixed-spark-3-common</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -311,7 +311,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -319,7 +319,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-paimon</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -351,7 +351,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-mixed-hive</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
@@ -365,14 +365,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-mixed-spark-3-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-iceberg</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>

@@ -21,9 +21,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <artifactId>amoro-format-mixed</artifactId>
-        <version>0.8.1-incubating</version>
+        <version>0.8.1.1-4.2.0-0-dev1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,7 +33,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-iceberg</artifactId>
         </dependency>
 
@@ -94,7 +94,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -102,7 +102,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-iceberg</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>

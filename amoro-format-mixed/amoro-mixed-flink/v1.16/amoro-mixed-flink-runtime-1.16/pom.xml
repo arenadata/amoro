@@ -21,7 +21,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <artifactId>amoro-mixed-flink</artifactId>
         <version>0.8.1-incubating</version>
         <relativePath>../../pom.xml</relativePath>
@@ -38,7 +38,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-mixed-flink-1.16</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

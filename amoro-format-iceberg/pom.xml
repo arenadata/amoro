@@ -22,9 +22,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <artifactId>amoro-parent</artifactId>
-        <version>0.8.1-incubating</version>
+        <version>0.8.1.1-4.2.0-0-dev1</version>
     </parent>
 
     <artifactId>amoro-format-iceberg</artifactId>
@@ -33,12 +33,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-shade-thrift</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
         </dependency>
 
@@ -48,12 +48,12 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-shade-guava-32</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-shade-jackson-2</artifactId>
         </dependency>
 
@@ -63,7 +63,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-shade-zookeeper-3</artifactId>
         </dependency>
 
@@ -178,7 +178,7 @@
 
         <!-- test dependencies -->
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.parent.version}</version>
             <classifier>tests</classifier>

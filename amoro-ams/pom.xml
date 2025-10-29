@@ -24,9 +24,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.amoro</groupId>
+        <groupId>io.arenadata.amoro</groupId>
         <artifactId>amoro-parent</artifactId>
-        <version>0.8.1-incubating</version>
+        <version>0.8.1.1-4.2.0-0-dev1</version>
     </parent>
 
     <artifactId>amoro-ams</artifactId>
@@ -43,12 +43,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-iceberg</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-mixed-hive</artifactId>
             <exclusions>
                 <exclusion>
@@ -59,7 +59,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-web</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -320,14 +320,14 @@
 
         <!-- runtime dependencies -->
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-mixed-spark-${terminal.spark.major.version}</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-optimizer-standalone</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
@@ -335,7 +335,7 @@
 
         <!-- test dependencies -->
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-common</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -343,7 +343,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-iceberg</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -351,7 +351,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-mixed-hive</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -359,14 +359,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-paimon</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
+            <groupId>io.arenadata.amoro</groupId>
             <artifactId>amoro-format-paimon</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -530,7 +530,7 @@
             <id>support-paimon-format</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.amoro</groupId>
+                    <groupId>io.arenadata.amoro</groupId>
                     <artifactId>amoro-format-paimon</artifactId>
                 </dependency>
             </dependencies>
@@ -539,7 +539,7 @@
             <id>support-hudi-format</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.amoro</groupId>
+                    <groupId>io.arenadata.amoro</groupId>
                     <artifactId>amoro-format-hudi</artifactId>
                 </dependency>
             </dependencies>
@@ -548,11 +548,11 @@
             <id>support-all-formats</id>
             <dependencies>
                 <dependency>
-                    <groupId>org.apache.amoro</groupId>
+                    <groupId>io.arenadata.amoro</groupId>
                     <artifactId>amoro-format-paimon</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.apache.amoro</groupId>
+                    <groupId>io.arenadata.amoro</groupId>
                     <artifactId>amoro-format-hudi</artifactId>
                 </dependency>
             </dependencies>
