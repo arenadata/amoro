@@ -18,11 +18,9 @@
 #
 # This file is used to export env variables for AMORO
 
-# set your hadoop conf dir
-# export HADOOP_CONF_DIR=
+export AMORO_HOME=/usr/lib/amoro
+export AMORO_CONF_DIR=/etc/amoro/conf
+export AMORO_LOG_DIR=/var/log/amoro
+export HADOOP_CONF_DIR=/etc/hadoop/conf
+export HIVE_CONF_DIR=/etc/hive/conf
 
-# set your hive conf dir
-# export HIVE_CONF_DIR=
-
-# set your addition classpath dir
-# export AMORO_ADDITION_CLASSPATH=
