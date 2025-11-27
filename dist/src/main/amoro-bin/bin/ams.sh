@@ -70,8 +70,8 @@ if [ ! -d "${AMORO_HOME}/run" ]; then
     mkdir "${AMORO_HOME}/run"
 fi
 
-if [ ! -f $PID_PATH ];then
-    touch $PID_PATH
+if [ ! -f "$PID" ]; then
+    touch "$PID"
 fi
 
 if [ ! -f $STDERR_LOG ];then
