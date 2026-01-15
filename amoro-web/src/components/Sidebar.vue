@@ -168,6 +168,33 @@ export default defineComponent({
       document.addEventListener('click', handleClickOutside)
     })
 
+    const handleMenuClick = (event: MouseEvent, item: MenuItem) => {
+      const isNewTab =
+          event.metaKey || // cmd (mac)
+          event.ctrlKey || // ctrl (win/linux)
+          event.button === 1
+
+      const path = item.key === 'tables'
+          ? '/tables'
+          : `/${item.key}`
+
+      if (isNewTab) {
+        event.preventDefault()
+        const routeData = router.resolve({ path })
+        window.open(routeData.href, '_blank')
+        return
+      }
+
+      if (item.key === 'tables') {
+        nextTick(setCurMenu)
+        return
+      }
+
+      router.push({ path })
+      nextTick(setCurMenu)
+    }
+
+
     return {
       ...toRefs(state),
       hasToken,
@@ -180,6 +207,7 @@ export default defineComponent({
       tableMenusRef,
       goCreatePage,
       viewOverview,
+      handleMenuClick,
     }
   },
 })
@@ -197,7 +225,16 @@ export default defineComponent({
       theme="dark"
       :inline-collapsed="collapsed"
     >
-      <a-menu-item v-for="item in menuList" :key="item.key" :class="{ 'active-color': (store.isShowTablesMenu && item.key === 'tables'), 'table-item-tab': item.key === 'tables' }" @click="navClick(item)" @mouseenter="mouseenter(item)">
+      <a-menu-item
+          v-for="item in menuList"
+          :key="item.key"
+          :class="{
+            'active-color': (store.isShowTablesMenu && item.key === 'tables'),
+            'table-item-tab': item.key === 'tables'
+          }"
+          @click="handleMenuClick($event, item)"
+          @mouseenter="mouseenter(item)"
+      >
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
