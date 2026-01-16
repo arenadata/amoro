@@ -178,12 +178,10 @@ const getTableLink = (record: IOptimizeTableItem) => {
 }
 
 const onTableClick = (event: MouseEvent, record: IOptimizeTableItem) => {
-  // Middle click / Cmd / Ctrl → браузеру открыть новую вкладку
   if (event.button === 1 || event.metaKey || event.ctrlKey) {
     return
   }
 
-  // Left click → SPA
   event.preventDefault()
   goTableDetail(record)
 }

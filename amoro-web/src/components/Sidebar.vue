@@ -170,8 +170,8 @@ export default defineComponent({
 
     const handleMenuClick = (event: MouseEvent, item: MenuItem) => {
       const isNewTab =
-          event.metaKey || // cmd (mac)
-          event.ctrlKey || // ctrl (win/linux)
+          event.metaKey ||
+          event.ctrlKey ||
           event.button === 1
 
       const path = item.key === 'tables'

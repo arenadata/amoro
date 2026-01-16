@@ -171,13 +171,11 @@ export default defineComponent({
       }
 
       if (event && (event.button === 1 || event.metaKey || event.ctrlKey)) {
-        // Middle-click или cmd/ctrl + click: открываем в новой вкладке
         const url = router.resolve(routeObj).href
         window.open(url, '_blank')
-        // Предотвращаем стандартное поведение, если нужно (для div не обязательно)
+
         if (event) event.preventDefault()
       } else {
-        // Стандартный left-click: навигация внутри приложения
         if (route.path.includes('tables')) {
           router.replace(routeObj)
         } else {
