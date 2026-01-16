@@ -63,21 +63,21 @@ const columns = computed(() => [
   },
 ])
 
-function goTableDetail(record: ITopTableItem) {
-  try {
-    const table = (record.tableName || '').split('.')
-    router.push({
-      path: '/tables',
-      query: {
-        catalog: table[0],
-        db: table[1],
-        table: table[2],
-      },
-    })
-  }
-  catch (error) {
-  }
-}
+// function goTableDetail(record: ITopTableItem) {
+//   try {
+//     const table = (record.tableName || '').split('.')
+//     router.push({
+//       path: '/tables',
+//       query: {
+//         catalog: table[0],
+//         db: table[1],
+//         table: table[2],
+//       },
+//     })
+//   }
+//   catch (error) {
+//   }
+// }
 
 async function getTop10Tables() {
   try {
@@ -96,6 +96,18 @@ async function getTop10Tables() {
   }
   finally {
     loading.value = false
+  }
+}
+
+const getTableLink = (record: ITopTableItem) => {
+  const table = (record.tableName || '').split('.')
+  return {
+    path: '/tables',
+    query: {
+      catalog: table[0],
+      db: table[1],
+      table: table[2],
+    },
   }
 }
 
@@ -133,9 +145,13 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'tableName'">
-            <span :title="record.tableName" class="primary-link" @click="goTableDetail(record)">
+            <router-link
+                class="primary-link"
+                :title="record.tableName"
+                :to="getTableLink(record)"
+            >
               {{ record.tableName }}
-            </span>
+            </router-link>
           </template>
           <template v-if="column.dataIndex === 'tableSize'">
             {{ bytesToSize(record.tableSize) }}

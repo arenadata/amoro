@@ -169,6 +169,25 @@ function reset() {
   refresh(true)
 }
 
+const getTableLink = (record: IOptimizeTableItem) => {
+  const { catalog, database, tableName } = record.tableIdentifier
+  return {
+    path: '/tables',
+    query: { catalog, db: database, table: tableName },
+  }
+}
+
+const onTableClick = (event: MouseEvent, record: IOptimizeTableItem) => {
+  // Middle click / Cmd / Ctrl → браузеру открыть новую вкладку
+  if (event.button === 1 || event.metaKey || event.ctrlKey) {
+    return
+  }
+
+  // Left click → SPA
+  event.preventDefault()
+  goTableDetail(record)
+}
+
 onMounted(async () => {
   refresh()
   await getOptimizerGroupList()
@@ -217,15 +236,15 @@ onMounted(async () => {
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'tableName'">
-          <a-typography-text
-            style="display: block;"
-            :ellipsis="{
-              tooltip: record.tableName,
-            }"
-            class="primary-link"
-            :content="record.tableName"
-            @click="goTableDetail(record)"
-          />
+          <router-link
+              :to="getTableLink(record)"
+              class="primary-link"
+              style="display: block;"
+              :title="record.tableName"
+              @click="onTableClick($event, record)"
+          >
+            {{ record.tableName }}
+          </router-link>
         </template>
         <template v-if="column.dataIndex === 'duration'">
           <span :title="record.durationDesc">
