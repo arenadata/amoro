@@ -150,7 +150,7 @@ export default defineComponent({
     function createTable() {
       emit('goCreatePage')
     }
-    function handleClickTable(item: IMap<string>) {
+    function handleClickTable({ event, item }: { event?: MouseEvent, item: IMap<string> }) {
       state.tableName = item.label
       state.type = item.type
       localStorage.setItem(storageTableKey, JSON.stringify({
@@ -160,7 +160,7 @@ export default defineComponent({
       }))
       store.updateTablesMenu(false)
       const path = item.type === 'HIVE' ? '/hive-tables' : '/tables'
-      const pathQuery = {
+      const routeObj = {
         path,
         query: {
           catalog: state.curCatalog,
@@ -169,11 +169,21 @@ export default defineComponent({
           type: state.type,
         },
       }
-      if (route.path.includes('tables')) {
-        router.replace(pathQuery)
-        return
+
+      if (event && (event.button === 1 || event.metaKey || event.ctrlKey)) {
+        // Middle-click или cmd/ctrl + click: открываем в новой вкладке
+        const url = router.resolve(routeObj).href
+        window.open(url, '_blank')
+        // Предотвращаем стандартное поведение, если нужно (для div не обязательно)
+        if (event) event.preventDefault()
+      } else {
+        // Стандартный left-click: навигация внутри приложения
+        if (route.path.includes('tables')) {
+          router.replace(routeObj)
+        } else {
+          router.push(routeObj)
+        }
       }
-      router.push(pathQuery)
     }
 
     function getCatalogOps() {
@@ -344,7 +354,14 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="tableLoading" />
-          <VirtualRecycleScroller :loading="tableLoading" :items="tableList" :active-item="tableName" :item-size="40" icon-name="tableOutlined" @handle-click-table="handleClickTable" />
+          <VirtualRecycleScroller
+              :loading="tableLoading"
+              :items="tableList"
+              :active-item="tableName"
+              :item-size="40"
+              icon-name="tableOutlined"
+              @handle-click-table="handleClickTable"
+          />
         </div>
       </div>
     </div>

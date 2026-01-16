@@ -24,7 +24,7 @@ import { Empty as AEmpty } from 'ant-design-vue'
 import type { IMap } from '@/types/common.type'
 import { tableTypeIconMap } from '@/types/common.type'
 
-export default defineComponent ({
+export default defineComponent({
   components: {
     RecycleScroller,
   },
@@ -56,8 +56,8 @@ export default defineComponent ({
       emit('mouseEnter', item.label)
     }
 
-    const handleClickTable = (item: IMap<string>) => {
-      emit('handleClickTable', item)
+    const handleClickTable = (event: MouseEvent, item: IMap<string>) => {
+      emit('handleClickTable', { event, item })
     }
 
     return {
@@ -72,14 +72,19 @@ export default defineComponent ({
 
 <template>
   <RecycleScroller
-    v-if="items.length && !loading"
-    v-slot="{ item }"
-    class="scroller"
-    :items="items"
-    :item-size="40"
-    key-field="id"
+      v-if="items.length && !loading"
+      v-slot="{ item }"
+      class="scroller"
+      :items="items"
+      :item-size="40"
+      key-field="id"
   >
-    <div :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }" class="desc" @mouseenter="handleMouseEnter(item)" @click="handleClickTable(item)">
+    <div
+        :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }"
+        class="desc"
+        @mouseenter="handleMouseEnter(item)"
+        @click="handleClickTable($event, item)"
+    >
       <svg-icon v-if="iconName === 'database'" icon-class="database" class="table-icon g-mr-8" />
       <svg-icon v-else :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap]" class="table-icon g-mr-8" />
       <p :title="item.label" class="name g-text-nowrap">
