@@ -17,12 +17,12 @@
  / -->
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import {computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRefs, watchEffect} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 import useStore from '@/store/index'
 import TableMenu from '@/components/tables-sub-menu/TablesMenu.vue'
-import { getQueryString } from '@/utils'
+import {getQueryString} from '@/utils'
 
 interface MenuItem {
   key: string
@@ -168,33 +168,6 @@ export default defineComponent({
       document.addEventListener('click', handleClickOutside)
     })
 
-    const handleMenuClick = (event: MouseEvent, item: MenuItem) => {
-      const isNewTab =
-          event.metaKey ||
-          event.ctrlKey ||
-          event.button === 1
-
-      const path = item.key === 'tables'
-          ? '/tables'
-          : `/${item.key}`
-
-      if (isNewTab) {
-        event.preventDefault()
-        const routeData = router.resolve({ path })
-        window.open(routeData.href, '_blank')
-        return
-      }
-
-      if (item.key === 'tables') {
-        nextTick(setCurMenu)
-        return
-      }
-
-      router.push({ path })
-      nextTick(setCurMenu)
-    }
-
-
     return {
       ...toRefs(state),
       hasToken,
@@ -207,7 +180,6 @@ export default defineComponent({
       tableMenusRef,
       goCreatePage,
       viewOverview,
-      handleMenuClick,
     }
   },
 })
@@ -232,13 +204,15 @@ export default defineComponent({
             'active-color': (store.isShowTablesMenu && item.key === 'tables'),
             'table-item-tab': item.key === 'tables'
           }"
-          @click="handleMenuClick($event, item)"
           @mouseenter="mouseenter(item)"
       >
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
-        <span>{{ item.title }}</span>
+
+        <RouterLink :to="item.key === 'tables' ? '/tables' : `/${item.key}`">
+          {{ item.title }}
+        </RouterLink>
       </a-menu-item>
     </a-menu>
     <a-button type="link" class="toggle-btn" @click="toggleCollapsed">

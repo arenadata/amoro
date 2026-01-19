@@ -247,13 +247,13 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'snapshotId'">
-            <router-link
+            <RouterLink
                 class="snapshot-link"
                 :to="getSnapshotLink(record)"
                 @click="onSnapshotClick($event, record)"
             >
               {{ record.snapshotId }}
-            </router-link>
+            </RouterLink>
           </template>
         </template>
         <template #expandedRowRender="{ record }">

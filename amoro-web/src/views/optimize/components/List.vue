@@ -19,7 +19,6 @@ limitations under the License.
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import { Modal } from 'ant-design-vue'
 import type { IIOptimizeGroupItem, ILableAndValue, IOptimizeResourceTableItem, IOptimizeTableItem } from '@/types/common.type'
 import { getOptimizerAction, getOptimizerTableList, getResourceGroupsListAPI, releaseResource } from '@/services/optimize.service'
@@ -27,9 +26,9 @@ import { usePagination } from '@/hooks/usePagination'
 import { usePlaceholder } from '@/hooks/usePlaceholder'
 import { bytesToSize, formatMS2DisplayTime, formatMS2Time } from '@/utils'
 import { getTableMaxWidth } from '@/utils/table'
+import type { RouteLocationRaw } from 'vue-router'
 
 const { t } = useI18n()
-const router = useRouter()
 
 const STATUS_CONFIG = shallowReactive({
   pending: { title: 'pending', color: '#ffcc00' },
@@ -149,16 +148,12 @@ function changeTable({ current = pagination.current, pageSize = pagination.pageS
   refresh(resetPage)
 }
 
-function goTableDetail(record: IOptimizeTableItem) {
+const tableTo = (record: IOptimizeTableItem): RouteLocationRaw => {
   const { catalog, database, tableName } = record.tableIdentifier
-  router.push({
+  return {
     path: '/tables',
-    query: {
-      catalog,
-      db: database,
-      table: tableName,
-    },
-  })
+    query: { catalog, db: database, table: tableName },
+  }
 }
 
 function reset() {
@@ -167,23 +162,6 @@ function reset() {
   tableSearchInput.value = undefined
   actions.value = undefined
   refresh(true)
-}
-
-const getTableLink = (record: IOptimizeTableItem) => {
-  const { catalog, database, tableName } = record.tableIdentifier
-  return {
-    path: '/tables',
-    query: { catalog, db: database, table: tableName },
-  }
-}
-
-const onTableClick = (event: MouseEvent, record: IOptimizeTableItem) => {
-  if (event.button === 1 || event.metaKey || event.ctrlKey) {
-    return
-  }
-
-  event.preventDefault()
-  goTableDetail(record)
 }
 
 onMounted(async () => {
@@ -234,15 +212,15 @@ onMounted(async () => {
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'tableName'">
-          <router-link
-              :to="getTableLink(record)"
-              class="primary-link"
-              style="display: block;"
-              :title="record.tableName"
-              @click="onTableClick($event, record)"
-          >
-            {{ record.tableName }}
-          </router-link>
+          <RouterLink :to="tableTo(record)" :title="record.tableName">
+            <a-typography-text
+                style="display:block"
+                class="primary-link"
+                :ellipsis="{ tooltip: record.tableName }"
+            >
+              {{ record.tableName }}
+            </a-typography-text>
+          </RouterLink>
         </template>
         <template v-if="column.dataIndex === 'duration'">
           <span :title="record.durationDesc">
