@@ -23,7 +23,7 @@ import CreateDBModal from './CreateDB.vue'
 import useStore from '@/store/index'
 import { getCatalogList, getDatabaseList, getTableList } from '@/services/table.service'
 import type { ICatalogItem, ILableAndValue, IMap } from '@/types/common.type'
-import { debounce } from '@/utils/index'
+import { debounce } from '@/utils'
 import { usePlaceholder } from '@/hooks/usePlaceholder'
 import virtualRecycleScroller from '@/components/VirtualRecycleScroller.vue'
 
@@ -150,7 +150,7 @@ export default defineComponent({
     function createTable() {
       emit('goCreatePage')
     }
-    function handleClickTable({ event, item }: { event?: MouseEvent, item: IMap<string> }) {
+    function handleClickTable(item: IMap<string>) {
       state.tableName = item.label
       state.type = item.type
       localStorage.setItem(storageTableKey, JSON.stringify({
@@ -160,7 +160,7 @@ export default defineComponent({
       }))
       store.updateTablesMenu(false)
       const path = item.type === 'HIVE' ? '/hive-tables' : '/tables'
-      const routeObj = {
+      const pathQuery = {
         path,
         query: {
           catalog: state.curCatalog,
@@ -169,19 +169,11 @@ export default defineComponent({
           type: state.type,
         },
       }
-
-      if (event && (event.button === 1 || event.metaKey || event.ctrlKey)) {
-        const url = router.resolve(routeObj).href
-        window.open(url, '_blank')
-
-        if (event) event.preventDefault()
-      } else {
-        if (route.path.includes('tables')) {
-          router.replace(routeObj)
-        } else {
-          router.push(routeObj)
-        }
+      if (route.path.includes('tables')) {
+        router.replace(pathQuery)
+        return
       }
+      router.push(pathQuery)
     }
 
     function getCatalogOps() {
@@ -266,6 +258,21 @@ export default defineComponent({
       })
     }
 
+    const  tableHref = (item: IMap<string>) => {
+      const path = item.type === 'HIVE' ? '/hive-tables' : '/tables'
+
+      return router.resolve({
+        path,
+        query: {
+          catalog: state.curCatalog,
+          db: state.database,
+          table: item.label,
+          type: item.type,
+        },
+      }).href
+    }
+
+
     onBeforeMount(() => {
       const { database, tableName } = storageCataDBTable
       state.database = database
@@ -286,6 +293,7 @@ export default defineComponent({
       handleClickTable,
       handleSearch,
       clearSearch,
+      tableHref,
     }
   },
 })
@@ -327,7 +335,14 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="loading" />
-          <VirtualRecycleScroller :loading="loading" :items="databaseList" :active-item="database" :item-size="40" icon-name="database" @handle-click-table="handleClickDb" />
+          <VirtualRecycleScroller
+              :loading="loading"
+              :items="databaseList"
+              :active-item="database"
+              :item-size="40"
+              icon-name="database"
+              @handle-click-table="handleClickDb"
+          />
         </div>
       </div>
       <div class="table-list">
@@ -358,6 +373,7 @@ export default defineComponent({
               :active-item="tableName"
               :item-size="40"
               icon-name="tableOutlined"
+              :get-href="tableHref"
               @handle-click-table="handleClickTable"
           />
         </div>
