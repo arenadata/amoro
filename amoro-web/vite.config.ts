@@ -97,39 +97,39 @@ export default defineConfig({
      * If you run the server on you local backend
      * Maybe you need to open the Proxy
      */
-    // proxy: {
-    //   '^/api/ams': {
-    //     // change the target to your backend server
-    //     // Such as target: 'http://127.0.0.1:xxx',
-    //     target: 'http://127.0.0.1:1630',
-    //     changeOrigin: true,
-    //     configure(_, options) {
-    //       // configure proxy header here
-    //       options.headers = {
-    //         'Access-Control-Allow-Origin': '*',
-    //         'Access-Control-Allow-Credentials': 'true',
-    //         'Access-Control-Allow-Headers':
-    //             'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
-    //         'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS'
-    //       }
-    //     }
-    //   },
-    //   '^/swagger-docs': {
-    //     // Proxy for swagger-docs
-    //     target: 'http://127.0.0.1:1630',
-    //     changeOrigin: true,
-    //     configure(_, options) {
-    //       // configure proxy header here
-    //       options.headers = {
-    //         'Access-Control-Allow-Origin': '*',
-    //         'Access-Control-Allow-Credentials': 'true',
-    //         'Access-Control-Allow-Headers':
-    //             'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
-    //         'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS'
-    //       }
-    //     }
-    //   }
-    // }
+    proxy: {
+      '^/api/ams': {
+        // change the target to your backend server
+        // Such as target: 'http://127.0.0.1:xxx',
+        target: 'http://anisimov-adh-5.ru-central1.internal:1630',
+        changeOrigin: true,
+        configure(_, options) {
+          // configure proxy header here
+          options.headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Headers':
+                'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
+            'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS'
+          }
+        }
+      },
+      '^/swagger-docs': {
+        // Proxy for swagger-docs
+        target: 'http://anisimov-adh-5.ru-central1.internal:1630',
+        changeOrigin: true,
+        configure(_, options) {
+          // configure proxy header here
+          options.headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Headers':
+                'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
+            'Access-Control-Allow-Methods': 'PUT,POST,GET,DELETE,OPTIONS'
+          }
+        }
+      }
+    }
   },
   resolve: {
     alias: {
