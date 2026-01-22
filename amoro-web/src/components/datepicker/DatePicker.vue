@@ -89,18 +89,11 @@ const rootStyle = computed<VueStyle>(() => attrs.style as VueStyle)
 
 const hasError = computed(() => props.error.length > 0)
 
-/**
- * Forward all attributes to AntDV DatePicker/RangePicker,
- * except root class/style which are applied to the wrapper.
- */
 const pickerAttrs = computed(() => {
   const { class: _class, style: _style, ...rest } = attrs
   return rest
 })
 
-/**
- * Keep the id truly optional in DOM: if empty string -> attribute is removed.
- */
 const inputId = computed<string | undefined>(() => (props.id.trim() ? props.id : undefined))
 
 /**
@@ -128,24 +121,23 @@ const placeholderNormalized = computed<DatePickerPlaceholder>(() => {
   return [...DEFAULT_RANGE_PLACEHOLDER]
 })
 
-function handleChange(value: DatePickerModelValue, dateString: DatePickerDateString) {
-  // modelValue is already updated via v-model:value
+const handleChange = (value: DatePickerModelValue, dateString: DatePickerDateString) => {
   emit('change', value, dateString)
 }
 
-function handleOpenChange(open: boolean) {
+const handleOpenChange = (open: boolean) => {
   emit('openChange', open)
 }
 
-function handlePanelChange(value: DatePickerModelValue, mode: DatePickerPanelModeValue) {
+const handlePanelChange = (value: DatePickerModelValue, mode: DatePickerPanelModeValue) => {
   emit('panelChange', value, mode)
 }
 
-function handleCalendarChange(value: DatePickerModelValue, dateStrings: DatePickerDateString) {
+const handleCalendarChange = (value: DatePickerModelValue, dateStrings: DatePickerDateString) => {
   emit('calendarChange', value, dateStrings)
 }
 
-function handleOk(value: DatePickerModelValue) {
+const handleOk = (value: DatePickerModelValue) => {
   emit('ok', value)
 }
 
