@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.21.1",
+    "@storybook/vue3": "8.6.15",
     "@storybook/vue3-vite": "8.6.15",
     "@types/node": "^20.14.8",
     "@vitejs/plugin-vue": "^5.0.5",
