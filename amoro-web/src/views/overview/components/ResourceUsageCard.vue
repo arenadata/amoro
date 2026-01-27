@@ -54,8 +54,10 @@ const fullscreenStyle = computed(() => {
   return {}
 })
 
+const SIDEBAR_SELECTOR = '.side-bar .ant-menu'
+
 function updateSidebarWidth() {
-  const sidebar = document.querySelector('.side-bar .ant-menu')
+  const sidebar = document.querySelector(SIDEBAR_SELECTOR)
   if (sidebar) {
     sidebarWidth.value = `${sidebar.clientWidth}px`
   }
@@ -69,12 +71,26 @@ function toggleFullscreen() {
   })
 }
 
+let resizeObserver: ResizeObserver | null = null
+
 onMounted(() => {
   window.addEventListener('resize', updateSidebarWidth)
+
+  const sidebar = document.querySelector(SIDEBAR_SELECTOR)
+  if (sidebar) {
+    resizeObserver = new ResizeObserver(() => {
+      updateSidebarWidth()
+    })
+    resizeObserver.observe(sidebar)
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateSidebarWidth)
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 
 function resourceFormatter(params: any[]): string {
