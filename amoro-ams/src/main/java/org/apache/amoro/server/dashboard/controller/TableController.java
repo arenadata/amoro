@@ -83,7 +83,17 @@ import org.apache.iceberg.SnapshotRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -94,7 +104,8 @@ import java.util.stream.Collectors;
 public class TableController {
   private static final Logger LOG = LoggerFactory.getLogger(TableController.class);
   private static final long UPGRADE_INFO_EXPIRE_INTERVAL = 60 * 60 * 1000;
-  private static final HashSet<String> validPartitionsTableSortFields = new HashSet<>(
+  private static final HashSet<String> validPartitionsTableSortFields =
+      new HashSet<>(
           Arrays.asList("partition", "specId", "fileCount", "fileSize", "lastCommitTime"));
 
   private final CatalogManager catalogManager;
@@ -472,8 +483,9 @@ public class TableController {
   private Comparator<PartitionBaseInfo> getPartitionComparator(String sortBy, String sortOrder) {
     if (sortBy == null || !validPartitionsTableSortFields.contains(sortBy)) {
       throw new IllegalArgumentException(
-        String.format("Invalid sortBy parameter: '%s'. Allowed values: %s",
-          sortBy, String.join(", ", validPartitionsTableSortFields)));
+          String.format(
+              "Invalid sortBy parameter: '%s'. Allowed values: %s",
+              sortBy, String.join(", ", validPartitionsTableSortFields)));
     }
 
     Comparator<PartitionBaseInfo> comparator;

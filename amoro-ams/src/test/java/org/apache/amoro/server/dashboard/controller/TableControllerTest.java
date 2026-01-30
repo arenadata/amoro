@@ -40,8 +40,7 @@ public class TableControllerTest {
         new PartitionBaseInfo("partition_a", 1, 100, 1000, 1609459200000L),
         new PartitionBaseInfo("partition_b", 2, 200, 2000, 1609545600000L),
         new PartitionBaseInfo("partition_c", 3, 150, 1500, 1609372800000L),
-        new PartitionBaseInfo("partition_d", 1, 50, 500, 1609632000000L)
-    );
+        new PartitionBaseInfo("partition_d", 1, 50, 500, 1609632000000L));
   }
 
   /**
@@ -52,9 +51,12 @@ public class TableControllerTest {
    * @return Comparator for PartitionBaseInfo
    * @throws Exception if reflection fails
    */
-  private Comparator<PartitionBaseInfo> invokeGetPartitionComparator(String sortBy, String sortOrder) throws Exception {
+  private Comparator<PartitionBaseInfo> invokeGetPartitionComparator(
+      String sortBy, String sortOrder) throws Exception {
     TableController controller = new TableController(null, null, null, null);
-    Method method = TableController.class.getDeclaredMethod("getPartitionComparator", String.class, String.class);
+    Method method =
+        TableController.class.getDeclaredMethod(
+            "getPartitionComparator", String.class, String.class);
     method.setAccessible(true);
     try {
       return (Comparator<PartitionBaseInfo>) method.invoke(controller, sortBy, sortOrder);
@@ -73,11 +75,10 @@ public class TableControllerTest {
   public void testSortByPartitionAsc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("partition", "asc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals("partition_a", sorted.get(0).getPartition());
     Assert.assertEquals("partition_d", sorted.get(3).getPartition());
   }
@@ -87,11 +88,10 @@ public class TableControllerTest {
   public void testSortByPartitionDesc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("partition", "desc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals("partition_d", sorted.get(0).getPartition());
     Assert.assertEquals("partition_a", sorted.get(3).getPartition());
   }
@@ -101,11 +101,10 @@ public class TableControllerTest {
   public void testSortByFileCountAsc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("fileCount", "asc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(50, sorted.get(0).getFileCount());
     Assert.assertEquals(200, sorted.get(3).getFileCount());
   }
@@ -115,11 +114,10 @@ public class TableControllerTest {
   public void testSortByFileCountDesc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("fileCount", "desc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(200, sorted.get(0).getFileCount());
     Assert.assertEquals(50, sorted.get(3).getFileCount());
   }
@@ -129,11 +127,10 @@ public class TableControllerTest {
   public void testSortByFileSizeAsc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("fileSize", "asc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(500, sorted.get(0).getFileSize());
     Assert.assertEquals(2000, sorted.get(3).getFileSize());
   }
@@ -143,11 +140,10 @@ public class TableControllerTest {
   public void testSortByFileSizeDesc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("fileSize", "desc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(2000, sorted.get(0).getFileSize());
     Assert.assertEquals(500, sorted.get(3).getFileSize());
   }
@@ -156,12 +152,12 @@ public class TableControllerTest {
   @Test
   public void testSortByLastCommitTimeAsc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
-    Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("lastCommitTime", "asc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+    Comparator<PartitionBaseInfo> comparator =
+        invokeGetPartitionComparator("lastCommitTime", "asc");
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(1609372800000L, sorted.get(0).getLastCommitTime());
     Assert.assertEquals(1609632000000L, sorted.get(3).getLastCommitTime());
   }
@@ -170,12 +166,12 @@ public class TableControllerTest {
   @Test
   public void testSortByLastCommitTimeDesc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
-    Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("lastCommitTime", "desc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+    Comparator<PartitionBaseInfo> comparator =
+        invokeGetPartitionComparator("lastCommitTime", "desc");
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(1609632000000L, sorted.get(0).getLastCommitTime());
     Assert.assertEquals(1609372800000L, sorted.get(3).getLastCommitTime());
   }
@@ -185,11 +181,10 @@ public class TableControllerTest {
   public void testSortBySpecIdAsc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("specId", "asc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(1, sorted.get(0).getSpecId());
     Assert.assertEquals(3, sorted.get(3).getSpecId());
   }
@@ -199,11 +194,10 @@ public class TableControllerTest {
   public void testSortBySpecIdDesc() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
     Comparator<PartitionBaseInfo> comparator = invokeGetPartitionComparator("specId", "desc");
-    
-    List<PartitionBaseInfo> sorted = partitions.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted =
+        partitions.stream().sorted(comparator).collect(Collectors.toList());
+
     Assert.assertEquals(3, sorted.get(0).getSpecId());
     Assert.assertEquals(1, sorted.get(3).getSpecId());
   }
@@ -234,17 +228,15 @@ public class TableControllerTest {
   @Test
   public void testSortOrderCaseInsensitive() throws Exception {
     List<PartitionBaseInfo> partitions = createTestPartitions();
-    
+
     Comparator<PartitionBaseInfo> comparator1 = invokeGetPartitionComparator("fileCount", "DESC");
     Comparator<PartitionBaseInfo> comparator2 = invokeGetPartitionComparator("fileCount", "desc");
-    
-    List<PartitionBaseInfo> sorted1 = partitions.stream()
-        .sorted(comparator1)
-        .collect(Collectors.toList());
-    List<PartitionBaseInfo> sorted2 = partitions.stream()
-        .sorted(comparator2)
-        .collect(Collectors.toList());
-    
+
+    List<PartitionBaseInfo> sorted1 =
+        partitions.stream().sorted(comparator1).collect(Collectors.toList());
+    List<PartitionBaseInfo> sorted2 =
+        partitions.stream().sorted(comparator2).collect(Collectors.toList());
+
     Assert.assertEquals(sorted1.get(0).getFileCount(), sorted2.get(0).getFileCount());
   }
 }
