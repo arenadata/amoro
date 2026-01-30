@@ -65,14 +65,14 @@ export default [
     url: '/mock/api/ams/v1/catalogs/test_catalog/databases',
     method: 'get',
     response: () => {
-      return { "message": "success", "code": 200, "result": ["db", "test", "acc"] }
+      return { "message": "success", "code": 200, "result": ["db", "test", "acc", "dsfsdf", "4235324542", "sdfsdf", "2348", "sdf", "mamama", "kera", "reklka", "erwerk", "base_mase_fase", "real_db", "unreal_db", "maga_db", "alto_db", "bobro_db", "silent_db", "balalaika_db", "garmoshka_db", "db_na_db", "unikal_db"] }
     },
   },
   {
     url: '/mock/api/ams/v1/catalogs/test_catalog/databases/db/tables',
     method: 'get',
     response: () => {
-      return { "message": "success", "code": 200, "result": [{ "name": "user", "type": "ICEBERG" },{ "name": "wf", "type": "ICEBERG" }, { "name": "xcvz", "type": "ICEBERG" }] };
+      return { "message": "success", "code": 200, "result": [{ "name": "user", "type": "ICEBERG" }, { "name": "hive9", "type": "HIVE" }, { "name": "hive8", "type": "HIVE" }, { "name": "hive7", "type": "HIVE" }, { "name": "hive6", "type": "HIVE" }, { "name": "hive5", "type": "HIVE" }, { "name": "hive4", "type": "HIVE" }, { "name": "hive3", "type": "HIVE" }, { "name": "hive2", "type": "HIVE" }, { "name": "hive1", "type": "HIVE" }, { "name": "iceberg6", "type": "ICEBERG" }, { "name": "iceberg4", "type": "ICEBERG" }, { "name": "iceberg3", "type": "ICEBERG" }, { "name": "iceberg2", "type": "ICEBERG" }, { "name": "iceberg1", "type": "ICEBERG" }, { "name": "231876cvmnbmnb", "type": "ICEBERG" }, { "name": "adsmnbmnbmnbmnb", "type": "ICEBERG" }, { "name": "321123jhgjhg", "type": "ICEBERG" }, { "name": "gjhhg jhgjhgjhg", "type": "ICEBERG" }, { "name": "x676cvz", "type": "ICEBERG" }, { "name": "xcv88z", "type": "ICEBERG" }, { "name": "xcvz22", "type": "ICEBERG" },{ "name": "wf", "type": "ICEBERG" }, { "name": "xcvz", "type": "ICEBERG" }, { "name": "xcvz1", "type": "ICEBERG" }, { "name": "xcvz2", "type": "ICEBERG" }] };
     },
   },
   {
