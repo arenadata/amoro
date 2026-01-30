@@ -17,11 +17,12 @@
  / -->
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect, onMounted, onBeforeUnmount } from 'vue'
+import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRefs, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import useStore from '@/store/index'
 import TableMenu from '@/components/tables-sub-menu/TablesMenu.vue'
+import { useFeatures } from '@/hooks/useFeatures.ts'
 import { getQueryString } from '@/utils'
 
 interface MenuItem {
@@ -40,6 +41,7 @@ export default defineComponent({
     const router = useRouter()
     const route = useRoute()
     const store = useStore()
+    const { isEnabledFeature } = useFeatures()
 
     const state = reactive({
       collapsed: false,
@@ -111,7 +113,7 @@ export default defineComponent({
     }
 
     const navClick = (item: MenuItem) => {
-      if (item.key === 'tables') {
+      if (!isEnabledFeature('7491.enabled') && item.key === 'tables') {
         nextTick(() => {
           setCurMenu()
         })
@@ -137,7 +139,7 @@ export default defineComponent({
     }
 
     function toggleTablesMenu(flag = false) {
-      if (hasToken.value) {
+      if (hasToken.value || isEnabledFeature('7491.enabled')) {
         return
       }
       timer.value && clearTimeout(timer.value)
@@ -208,7 +210,7 @@ export default defineComponent({
       <MenuUnfoldOutlined v-if="collapsed" />
       <MenuFoldOutlined v-else />
     </a-button>
-    <div ref="tableMenusRef" v-if="store.isShowTablesMenu && !hasToken" :class="{ 'collapsed-sub-menu': collapsed }" class="tables-menu-wrap" @click.self="toggleTablesMenu(false)" @mouseenter="toggleTablesMenu(true)">
+    <div v-if="store.isShowTablesMenu && !hasToken" ref="tableMenusRef" :class="{ 'collapsed-sub-menu': collapsed }" class="tables-menu-wrap" @click.self="toggleTablesMenu(false)" @mouseenter="toggleTablesMenu(true)">
       <TableMenu @go-create-page="goCreatePage" />
     </div>
   </div>

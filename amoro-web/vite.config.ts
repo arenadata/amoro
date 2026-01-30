@@ -42,6 +42,7 @@ const css = {
         'dark-gray-color': '#2b354a',
         'dark-bg-color': '#202a40',
         'dark-bg-primary-color': '#1a2232',
+        'border-primary': '1px solid #e5e5e5',
       },
       javascriptEnabled: true,
     },

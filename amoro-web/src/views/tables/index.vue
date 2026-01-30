@@ -24,12 +24,15 @@ import UFiles from './components/Files.vue'
 import UOperations from './components/Operations.vue'
 import USnapshots from './components/Snapshots.vue'
 import UOptimizing from './components/Optimizing.vue'
+import UList from './components/List.vue'
 import useStore from '@/store/index'
+import { useFeatures } from '@/hooks/useFeatures.ts'
 import type { IBaseDetailInfo } from '@/types/common.type'
 
 export default defineComponent({
   name: 'Tables',
   components: {
+    UList,
     UDetails,
     UFiles,
     UOperations,
@@ -38,6 +41,7 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter()
+    const { isEnabledFeature } = useFeatures()
     const route = useRoute()
     const store = useStore()
 
@@ -51,6 +55,7 @@ export default defineComponent({
 
     const state = reactive({
       activeKey: 'Details',
+      isShowTablesMenuAsPage: false,
       isSecondaryNav: false,
       baseInfo: {
         optimizingStatus: '',
@@ -61,7 +66,7 @@ export default defineComponent({
         tableFormat: '',
         hasPartition: false,
         healthScore: -1,
-        comment: ''
+        comment: '',
       } as IBaseDetailInfo,
       detailLoaded: false,
     })
@@ -70,7 +75,7 @@ export default defineComponent({
       return state.baseInfo.tableType === 'ICEBERG'
     })
 
-    const setBaseDetailInfo = (baseInfo: IBaseDetailInfo  & { comment?: string }) => {
+    const setBaseDetailInfo = (baseInfo: IBaseDetailInfo & { comment?: string }) => {
       state.detailLoaded = true
       state.baseInfo = { ...baseInfo }
     }
@@ -93,7 +98,7 @@ export default defineComponent({
     watch(
       () => route.path,
       () => {
-        state.isSecondaryNav = !!(route.path.includes('create'))
+        state.isSecondaryNav = route.path.includes('create')
       },
       { immediate: true },
     )
@@ -109,6 +114,15 @@ export default defineComponent({
         }
         state.activeKey = value.tab as string
       },
+    )
+
+    watch(
+      () => route.query,
+      (value) => {
+        const { catalog, db, table } = value
+        state.isShowTablesMenuAsPage = isEnabledFeature('7491.enabled') && (Object.keys(value).length === 0 || !!((catalog || db) && !table))
+      },
+      { immediate: true },
     )
 
     onMounted(() => {
@@ -136,7 +150,8 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="tables-wrap">
+  <UList v-if="isShowTablesMenuAsPage" />
+  <div v-else class="tables-wrap">
     <div v-if="!isSecondaryNav" class="tables-content">
       <div class="g-flex-jsb">
         <div class="g-flex-col">
