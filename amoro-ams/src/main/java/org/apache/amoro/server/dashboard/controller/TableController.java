@@ -28,6 +28,7 @@ import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.api.OptimizingService;
 import org.apache.amoro.client.OptimizingClientPools;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.hive.CachedHiveClientPool;
 import org.apache.amoro.hive.HMSClientPool;
 import org.apache.amoro.hive.catalog.MixedHiveCatalog;
@@ -478,11 +479,11 @@ public class TableController {
    *
    * @param sortBy - field name to sort by
    * @return Comparator for PartitionBaseInfo
-   * @throws IllegalArgumentException if sortBy is not a valid field
+   * @throws BadRequestException if sortBy is not a valid field
    */
   private Comparator<PartitionBaseInfo> getPartitionComparator(String sortBy, String sortOrder) {
     if (sortBy == null || !validPartitionsTableSortFields.contains(sortBy)) {
-      throw new IllegalArgumentException(
+      throw new BadRequestException(
           String.format(
               "Invalid sortBy parameter: '%s'. Allowed values: %s",
               sortBy, String.join(", ", validPartitionsTableSortFields)));
@@ -507,7 +508,7 @@ public class TableController {
         comparator = Comparator.comparingLong(PartitionBaseInfo::getLastCommitTime);
         break;
       default:
-        throw new IllegalArgumentException("Invalid sortBy parameter: " + sortBy);
+        throw new BadRequestException("Invalid sortBy parameter: " + sortBy);
     }
 
     if ("desc".equalsIgnoreCase(sortOrder)) {

@@ -32,6 +32,7 @@ import io.javalin.http.HttpCode;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.http.staticfiles.StaticFileConfig;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.exception.ForbiddenException;
 import org.apache.amoro.exception.SignatureCheckException;
 import org.apache.amoro.server.AmoroManagementConf;
@@ -408,11 +409,17 @@ public class DashboardServer {
       if (!ctx.req.getRequestURI().startsWith("/api/ams")) {
         ctx.html(getIndexFileContent());
       } else {
+        ctx.status(HttpCode.FORBIDDEN);
         ctx.json(new ErrorResponse(HttpCode.FORBIDDEN, "Please login first", ""));
       }
     } else if (e instanceof SignatureCheckException) {
+      ctx.status(HttpCode.FORBIDDEN);
       ctx.json(new ErrorResponse(HttpCode.FORBIDDEN, "Signature check failed", ""));
+    } else if (e instanceof BadRequestException) {
+      ctx.status(HttpCode.BAD_REQUEST);
+      ctx.json(new ErrorResponse(HttpCode.BAD_REQUEST, e.getMessage(), ""));
     } else {
+      ctx.status(HttpCode.INTERNAL_SERVER_ERROR);
       ctx.json(new ErrorResponse(HttpCode.INTERNAL_SERVER_ERROR, e.getMessage(), ""));
     }
     LOG.error("An error occurred while processing the url:{}", ctx.url(), e);

@@ -44,6 +44,7 @@ public class AmoroRuntimeException extends RuntimeException {
     CODE_MAP.put(AlreadyExistsException.class, ErrorCodes.ALREADY_EXISTS_ERROR_CODE);
     CODE_MAP.put(IllegalMetadataException.class, ErrorCodes.ILLEGAL_METADATA_ERROR_CODE);
     CODE_MAP.put(ForbiddenException.class, ErrorCodes.FORBIDDEN_ERROR_CODE);
+    CODE_MAP.put(BadRequestException.class, ErrorCodes.BAD_REQUEST_ERROR_CODE);
 
     CODE_MAP.put(TaskNotFoundException.class, ErrorCodes.TASK_NOT_FOUND_ERROR_CODE);
     CODE_MAP.put(TaskRuntimeException.class, ErrorCodes.TASK_RUNTIME_ERROR_CODE);

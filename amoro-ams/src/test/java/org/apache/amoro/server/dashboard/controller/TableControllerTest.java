@@ -18,6 +18,7 @@
 
 package org.apache.amoro.server.dashboard.controller;
 
+import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.table.descriptor.PartitionBaseInfo;
 import org.junit.Assert;
 import org.junit.Test;
@@ -202,14 +203,14 @@ public class TableControllerTest {
     Assert.assertEquals(1, sorted.get(3).getSpecId());
   }
 
-  /** Test that invalid sortBy parameter throws IllegalArgumentException. */
-  @Test(expected = IllegalArgumentException.class)
+  /** Test that invalid sortBy parameter throws BadRequestException. */
+  @Test(expected = BadRequestException.class)
   public void testInvalidSortByParameter() throws Exception {
     invokeGetPartitionComparator("invalidField", "asc");
   }
 
-  /** Test that null sortBy parameter throws IllegalArgumentException. */
-  @Test(expected = IllegalArgumentException.class)
+  /** Test that null sortBy parameter throws BadRequestException. */
+  @Test(expected = BadRequestException.class)
   public void testNullSortByParameter() throws Exception {
     invokeGetPartitionComparator(null, "asc");
   }
