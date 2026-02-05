@@ -28,6 +28,7 @@ import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.api.OptimizingService;
 import org.apache.amoro.client.OptimizingClientPools;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.hive.CachedHiveClientPool;
 import org.apache.amoro.hive.HMSClientPool;
 import org.apache.amoro.hive.catalog.MixedHiveCatalog;
@@ -83,9 +84,11 @@ import org.apache.iceberg.SnapshotRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,6 +105,9 @@ import java.util.stream.Collectors;
 public class TableController {
   private static final Logger LOG = LoggerFactory.getLogger(TableController.class);
   private static final long UPGRADE_INFO_EXPIRE_INTERVAL = 60 * 60 * 1000;
+  private static final HashSet<String> validPartitionsTableSortFields =
+      new HashSet<>(
+          Arrays.asList("partition", "specId", "fileCount", "fileSize", "lastCommitTime"));
 
   private final CatalogManager catalogManager;
   private final TableManager tableManager;
@@ -451,6 +457,8 @@ public class TableController {
     String filter = ctx.queryParamAsClass("filter", String.class).getOrDefault("");
     Integer page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
     Integer pageSize = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(20);
+    String sortBy = ctx.queryParamAsClass("sortBy", String.class).getOrDefault("partition");
+    String sortOrder = ctx.queryParamAsClass("sortOrder", String.class).getOrDefault("desc");
 
     List<PartitionBaseInfo> partitionBaseInfos =
         tableDescriptor.getTablePartition(
@@ -458,12 +466,56 @@ public class TableController {
     partitionBaseInfos =
         partitionBaseInfos.stream()
             .filter(e -> e.getPartition().contains(filter))
-            .sorted(Comparator.comparing(PartitionBaseInfo::getPartition).reversed())
+            .sorted(getPartitionComparator(sortBy, sortOrder))
             .collect(Collectors.toList());
     int offset = (page - 1) * pageSize;
     PageResult<PartitionBaseInfo> amsPageResult =
         PageResult.of(partitionBaseInfos, offset, pageSize);
     ctx.json(OkResponse.of(amsPageResult));
+  }
+
+  /**
+   * Get comparator for partition sorting based on the field name.
+   *
+   * @param sortBy - field name to sort by
+   * @return Comparator for PartitionBaseInfo
+   * @throws BadRequestException if sortBy is not a valid field
+   */
+  private Comparator<PartitionBaseInfo> getPartitionComparator(String sortBy, String sortOrder) {
+    if (sortBy == null || !validPartitionsTableSortFields.contains(sortBy)) {
+      throw new BadRequestException(
+          String.format(
+              "Invalid sortBy parameter: '%s'. Allowed values: %s",
+              sortBy, String.join(", ", validPartitionsTableSortFields)));
+    }
+
+    Comparator<PartitionBaseInfo> comparator;
+
+    switch (sortBy) {
+      case "partition":
+        comparator = Comparator.comparing(PartitionBaseInfo::getPartition);
+        break;
+      case "specId":
+        comparator = Comparator.comparingInt(PartitionBaseInfo::getSpecId);
+        break;
+      case "fileCount":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getFileCount);
+        break;
+      case "fileSize":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getFileSize);
+        break;
+      case "lastCommitTime":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getLastCommitTime);
+        break;
+      default:
+        throw new BadRequestException("Invalid sortBy parameter: " + sortBy);
+    }
+
+    if ("desc".equalsIgnoreCase(sortOrder)) {
+      comparator = comparator.reversed();
+    }
+
+    return comparator;
   }
 
   /**
