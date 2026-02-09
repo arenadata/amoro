@@ -22,7 +22,6 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { Empty as AEmpty } from 'ant-design-vue'
 import type { IMap } from '@/types/common.type'
-import { tableTypeIconMap } from '@/types/common.type'
 
 export default defineComponent ({
   components: {
@@ -41,17 +40,13 @@ export default defineComponent ({
       type: Number,
       default: 40,
     },
-    iconName: {
-      type: String,
-      default: 'tableOutlined',
-    },
     loading: {
       type: Boolean,
       default: false,
     },
   },
   emits: ['mouseEnter', 'handleClickTable'],
-  setup(props, { emit }) {
+  setup(_, { emit }) {
     const handleMouseEnter = (item: IMap<string>) => {
       emit('mouseEnter', item.label)
     }
@@ -60,16 +55,8 @@ export default defineComponent ({
       emit('handleClickTable', item)
     }
 
-    const getIconName = (item: IMap<string>): string => {
-      if (props.iconName === 'database') {
-        return 'database'
-      }
-      return tableTypeIconMap[item.type as keyof typeof tableTypeIconMap] || 'tableOutlined'
-    }
-
     return {
       simpleImage: AEmpty.PRESENTED_IMAGE_SIMPLE,
-      getIconName,
       handleMouseEnter,
       handleClickTable,
     }
@@ -87,21 +74,16 @@ export default defineComponent ({
     key-field="id"
   >
     <div
-      :class="{
-        'active': activeItem === item.label,
-        'hive-table': item.type === 'HIVE',
-      }"
+      :class="{ 'active': activeItem === item.label }"
       class="desc"
       @mouseenter="handleMouseEnter(item)"
       @click="handleClickTable(item)"
     >
-      <svg-icon
-        :icon-class="getIconName(item)"
-        class="table-icon g-mr-8"
-      />
-      <p :title="item.label" class="name g-text-nowrap">
-        {{ item.label }}
-      </p>
+      <slot :item="item">
+        <p :title="item.label" class="name g-text-nowrap">
+          {{ item.label }}
+        </p>
+      </slot>
     </div>
   </RecycleScroller>
   <a-empty v-if="!items.length && !loading" class="theme-dark" :image="simpleImage" />
