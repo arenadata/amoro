@@ -51,7 +51,7 @@ export default defineComponent ({
     },
   },
   emits: ['mouseEnter', 'handleClickTable'],
-  setup(_, { emit }) {
+  setup(props, { emit }) {
     const handleMouseEnter = (item: IMap<string>) => {
       emit('mouseEnter', item.label)
     }
@@ -60,9 +60,16 @@ export default defineComponent ({
       emit('handleClickTable', item)
     }
 
+    const getIconName = (item: IMap<string>): string => {
+      if (props.iconName === 'database') {
+        return 'database'
+      }
+      return tableTypeIconMap[item.type as keyof typeof tableTypeIconMap] || 'tableOutlined'
+    }
+
     return {
       simpleImage: AEmpty.PRESENTED_IMAGE_SIMPLE,
-      tableTypeIconMap,
+      getIconName,
       handleMouseEnter,
       handleClickTable,
     }
@@ -79,9 +86,19 @@ export default defineComponent ({
     :item-size="40"
     key-field="id"
   >
-    <div :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }" class="desc" @mouseenter="handleMouseEnter(item)" @click="handleClickTable(item)">
-      <svg-icon v-if="iconName === 'database'" icon-class="database" class="table-icon g-mr-8" />
-      <svg-icon v-else :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap]" class="table-icon g-mr-8" />
+    <div
+      :class="{
+        'active': activeItem === item.label,
+        'hive-table': item.type === 'HIVE',
+      }"
+      class="desc"
+      @mouseenter="handleMouseEnter(item)"
+      @click="handleClickTable(item)"
+    >
+      <svg-icon
+        :icon-class="getIconName(item)"
+        class="table-icon g-mr-8"
+      />
       <p :title="item.label" class="name g-text-nowrap">
         {{ item.label }}
       </p>
