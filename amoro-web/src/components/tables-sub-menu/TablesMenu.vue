@@ -323,7 +323,7 @@ export default defineComponent({
           <u-loading v-if="loading" />
           <VirtualRecycleScroller :loading="loading" :items="databaseList" :active-item="database" :item-size="40" @handle-click-table="handleClickDb">
             <template #default="{ item }">
-              <svg-icon icon-class="database" class="table-icon g-mr-8" />
+              <svg-icon :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap] || 'tableOutlined'" class="table-icon g-mr-8" />
               <p :title="item.label" class="name g-text-nowrap">
                 {{ item.label }}
               </p>
