@@ -106,6 +106,7 @@ import java.util.stream.Collectors;
 public class TableController {
   private static final Logger LOG = LoggerFactory.getLogger(TableController.class);
   private static final long UPGRADE_INFO_EXPIRE_INTERVAL = 60 * 60 * 1000;
+  private static final long MILLIS_PER_SECOND = 1000L;
   private static final HashSet<String> validPartitionsTableSortFields =
       new HashSet<>(
           Arrays.asList("partition", "specId", "fileCount", "fileSize", "lastCommitTime"));
@@ -410,12 +411,22 @@ public class TableController {
         ctx.queryParamAsClass("operation", String.class)
             .getOrDefault(OperationType.ALL.displayName());
     OperationType operationType = OperationType.of(operation);
+    // Date range filtering parameters (timestamps in seconds)
+    Long startTime = ctx.queryParamAsClass("startTime", Long.class).getOrDefault(null);
+    Long endTime = ctx.queryParamAsClass("endTime", Long.class).getOrDefault(null);
+    Range<Long> commitTimeRange = buildCommitTimeRange(startTime, endTime);
 
     List<AmoroSnapshotsOfTable> snapshotsOfTables =
         tableDescriptor.getSnapshots(
             TableIdentifier.of(catalog, database, tableName).buildTableIdentifier(),
             ref,
             operationType);
+
+    snapshotsOfTables =
+        snapshotsOfTables.stream()
+            .filter(snapshot -> commitTimeRange.contains(snapshot.getCommitTime()))
+            .collect(Collectors.toList());
+
     int offset = (page - 1) * pageSize;
     PageResult<AmoroSnapshotsOfTable> pageResult =
         PageResult.of(snapshotsOfTables, offset, pageSize);
@@ -767,6 +778,47 @@ public class TableController {
               branchInfos.remove(mainBranch);
               branchInfos.add(0, mainBranch);
             });
+  }
+
+  /**
+   * Builds a time range for filtering commits.
+   * Input times are in seconds (Unix timestamp); the returned range uses milliseconds.
+   *
+   * @param startTime start of the range in seconds (nullable)
+   * @param endTime end of the range in seconds (nullable)
+   * @return Range in milliseconds: closed [start, end] if both set, atLeast/atMost if one set, all if neither
+   * @throws BadRequestException if both times are set and startTime &gt; endTime, or on overflow
+   */
+  private Range<Long> buildCommitTimeRange(Long startTime, Long endTime) {
+    if (startTime != null && endTime != null && startTime > endTime) {
+      throw new BadRequestException("startTime must be less than or equal to endTime");
+    }
+
+    if (startTime != null && endTime != null) {
+      return Range.closed(toMillis(startTime, "startTime"), toMillis(endTime, "endTime"));
+    } else if (startTime != null) {
+      return Range.atLeast(toMillis(startTime, "startTime"));
+    } else if (endTime != null) {
+      return Range.atMost(toMillis(endTime, "endTime"));
+    } else {
+      return Range.all();
+    }
+  }
+
+  /**
+   * Converts seconds to milliseconds with overflow check.
+   *
+   * @param seconds time value in seconds
+   * @param paramName parameter name for error message on overflow
+   * @return time in milliseconds
+   * @throws BadRequestException if multiplication overflows (e.g. Long.MAX_VALUE)
+   */
+  private long toMillis(long seconds, String paramName) {
+    try {
+      return Math.multiplyExact(seconds, MILLIS_PER_SECOND);
+    } catch (ArithmeticException e) {
+      throw new BadRequestException(paramName + " is out of range", e);
+    }
   }
 
   private List<AMSColumnInfo> transformHiveSchemaToAMSColumnInfo(List<FieldSchema> fields) {
