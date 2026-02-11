@@ -23,6 +23,7 @@ import CreateDBModal from './CreateDB.vue'
 import useStore from '@/store/index'
 import { getCatalogList, getDatabaseList, getTableList } from '@/services/table.service'
 import type { ICatalogItem, ILableAndValue, IMap } from '@/types/common.type'
+import { tableTypeIconMap } from '@/types/common.type'
 import { debounce } from '@/utils/index'
 import { usePlaceholder } from '@/hooks/usePlaceholder'
 import virtualRecycleScroller from '@/components/VirtualRecycleScroller.vue'
@@ -268,6 +269,7 @@ export default defineComponent({
     return {
       ...toRefs(state),
       placeholder,
+      tableTypeIconMap,
       handleClickDb,
       getPopupContainer,
       clickDatabase,
@@ -319,7 +321,14 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="loading" />
-          <VirtualRecycleScroller :loading="loading" :items="databaseList" :active-item="database" :item-size="40" icon-name="database" @handle-click-table="handleClickDb" />
+          <VirtualRecycleScroller :loading="loading" :items="databaseList" :active-item="database" :item-size="40" @handle-click-table="handleClickDb">
+            <template #default="{ item }">
+              <svg-icon :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap] || 'tableOutlined'" class="table-icon g-mr-8" />
+              <p :title="item.label" class="name g-text-nowrap">
+                {{ item.label }}
+              </p>
+            </template>
+          </VirtualRecycleScroller>
         </div>
       </div>
       <div class="table-list">
@@ -344,7 +353,14 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="tableLoading" />
-          <VirtualRecycleScroller :loading="tableLoading" :items="tableList" :active-item="tableName" :item-size="40" icon-name="tableOutlined" @handle-click-table="handleClickTable" />
+          <VirtualRecycleScroller :loading="tableLoading" :items="tableList" :active-item="tableName" :item-size="40" @handle-click-table="handleClickTable">
+            <template #default="{ item }">
+              <svg-icon :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap] || 'tableOutlined'" class="table-icon g-mr-8" />
+              <p :title="item.label" class="name g-text-nowrap">
+                {{ item.label }}
+              </p>
+            </template>
+          </VirtualRecycleScroller>
         </div>
       </div>
     </div>

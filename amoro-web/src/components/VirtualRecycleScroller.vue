@@ -22,7 +22,6 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { Empty as AEmpty } from 'ant-design-vue'
 import type { IMap } from '@/types/common.type'
-import { tableTypeIconMap } from '@/types/common.type'
 
 export default defineComponent ({
   components: {
@@ -41,10 +40,6 @@ export default defineComponent ({
       type: Number,
       default: 40,
     },
-    iconName: {
-      type: String,
-      default: 'tableOutlined',
-    },
     loading: {
       type: Boolean,
       default: false,
@@ -62,7 +57,6 @@ export default defineComponent ({
 
     return {
       simpleImage: AEmpty.PRESENTED_IMAGE_SIMPLE,
-      tableTypeIconMap,
       handleMouseEnter,
       handleClickTable,
     }
@@ -79,12 +73,17 @@ export default defineComponent ({
     :item-size="40"
     key-field="id"
   >
-    <div :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }" class="desc" @mouseenter="handleMouseEnter(item)" @click="handleClickTable(item)">
-      <svg-icon v-if="iconName === 'database'" icon-class="database" class="table-icon g-mr-8" />
-      <svg-icon v-else :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap]" class="table-icon g-mr-8" />
-      <p :title="item.label" class="name g-text-nowrap">
-        {{ item.label }}
-      </p>
+    <div
+      :class="{ 'active': activeItem === item.label }"
+      class="desc"
+      @mouseenter="handleMouseEnter(item)"
+      @click="handleClickTable(item)"
+    >
+      <slot :item="item">
+        <p :title="item.label" class="name g-text-nowrap">
+          {{ item.label }}
+        </p>
+      </slot>
     </div>
   </RecycleScroller>
   <a-empty v-if="!items.length && !loading" class="theme-dark" :image="simpleImage" />
