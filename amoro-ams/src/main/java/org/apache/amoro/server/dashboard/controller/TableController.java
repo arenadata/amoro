@@ -106,7 +106,6 @@ import java.util.stream.Collectors;
 public class TableController {
   private static final Logger LOG = LoggerFactory.getLogger(TableController.class);
   private static final long UPGRADE_INFO_EXPIRE_INTERVAL = 60 * 60 * 1000;
-  private static final long MILLIS_PER_SECOND = 1000L;
   private static final HashSet<String> validPartitionsTableSortFields =
       new HashSet<>(
           Arrays.asList("partition", "specId", "fileCount", "fileSize", "lastCommitTime"));
@@ -245,8 +244,7 @@ public class TableController {
         "Catalog %s does not support MIXED_HIVE format",
         catalog);
     // we should only keep MIXED_HIVE format，
-    // so `CatalogLoader.createCatalog` can get right CatalogImpl through calling
-    // catalogImpl.
+    // so `CatalogLoader.createCatalog` can get right CatalogImpl through calling catalogImpl.
     Map<String, String> originCatalogProperties = catalogMeta.getCatalogProperties();
     Map<String, String> catalogProperties = new HashMap<>(originCatalogProperties);
     catalogProperties.put(CatalogMetaProperties.TABLE_FORMATS, TableFormat.MIXED_HIVE.name());
@@ -817,7 +815,7 @@ public class TableController {
    */
   private long toMillis(long seconds, String paramName) {
     try {
-      return Math.multiplyExact(seconds, MILLIS_PER_SECOND);
+      return Math.multiplyExact(seconds, 1000L);
     } catch (ArithmeticException e) {
       throw new BadRequestException(paramName + " is out of range", e);
     }
