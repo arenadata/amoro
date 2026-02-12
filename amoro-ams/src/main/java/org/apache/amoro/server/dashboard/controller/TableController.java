@@ -245,7 +245,8 @@ public class TableController {
         "Catalog %s does not support MIXED_HIVE format",
         catalog);
     // we should only keep MIXED_HIVE format，
-    // so `CatalogLoader.createCatalog` can get right CatalogImpl through calling catalogImpl.
+    // so `CatalogLoader.createCatalog` can get right CatalogImpl through calling
+    // catalogImpl.
     Map<String, String> originCatalogProperties = catalogMeta.getCatalogProperties();
     Map<String, String> catalogProperties = new HashMap<>(originCatalogProperties);
     catalogProperties.put(CatalogMetaProperties.TABLE_FORMATS, TableFormat.MIXED_HIVE.name());
@@ -781,12 +782,13 @@ public class TableController {
   }
 
   /**
-   * Builds a time range for filtering commits.
-   * Input times are in seconds (Unix timestamp); the returned range uses milliseconds.
+   * Builds a time range for filtering commits. Input times are in seconds (Unix timestamp); the
+   * returned range uses milliseconds.
    *
    * @param startTime start of the range in seconds (nullable)
    * @param endTime end of the range in seconds (nullable)
-   * @return Range in milliseconds: closed [start, end] if both set, atLeast/atMost if one set, all if neither
+   * @return Range in milliseconds: closed [start, end] if both set, atLeast/atMost if one set, all
+   *     if neither
    * @throws BadRequestException if both times are set and startTime &gt; endTime, or on overflow
    */
   private Range<Long> buildCommitTimeRange(Long startTime, Long endTime) {
