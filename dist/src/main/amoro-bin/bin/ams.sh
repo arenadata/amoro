@@ -19,7 +19,7 @@
 
 CURRENT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
-
+source /etc/amoro/conf/amoro-env.sh
 source ${CURRENT_DIR}/load-config.sh
 
 
