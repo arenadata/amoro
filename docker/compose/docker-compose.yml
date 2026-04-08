@@ -1,0 +1,203 @@
+name: amoro-local
+
+services:
+  postgres:
+    image: postgres:16.4
+    container_name: amoro-postgres
+    environment:
+      POSTGRES_DB: amoro
+      POSTGRES_USER: amoro
+      POSTGRES_PASSWORD: amoro
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  amoro:
+    image: apache/amoro:local
+    build:
+      context: ../..
+      dockerfile: docker/amoro/Dockerfile
+    container_name: amoro-ams
+    command: ["ams"]
+    environment:
+      LOG_LEVEL: info
+      JVM_XMS: 1024
+      JVM_XMX: 1024
+    ports:
+      - "1630:1630"
+      - "1260:1260"
+      - "1261:1261"
+    volumes:
+      - ./configs/config.yaml:/usr/local/amoro/conf/config.yaml:ro
+      - ./configs/env.sh:/usr/local/amoro/conf/env.sh:ro
+      - amoro-logs:/usr/local/amoro/logs
+      - amoro-warehouse:/var/lib/amoro/warehouse
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/1630'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  optimizer:
+    image: apache/amoro:local
+    container_name: amoro-optimizer
+    command: ["optimizer", "1024", "-a", "thrift://amoro:1261", "-p", "1", "-g", "localContainer"]
+    environment:
+      LOG_LEVEL: info
+      JVM_XMS: 1024
+      JVM_XMX: 1024
+    volumes:
+      - ./configs/env.sh:/usr/local/amoro/conf/env.sh:ro
+      - optimizer-logs:/usr/local/amoro/logs
+      - amoro-warehouse:/var/lib/amoro/warehouse
+    depends_on:
+      amoro:
+        condition: service_healthy
+      optimizer-group-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  optimizer-group-init:
+    image: postgres:16.4
+    container_name: amoro-optimizer-group-init
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        psql postgresql://amoro:amoro@postgres:5432/amoro -v ON_ERROR_STOP=1 -c "
+          INSERT INTO resource_group (group_name, container_name, properties)
+          VALUES ('localContainer', 'localContainer', '{}')
+          ON CONFLICT (group_name) DO UPDATE
+            SET container_name = EXCLUDED.container_name,
+                properties = EXCLUDED.properties;
+        "
+    depends_on:
+      postgres:
+        condition: service_healthy
+      amoro:
+        condition: service_healthy
+    restart: "no"
+
+  catalog-init:
+    image: curlimages/curl:8.11.1
+    container_name: amoro-catalog-init
+    entrypoint:
+      - /bin/sh
+      - /opt/bootstrap/create-default-catalog.sh
+    environment:
+      AMS_API_BASE_URL: http://amoro:1630/api/ams/v1
+      AMORO_ADMIN_USER: admin
+      AMORO_ADMIN_PASSWORD: admin
+      AMORO_DEFAULT_CATALOG_NAME: local_hadoop
+      AMORO_DEFAULT_OPTIMIZER_GROUP: localContainer
+      AMORO_DEFAULT_CATALOG_WAREHOUSE: file:///var/lib/amoro/warehouse
+      AMORO_DEFAULT_TABLE_FORMAT: MIXED_ICEBERG
+      AMORO_SEED_ENABLED: "true"
+      AMORO_SEED_DATABASE: demo
+      AMORO_SEED_TABLE_ONE: users
+      AMORO_SEED_TABLE_TWO: orders
+      AMORO_SEED_SNAPSHOT_TARGET: "5"
+    volumes:
+      - ./scripts/create-default-catalog.sh:/opt/bootstrap/create-default-catalog.sh:ro
+    depends_on:
+      amoro:
+        condition: service_healthy
+      optimizer-group-init:
+        condition: service_completed_successfully
+    restart: "no"
+
+  catalog-init-s3:
+    image: curlimages/curl:8.11.1
+    container_name: amoro-catalog-init-s3
+    entrypoint:
+      - /bin/sh
+      - /opt/bootstrap/create-default-catalog.sh
+    environment:
+      AMS_API_BASE_URL: http://amoro:1630/api/ams/v1
+      AMORO_ADMIN_USER: admin
+      AMORO_ADMIN_PASSWORD: admin
+      AMORO_DEFAULT_CATALOG_NAME: local_s3
+      AMORO_DEFAULT_CATALOG_TYPE: ams
+      AMORO_DEFAULT_OPTIMIZER_GROUP: localContainer
+      AMORO_DEFAULT_CATALOG_WAREHOUSE: s3://amoro-warehouse
+      AMORO_DEFAULT_TABLE_FORMAT: MIXED_ICEBERG
+      AMORO_DEFAULT_STORAGE_TYPE: S3
+      AMORO_DEFAULT_S3_REGION: us-east-1
+      AMORO_DEFAULT_S3_ENDPOINT: http://minio:9000
+      AMORO_DEFAULT_S3_PATH_STYLE_ACCESS: "true"
+      AMORO_DEFAULT_AUTH_TYPE: AK/SK
+      AMORO_DEFAULT_AK_ACCESS_KEY: minio
+      AMORO_DEFAULT_AK_SECRET_KEY: minio123
+      AMORO_SEED_ENABLED: "true"
+      AMORO_SEED_DATABASE: demo
+      AMORO_SEED_TABLE_ONE: users
+      AMORO_SEED_TABLE_TWO: orders
+      AMORO_SEED_SNAPSHOT_TARGET: "5"
+    volumes:
+      - ./scripts/create-default-catalog.sh:/opt/bootstrap/create-default-catalog.sh:ro
+    depends_on:
+      amoro:
+        condition: service_healthy
+      optimizer-group-init:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    restart: "no"
+    profiles: ["s3"]
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: amoro-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    profiles: ["s3"]
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: amoro-minio-init
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        attempt=1
+        until mc alias set local http://minio:9000 minio minio123; do
+          if [ "$$attempt" -ge 60 ]; then
+            echo "MinIO is not ready after 60 attempts"
+            exit 1
+          fi
+          attempt=$$((attempt + 1))
+          sleep 1
+        done
+        mc mb --ignore-existing local/amoro-warehouse
+    depends_on:
+      - minio
+    restart: "no"
+    profiles: ["s3"]
+
+volumes:
+  postgres-data:
+  amoro-logs:
+  optimizer-logs:
+  minio-data:
+  amoro-warehouse:

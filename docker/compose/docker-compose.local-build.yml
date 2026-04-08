@@ -1,0 +1,9 @@
+services:
+  amoro:
+    image: apache/amoro:local
+    build:
+      context: ../..
+      dockerfile: docker/amoro/Dockerfile
+
+  optimizer:
+    image: apache/amoro:local
