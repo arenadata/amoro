@@ -49,6 +49,9 @@ export default defineComponent({
           message.error(res.message)
           return
         }
+        store.updateUserInfo({
+          userName: values.username,
+        })
         const { path, query } = store.historyPathInfo
 
         const backRoute = path && path !== '/login' ? path : '/'

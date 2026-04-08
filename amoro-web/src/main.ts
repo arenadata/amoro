@@ -42,12 +42,20 @@ app.component('svg-icon', SvgIcon)
 app.use(VueI18n)
 RegisterComponents(app);
 
+function getHashPath(): string {
+  const hashPath = window.location.hash?.replace(/^#/, '')
+  if (!hashPath) {
+    return window.location.pathname
+  }
+  return hashPath.split('?')[0] || '/'
+}
+
 // login
 (async () => {
   try {
     const store = useStore()
 
-    const fromPath = window.location.pathname
+    const fromPath = getHashPath()
     const fromQuery = window.location.search
     if (!store.historyPathInfo.path && fromPath !== '/login') {
       const queryParams = new URLSearchParams(fromQuery)
@@ -67,16 +75,29 @@ RegisterComponents(app);
       store.updateUserInfo({
         userName: res.userName,
       })
+    } else if (fromPath !== '/login') {
+      router.replace({
+        path: '/login',
+      })
     }
   }
   finally {
     const store = useStore()
     router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-      // if no username in store and not go to login page, should redirect to login page
-      store.setHistoryPath({
-        path: from.path,
-        query: from.query,
-      })
+      if (!store.userInfo.userName && to.path !== '/login') {
+        store.setHistoryPath({
+          path: to.path,
+          query: to.query,
+        })
+        next({ path: '/login' })
+        return
+      }
+      if (to.path !== '/login') {
+        store.setHistoryPath({
+          path: to.path,
+          query: to.query,
+        })
+      }
       next()
     })
 
