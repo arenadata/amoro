@@ -47,12 +47,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.amoro</groupId>
-            <artifactId>amoro-optimizer-flink</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.amoro</groupId>
             <artifactId>amoro-optimizer-spark</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
