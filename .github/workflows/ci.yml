@@ -82,7 +82,7 @@ jobs:
             timeout: 60
 
           - name: Formats Other
-            modules: amoro-format-paimon,amoro-format-hudi,amoro-format-lance,amoro-openapi-sdk,amoro-metrics/amoro-metrics-prometheus
+            modules: amoro-format-paimon,amoro-format-hudi,amoro-format-lance,amoro-metrics/amoro-metrics-prometheus
             timeout: 60
 
           - name: Mixed Spark
