@@ -28,6 +28,7 @@ public class BucketAssignmentMeta {
   private String serverInfoJson;
   private String assignmentsJson;
   private Long lastUpdateTime;
+
   /** Per-node heartbeat timestamp. Updated only by the owning node, never by the leader. */
   private Long nodeHeartbeatTs;
 

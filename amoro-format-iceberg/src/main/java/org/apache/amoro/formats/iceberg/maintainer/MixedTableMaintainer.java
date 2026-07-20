@@ -41,8 +41,8 @@ import org.apache.amoro.table.MixedTable;
 import org.apache.amoro.table.UnkeyedTable;
 import org.apache.amoro.utils.MixedTableUtil;
 import org.apache.amoro.utils.TablePropertyUtil;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.iceberg.ContentFile;
 import org.apache.iceberg.DataFile;
@@ -262,8 +262,7 @@ public class MixedTableMaintainer implements TableMaintainer {
               fileEntries.add(e);
             }
           });
-      fileEntries
-          .parallelStream()
+      fileEntries.parallelStream()
           .filter(
               e -> IcebergTableMaintainer.willNotRetain(e, expirationConfig, partitionFreshness))
           .forEach(

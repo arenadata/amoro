@@ -140,6 +140,7 @@ public class TableProperties {
   /** metadata-based evaluation related properties */
   public static final String SELF_OPTIMIZING_EVALUATION_FALLBACK_INTERVAL =
       "self-optimizing.evaluation.fallback-interval"; // fallback evaluation interval in
+
   // milliseconds
 
   public static final int SELF_OPTIMIZING_EVALUATION_FALLBACK_INTERVAL_DEFAULT =

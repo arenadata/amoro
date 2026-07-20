@@ -25,7 +25,7 @@ import org.apache.amoro.flink.read.FlinkSplitPlanner;
 import org.apache.amoro.flink.read.hybrid.split.MixedFormatSplit;
 import org.apache.amoro.flink.table.MixedFormatTableLoader;
 import org.apache.amoro.table.KeyedTable;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.expressions.Expression;
 import org.slf4j.Logger;

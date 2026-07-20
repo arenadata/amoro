@@ -23,6 +23,8 @@ package org.apache.amoro;
  */
 public interface AmoroPlugin {
 
-  /** @return plugin name */
+  /**
+   * @return plugin name
+   */
   String name();
 }

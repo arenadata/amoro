@@ -89,7 +89,9 @@ public interface LogData<T> {
     return getChangeAction().toByteValue();
   }
 
-  /** @return rowData if in the flink application */
+  /**
+   * @return rowData if in the flink application
+   */
   T getActualValue();
 
   /** Accessor for getting the field of a row during runtime. */

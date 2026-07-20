@@ -27,7 +27,9 @@ public interface TerminalSession {
 
   /** ResultSet of single statement execute result. */
   interface ResultSet {
-    /** @return - list of column name for result-set. */
+    /**
+     * @return - list of column name for result-set.
+     */
     List<String> columns();
 
     /**
@@ -37,10 +39,14 @@ public interface TerminalSession {
      */
     boolean next();
 
-    /** @return current row */
+    /**
+     * @return current row
+     */
     Object[] rowData();
 
-    /** @return - return true if current statement shouldn't return result-set. */
+    /**
+     * @return - return true if current statement shouldn't return result-set.
+     */
     default boolean empty() {
       List<String> columns = columns();
       return columns == null || columns.isEmpty();
@@ -61,7 +67,9 @@ public interface TerminalSession {
    */
   ResultSet executeStatement(String catalog, String statement);
 
-  /** @return - return logs during execution and clean logs */
+  /**
+   * @return - return logs during execution and clean logs
+   */
   List<String> logs();
 
   /**

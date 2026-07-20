@@ -29,8 +29,10 @@ public abstract class TableStatsProvider {
   public static class BasicFileStats {
     /** Count of delete files. */
     int deleteFileCnt = 0;
+
     /** Count of data files. */
     int dataFileCnt = 0;
+
     /** Total size of all files in bytes. */
     long totalFileSize = 0;
 

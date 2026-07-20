@@ -66,6 +66,7 @@ public class ShuffleSplitAssigner implements SplitAssigner {
    * subtaskId.
    */
   private final Map<Long, Integer> partitionIndexSubtaskMap;
+
   /** Key is subtaskId, Value is the queue of unAssigned mixed-format splits. */
   private final Map<Integer, PriorityBlockingQueue<MixedFormatSplit>> subtaskSplitMap;
 

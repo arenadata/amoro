@@ -39,7 +39,10 @@ public interface HMSClient {
 
   void alterPartition(
       String dbName, String tblName, Partition newPart, EnvironmentContext environmentContext)
-      throws TException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+      throws TException,
+          ClassNotFoundException,
+          NoSuchMethodException,
+          InvocationTargetException,
           IllegalAccessException;
 
   Partition getPartition(String dbName, String tblName, List<String> partVals) throws TException;
@@ -84,8 +87,12 @@ public interface HMSClient {
       String tblName,
       List<Partition> newParts,
       EnvironmentContext environmentContext)
-      throws TException, InstantiationException, IllegalAccessException, NoSuchMethodException,
-          InvocationTargetException, ClassNotFoundException;
+      throws TException,
+          InstantiationException,
+          IllegalAccessException,
+          NoSuchMethodException,
+          InvocationTargetException,
+          ClassNotFoundException;
 
   List<Table> getTableObjectsByName(String dbName, List<String> tableNames) throws TException;
 }

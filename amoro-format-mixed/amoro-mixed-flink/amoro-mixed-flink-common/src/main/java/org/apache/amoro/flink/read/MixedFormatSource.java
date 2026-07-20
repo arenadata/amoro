@@ -57,6 +57,7 @@ public class MixedFormatSource<T>
   private final TypeInformation<T> typeInformation;
   private final MixedFormatTableLoader loader;
   private final String tableName;
+
   /**
    * generate mixed-format watermark. This is only for lookup join mixed-format table, and
    * mixed-format table is used as build table, i.e. right table.

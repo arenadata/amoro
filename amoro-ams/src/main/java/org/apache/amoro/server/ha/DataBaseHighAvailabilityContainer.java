@@ -65,6 +65,7 @@ public class DataBaseHighAvailabilityContainer extends PersistentBase
   private final Configurations serviceConfig;
   private final ScheduledExecutorService executor;
   private final AtomicBoolean isLeader = new AtomicBoolean(false);
+
   /** Prevent re-gaining leadership once the lease is lost. */
   private final AtomicBoolean leadershipRevoked = new AtomicBoolean(false);
 

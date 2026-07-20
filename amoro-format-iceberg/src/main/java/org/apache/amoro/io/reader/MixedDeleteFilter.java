@@ -35,7 +35,7 @@ import org.apache.amoro.table.PrimaryKeySpec;
 import org.apache.amoro.utils.NodeFilter;
 import org.apache.amoro.utils.map.StructLikeBaseMap;
 import org.apache.amoro.utils.map.StructLikeCollections;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.iceberg.Accessor;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.Schema;
@@ -205,13 +205,17 @@ public abstract class MixedDeleteFilter<T> {
     return null;
   }
 
-  /** @return The data not in equity delete file */
+  /**
+   * @return The data not in equity delete file
+   */
   public CloseableIterable<T> filter(CloseableIterable<T> records) {
     return new CloseableIterableWrapper<>(
         apply(apply(records, applyPosDeletes().negate()), applyEqDeletes().negate()), eqPredicate);
   }
 
-  /** @return The data in equity delete file */
+  /**
+   * @return The data in equity delete file
+   */
   public CloseableIterable<T> filterNegate(CloseableIterable<T> records) {
     return new CloseableIterableWrapper<>(
         apply(records, applyEqDeletes().or(applyPosDeletes())), eqPredicate);

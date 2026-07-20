@@ -20,7 +20,7 @@ package org.apache.amoro.flink.lookup;
 
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
 import org.apache.amoro.utils.map.RocksDBBackend;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.shaded.guava31.com.google.common.cache.Cache;
 import org.apache.flink.table.data.RowData;
@@ -45,6 +45,7 @@ public class RocksDBSetSpilledState extends RocksDBCacheState<Set<ByteArrayWrapp
   protected ThreadLocal<BinaryRowDataSerializerWrapper> joinKeySerializerThreadLocal =
       new ThreadLocal<>();
   private final BinaryRowDataSerializerWrapper joinKeySerializer;
+
   /** Multi-threads would put and delete the joinKeys and Set<ByteArrayWrapper> in the rocksdb. */
   private final Object rocksDBLock = new Object();
 

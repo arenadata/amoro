@@ -18,7 +18,7 @@
 
 package org.apache.amoro.flink.lookup;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;

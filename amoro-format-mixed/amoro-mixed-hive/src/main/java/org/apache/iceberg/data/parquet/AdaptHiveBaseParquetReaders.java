@@ -419,6 +419,7 @@ public abstract class AdaptHiveBaseParquetReaders<T> {
           .atOffset(ZoneOffset.UTC);
     }
   }
+
   // Change for mixed-hive table ⬆
 
   private static class TimestamptzReader

@@ -149,6 +149,7 @@ public class DashboardServer {
   }
 
   private volatile String indexHtml = null;
+
   // read index.html content
   public String getIndexFileContent() {
     if (indexHtml == null) {

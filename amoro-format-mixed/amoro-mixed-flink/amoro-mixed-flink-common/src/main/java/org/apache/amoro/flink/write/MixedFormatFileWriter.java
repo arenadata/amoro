@@ -25,7 +25,7 @@ import org.apache.amoro.flink.table.MixedFormatTableLoader;
 import org.apache.amoro.flink.util.MixedFormatUtils;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
 import org.apache.amoro.table.MixedTable;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.runtime.state.StateInitializationContext;
 import org.apache.flink.runtime.state.StateSnapshotContext;
@@ -64,6 +64,7 @@ public class MixedFormatFileWriter extends AbstractStreamOperator<FlinkWriteResu
   private transient int subTaskId;
   private transient long currentCheckpointId;
   private transient int attemptId;
+
   /**
    * Load table in runtime, because that table's refresh method will be invoked in serialization.
    * And it will set {@link org.apache.hadoop.security.UserGroupInformation#authenticationMethod} to

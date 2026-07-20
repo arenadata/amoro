@@ -341,7 +341,8 @@ public class TestTableManager extends AMSTableTestBase {
 
   private boolean isBlocked(BlockableOperation operation) {
     return tableManager()
-        .getBlockers(serverTableIdentifier().getIdentifier().buildTableIdentifier()).stream()
+        .getBlockers(serverTableIdentifier().getIdentifier().buildTableIdentifier())
+        .stream()
         .anyMatch(blocker -> blocker.getOperations().contains(operation));
   }
 

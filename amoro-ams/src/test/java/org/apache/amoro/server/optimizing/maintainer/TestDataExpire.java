@@ -49,7 +49,7 @@ import org.apache.amoro.table.PrimaryKeySpec;
 import org.apache.amoro.table.TableProperties;
 import org.apache.amoro.utils.CompatiblePropertyUtil;
 import org.apache.amoro.utils.ContentFiles;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.iceberg.ContentFile;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.MetricsModes;
@@ -655,7 +655,8 @@ public class TestDataExpire extends ExecutorTestBase {
 
   protected List<Record> readSortedKeyedRecords(KeyedTable keyedTable) {
     return tableTestHelper()
-        .readKeyedTable(keyedTable, Expressions.alwaysTrue(), null, false, false).stream()
+        .readKeyedTable(keyedTable, Expressions.alwaysTrue(), null, false, false)
+        .stream()
         .sorted(Comparator.comparing(o -> o.get(0, Integer.class)))
         .collect(Collectors.toList());
   }

@@ -26,10 +26,10 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStore;
+import org.apache.hadoop.hive.metastore.HMSHandler;
+import org.apache.hadoop.hive.metastore.HMSHandlerProxyFactory;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IHMSHandler;
-import org.apache.hadoop.hive.metastore.RetryingHMSHandler;
 import org.apache.hadoop.hive.metastore.TSetIpAddressProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TServer;
@@ -65,20 +65,6 @@ public class HMSMockServer {
   private static final String DEFAULT_DATABASE_NAME = "default";
   private static final int DEFAULT_POOL_SIZE = 50;
 
-  // create the metastore handlers based on whether we're working with Hive2 or Hive3 dependencies
-  // we need to do this because there is a breaking API change between Hive2 and Hive3
-  private static final DynConstructors.Ctor<HiveMetaStore.HMSHandler> HMS_HANDLER_CTOR =
-      DynConstructors.builder()
-          .impl(HiveMetaStore.HMSHandler.class, String.class, Configuration.class)
-          .impl(HiveMetaStore.HMSHandler.class, String.class, HiveConf.class)
-          .build();
-
-  private static final DynMethods.StaticMethod GET_BASE_HMS_HANDLER =
-      DynMethods.builder("getProxy")
-          .impl(RetryingHMSHandler.class, Configuration.class, IHMSHandler.class, boolean.class)
-          .impl(RetryingHMSHandler.class, HiveConf.class, IHMSHandler.class, boolean.class)
-          .buildStatic();
-
   private static final DynConstructors.Ctor<HiveMetaStoreClient> HMS_CLIENT_CTOR =
       DynConstructors.builder()
           .impl(HiveMetaStoreClient.class, HiveConf.class)
@@ -107,7 +93,7 @@ public class HMSMockServer {
   private final HiveConf hiveConf;
   private ExecutorService executorService;
   private TServer server;
-  private HiveMetaStore.HMSHandler baseHandler;
+  private HMSHandler baseHandler;
   private HMSClient clientPool;
   private final int port;
   private HiveMetaStoreClient client;
@@ -288,9 +274,9 @@ public class HMSMockServer {
     // so we set up metastore first to avoid this bug.
     setupMetastoreDB(derbyUrl);
 
-    serverConf.set(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname, derbyUrl);
-    baseHandler = HMS_HANDLER_CTOR.newInstance("new db based metaserver", serverConf);
-    IHMSHandler handler = GET_BASE_HMS_HANDLER.invoke(serverConf, baseHandler, false);
+    serverConf.set(HiveConf.ConfVars.METASTORE_CONNECT_URL_KEY.varname, derbyUrl);
+    baseHandler = new HMSHandler("new db based metaserver", serverConf);
+    IHMSHandler handler = HMSHandlerProxyFactory.getProxy(serverConf, baseHandler, false);
 
     SynchronousQueue<Runnable> executorQueue = new SynchronousQueue<Runnable>();
     AtomicInteger threadCount = new AtomicInteger(0);
@@ -345,7 +331,7 @@ public class HMSMockServer {
   private void setupMetastoreDB(String jdbcUrl) throws SQLException, IOException {
     Connection connection = DriverManager.getConnection(jdbcUrl);
     ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    InputStream inputStream = classLoader.getResourceAsStream("hive-schema-3.1.0.derby.sql");
+    InputStream inputStream = classLoader.getResourceAsStream("hive-schema-4.3.0.derby.sql");
     connection.setAutoCommit(true);
     try (Reader reader = new InputStreamReader(inputStream)) {
       runScript(connection, reader);

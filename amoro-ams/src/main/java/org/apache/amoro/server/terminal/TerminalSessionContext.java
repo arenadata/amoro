@@ -290,7 +290,9 @@ public class TerminalSessionContext {
       return no;
     }
 
-    /** @return - false if any exception happened. */
+    /**
+     * @return - false if any exception happened.
+     */
     boolean executeStatement(TerminalSession session, String statement, int lineNo) {
       executionResult.appendLog(" ");
       executionResult.appendLog("prepare execute statement, line:" + lineNo);

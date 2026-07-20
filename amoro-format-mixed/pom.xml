@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.amoro</groupId>
         <artifactId>amoro-parent</artifactId>
-        <version>0.9-SNAPSHOT</version>
+        <version>0.9.0.1-4.4.0-0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -32,7 +32,10 @@
     <url>https://amoro.apache.org</url>
 
     <modules>
-        <module>amoro-mixed-flink</module>
+        <!-- amoro-mixed-flink is disabled: it targets Flink 1.18, but Iceberg dropped
+             the iceberg-flink-1.18 connector after 1.7.x, so it cannot build against
+             Iceberg 1.10. Re-enable after migrating the module to Flink 1.19+. -->
+        <!-- <module>amoro-mixed-flink</module> -->
         <module>amoro-mixed-spark</module>
         <module>amoro-mixed-hive</module>
         <module>amoro-mixed-trino</module>

@@ -28,6 +28,8 @@ package org.apache.amoro.metrics;
  */
 @FunctionalInterface
 public interface Gauge<T extends Number> extends Metric {
-  /** @return The current value of metric */
+  /**
+   * @return The current value of metric
+   */
   T getValue();
 }

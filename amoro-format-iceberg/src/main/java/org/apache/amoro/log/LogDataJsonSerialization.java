@@ -35,6 +35,7 @@ public class LogDataJsonSerialization<T> implements Serializable {
 
   /** Reusable object node. */
   private transient ObjectNode node;
+
   /** Object mapper that is used to create output JSON objects. */
   private final ObjectMapper mapper = new ObjectMapper();
 

@@ -28,7 +28,9 @@ public class MetricManager extends AbstractPluginManager<MetricReporter> {
   public static final String PLUGIN_CATEGORY = "metric-reporters";
   private static volatile MetricManager INSTANCE;
 
-  /** @return Get the singleton object. */
+  /**
+   * @return Get the singleton object.
+   */
   public static MetricManager getInstance() {
     if (INSTANCE == null) {
       synchronized (MetricManager.class) {
