@@ -65,6 +65,20 @@ public class MixedRowDelta extends MixedUpdate<RowDelta> implements RowDelta {
   }
 
   @Override
+  public RowDelta removeRows(DataFile file) {
+    rowDelta.removeRows(file);
+    deleteIcebergDataFile(file);
+    return this;
+  }
+
+  @Override
+  public RowDelta removeDeletes(DeleteFile deletes) {
+    rowDelta.removeDeletes(deletes);
+    deleteIcebergDeleteFile(deletes);
+    return this;
+  }
+
+  @Override
   public RowDelta validateFromSnapshot(long snapshotId) {
     rowDelta.validateFromSnapshot(snapshotId);
     return this;

@@ -53,6 +53,12 @@ public class MixedDeleteFiles extends MixedUpdate<DeleteFiles> implements Delete
   }
 
   @Override
+  public DeleteFiles validateFilesExist() {
+    deleteFiles.validateFilesExist();
+    return this;
+  }
+
+  @Override
   public DeleteFiles deleteFromRowFilter(Expression expr) {
     deleteFiles.deleteFromRowFilter(expr);
     return this;
