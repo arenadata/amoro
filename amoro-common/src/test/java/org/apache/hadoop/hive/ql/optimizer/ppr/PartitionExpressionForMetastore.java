@@ -27,8 +27,16 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 
 import java.util.List;
 
-/** Copy from package jar "hive-exec" to avoid class check error */
+/**
+ * Copy from package jar "hive-exec" to avoid class check error. Declares both the Hive 2/3 and the
+ * Hive 4 variants of the {@link PartitionExpressionProxy} methods so the same class links against
+ * either Hive line-up.
+ */
 public class PartitionExpressionForMetastore implements PartitionExpressionProxy {
+
+  public String convertExprToFilter(byte[] expr) throws MetaException {
+    return null;
+  }
 
   public String convertExprToFilter(byte[] expr, String defaultPartitionName, boolean decodeFilter)
       throws MetaException {
@@ -37,6 +45,16 @@ public class PartitionExpressionForMetastore implements PartitionExpressionProxy
 
   public boolean filterPartitionsByExpr(
       List<FieldSchema> list, byte[] bytes, String s, List<String> list1) throws MetaException {
+    return false;
+  }
+
+  public boolean filterPartitionsByExpr(
+      List<String> partColumnNames,
+      List<org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo> partColumnTypeInfos,
+      byte[] expr,
+      String defaultPartitionName,
+      List<String> partitionNames)
+      throws MetaException {
     return false;
   }
 

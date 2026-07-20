@@ -37,6 +37,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
+            <scope>test</scope>
+        </dependency>
+
 
 
         <dependency>
@@ -272,12 +278,6 @@
         <!-- test dependencies -->
         <dependency>
             <groupId>org.apache.paimon</groupId>
-            <artifactId>paimon-spark-${spark.major.version}</artifactId>
-            <version>${paimon.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.paimon</groupId>
             <artifactId>paimon-hive-connector-3.1</artifactId>
             <version>${paimon.version}</version>
             <scope>test</scope>
@@ -436,6 +436,17 @@
                 <artifactId>scala-maven-plugin</artifactId>
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- TODO: re-enable after paimon-spark is released for scala-2.13;
+                             the 2.12-only paimon-spark connector cannot be on the classpath -->
+                        <exclude>**/TestUnifiedCatalog.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
