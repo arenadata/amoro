@@ -70,6 +70,14 @@
         <url>https://github.com/apache/amoro/issues</url>
     </issueManagement>
 
+    <distributionManagement>
+        <repository>
+            <id>arenadata</id>
+            <name>GitHub Arenadata Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/arenadata/amoro</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <java.source.version>21</java.source.version>
         <java.target.version>21</java.target.version>
