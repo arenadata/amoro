@@ -61,49 +61,65 @@ public class OptimizerProperties {
   // Dynamic resource allocation (DRA) properties (AIP-5), configured at the resource group level.
   // Semantics and validation rules are documented in DynamicAllocationConfig (amoro-ams).
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_ENABLED = "dynamic-allocation.enabled";
 
   public static final boolean DYNAMIC_ALLOCATION_ENABLED_DEFAULT = false;
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_MIN_PARALLELISM =
       "dynamic-allocation.min-parallelism";
 
   public static final int DYNAMIC_ALLOCATION_MIN_PARALLELISM_DEFAULT = 0;
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_MAX_PARALLELISM =
       "dynamic-allocation.max-parallelism";
 
   public static final int DYNAMIC_ALLOCATION_MAX_PARALLELISM_LIMIT = 1024;
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_SCHEDULER_BACKLOG_TIMEOUT =
       "dynamic-allocation.scheduler-backlog-timeout";
 
   public static final String DYNAMIC_ALLOCATION_SCHEDULER_BACKLOG_TIMEOUT_DEFAULT = "1min";
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_SUSTAINED_BACKLOG_TIMEOUT =
       "dynamic-allocation.sustained-backlog-timeout";
 
   public static final String DYNAMIC_ALLOCATION_SUSTAINED_BACKLOG_TIMEOUT_DEFAULT = "30s";
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_EXECUTOR_IDLE_TIMEOUT =
       "dynamic-allocation.executor-idle-timeout";
 
   public static final String DYNAMIC_ALLOCATION_EXECUTOR_IDLE_TIMEOUT_DEFAULT = "5min";
   public static final String DYNAMIC_ALLOCATION_EXECUTOR_IDLE_TIMEOUT_MIN = "30s";
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_SCALE_DOWN_COOLDOWN =
       "dynamic-allocation.scale-down-cooldown";
 
   public static final String DYNAMIC_ALLOCATION_SCALE_DOWN_COOLDOWN_DEFAULT = "1min";
 
-  /** @since 0.9.0 */
+  /**
+   * @since 0.9.0
+   */
   public static final String DYNAMIC_ALLOCATION_DRAIN_TIMEOUT = "dynamic-allocation.drain-timeout";
 
   public static final String DYNAMIC_ALLOCATION_DRAIN_TIMEOUT_DEFAULT = "15min";

@@ -52,6 +52,7 @@ import java.util.stream.IntStream;
  */
 public class HiddenKafkaProducer<T> implements LogMsgFactory.Producer<T> {
   private static final Logger LOG = LoggerFactory.getLogger(HiddenKafkaProducer.class);
+
   /** User defined properties for the Kafka Producer. */
   protected final Properties producerConfig;
 
@@ -61,6 +62,7 @@ public class HiddenKafkaProducer<T> implements LogMsgFactory.Producer<T> {
 
   /** The callback than handles error propagation or logging callbacks. */
   @Nullable protected transient Callback callback;
+
   /** Errors encountered in the async producer are stored here. */
   @Nullable protected transient volatile Exception asyncException;
 

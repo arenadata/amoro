@@ -29,7 +29,9 @@ import java.io.Closeable;
  */
 public interface InternalTableHandler<OP> extends Closeable {
 
-  /** @return Persistent {@link TableMetadata} object */
+  /**
+   * @return Persistent {@link TableMetadata} object
+   */
   TableMetadata tableMetadata();
 
   /**

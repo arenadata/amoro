@@ -28,6 +28,7 @@ import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.api.OptimizingService;
 import org.apache.amoro.client.OptimizingClientPools;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.hive.CachedHiveClientPool;
 import org.apache.amoro.hive.HMSClientPool;
 import org.apache.amoro.hive.catalog.MixedHiveCatalog;
@@ -57,6 +58,7 @@ import org.apache.amoro.server.process.TableProcessMeta;
 import org.apache.amoro.server.table.TableManager;
 import org.apache.amoro.shade.guava32.com.google.common.base.Function;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
+import org.apache.amoro.shade.guava32.com.google.common.collect.Range;
 import org.apache.amoro.shade.guava32.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.amoro.shade.thrift.org.apache.thrift.TException;
 import org.apache.amoro.table.TableIdentifier;
@@ -84,9 +86,11 @@ import org.apache.iceberg.SnapshotRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -103,6 +107,9 @@ import java.util.stream.Collectors;
 public class TableController {
   private static final Logger LOG = LoggerFactory.getLogger(TableController.class);
   private static final long UPGRADE_INFO_EXPIRE_INTERVAL = 60 * 60 * 1000;
+  private static final HashSet<String> validPartitionsTableSortFields =
+      new HashSet<>(
+          Arrays.asList("partition", "specId", "fileCount", "fileSize", "lastCommitTime"));
 
   private final CatalogManager catalogManager;
   private final TableManager tableManager;
@@ -425,12 +432,22 @@ public class TableController {
         ctx.queryParamAsClass("operation", String.class)
             .getOrDefault(OperationType.ALL.displayName());
     OperationType operationType = OperationType.of(operation);
+    // Date range filtering parameters (timestamps in seconds)
+    Long startTime = ctx.queryParamAsClass("startTime", Long.class).getOrDefault(null);
+    Long endTime = ctx.queryParamAsClass("endTime", Long.class).getOrDefault(null);
+    Range<Long> commitTimeRange = buildCommitTimeRange(startTime, endTime);
 
     List<AmoroSnapshotsOfTable> snapshotsOfTables =
         tableDescriptor.getSnapshots(
             TableIdentifier.of(catalog, database, tableName).buildTableIdentifier(),
             ref,
             operationType);
+
+    snapshotsOfTables =
+        snapshotsOfTables.stream()
+            .filter(snapshot -> commitTimeRange.contains(snapshot.getCommitTime()))
+            .collect(Collectors.toList());
+
     int offset = (page - 1) * pageSize;
     PageResult<AmoroSnapshotsOfTable> pageResult =
         PageResult.of(snapshotsOfTables, offset, pageSize);
@@ -473,6 +490,8 @@ public class TableController {
     String filter = ctx.queryParamAsClass("filter", String.class).getOrDefault("");
     Integer page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
     Integer pageSize = ctx.queryParamAsClass("pageSize", Integer.class).getOrDefault(20);
+    String sortBy = ctx.queryParamAsClass("sortBy", String.class).getOrDefault("partition");
+    String sortOrder = ctx.queryParamAsClass("sortOrder", String.class).getOrDefault("desc");
 
     List<PartitionBaseInfo> partitionBaseInfos =
         tableDescriptor.getTablePartition(
@@ -480,12 +499,56 @@ public class TableController {
     partitionBaseInfos =
         partitionBaseInfos.stream()
             .filter(e -> e.getPartition().contains(filter))
-            .sorted(Comparator.comparing(PartitionBaseInfo::getPartition).reversed())
+            .sorted(getPartitionComparator(sortBy, sortOrder))
             .collect(Collectors.toList());
     int offset = (page - 1) * pageSize;
     PageResult<PartitionBaseInfo> amsPageResult =
         PageResult.of(partitionBaseInfos, offset, pageSize);
     ctx.json(OkResponse.of(amsPageResult));
+  }
+
+  /**
+   * Get comparator for partition sorting based on the field name.
+   *
+   * @param sortBy - field name to sort by
+   * @return Comparator for PartitionBaseInfo
+   * @throws BadRequestException if sortBy is not a valid field
+   */
+  private Comparator<PartitionBaseInfo> getPartitionComparator(String sortBy, String sortOrder) {
+    if (sortBy == null || !validPartitionsTableSortFields.contains(sortBy)) {
+      throw new BadRequestException(
+          String.format(
+              "Invalid sortBy parameter: '%s'. Allowed values: %s",
+              sortBy, String.join(", ", validPartitionsTableSortFields)));
+    }
+
+    Comparator<PartitionBaseInfo> comparator;
+
+    switch (sortBy) {
+      case "partition":
+        comparator = Comparator.comparing(PartitionBaseInfo::getPartition);
+        break;
+      case "specId":
+        comparator = Comparator.comparingInt(PartitionBaseInfo::getSpecId);
+        break;
+      case "fileCount":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getFileCount);
+        break;
+      case "fileSize":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getFileSize);
+        break;
+      case "lastCommitTime":
+        comparator = Comparator.comparingLong(PartitionBaseInfo::getLastCommitTime);
+        break;
+      default:
+        throw new BadRequestException("Invalid sortBy parameter: " + sortBy);
+    }
+
+    if ("desc".equalsIgnoreCase(sortOrder)) {
+      comparator = comparator.reversed();
+    }
+
+    return comparator;
   }
 
   /**
@@ -739,6 +802,48 @@ public class TableController {
               branchInfos.remove(mainBranch);
               branchInfos.add(0, mainBranch);
             });
+  }
+
+  /**
+   * Builds a time range for filtering commits. Input times are in seconds (Unix timestamp); the
+   * returned range uses milliseconds.
+   *
+   * @param startTime start of the range in seconds (nullable)
+   * @param endTime end of the range in seconds (nullable)
+   * @return Range in milliseconds: closed [start, end] if both set, atLeast/atMost if one set, all
+   *     if neither
+   * @throws BadRequestException if both times are set and startTime &gt; endTime, or on overflow
+   */
+  private Range<Long> buildCommitTimeRange(Long startTime, Long endTime) {
+    if (startTime != null && endTime != null && startTime > endTime) {
+      throw new BadRequestException("startTime must be less than or equal to endTime");
+    }
+
+    if (startTime != null && endTime != null) {
+      return Range.closed(toMillis(startTime, "startTime"), toMillis(endTime, "endTime"));
+    } else if (startTime != null) {
+      return Range.atLeast(toMillis(startTime, "startTime"));
+    } else if (endTime != null) {
+      return Range.atMost(toMillis(endTime, "endTime"));
+    } else {
+      return Range.all();
+    }
+  }
+
+  /**
+   * Converts seconds to milliseconds with overflow check.
+   *
+   * @param seconds time value in seconds
+   * @param paramName parameter name for error message on overflow
+   * @return time in milliseconds
+   * @throws BadRequestException if multiplication overflows (e.g. Long.MAX_VALUE)
+   */
+  private long toMillis(long seconds, String paramName) {
+    try {
+      return Math.multiplyExact(seconds, 1000L);
+    } catch (ArithmeticException e) {
+      throw new BadRequestException(paramName + " is out of range", e);
+    }
   }
 
   private List<AMSColumnInfo> transformHiveSchemaToAMSColumnInfo(List<FieldSchema> fields) {

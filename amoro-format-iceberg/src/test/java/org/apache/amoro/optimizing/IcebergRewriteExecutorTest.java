@@ -49,6 +49,7 @@ import org.apache.iceberg.data.orc.GenericOrcReader;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.iceberg.io.CloseableIterable;
+import org.apache.iceberg.io.DeleteSchemaUtil;
 import org.apache.iceberg.io.InputFile;
 import org.apache.iceberg.io.OutputFileFactory;
 import org.apache.iceberg.parquet.Parquet;
@@ -79,8 +80,7 @@ public class IcebergRewriteExecutorTest extends TableTestBase {
 
   private RewriteFilesInput dataScanTask;
 
-  private final Schema posSchema =
-      new Schema(MetadataColumns.FILE_PATH, MetadataColumns.ROW_POSITION);
+  private final Schema posSchema = DeleteSchemaUtil.pathPosSchema();
 
   public IcebergRewriteExecutorTest(boolean hasPartition, FileFormat fileFormat) {
     super(

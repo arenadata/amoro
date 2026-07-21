@@ -29,7 +29,7 @@ import org.apache.amoro.flink.read.hybrid.split.SnapshotSplit;
 import org.apache.amoro.flink.table.MixedFormatTableLoader;
 import org.apache.amoro.scan.ChangeTableIncrementalScan;
 import org.apache.amoro.table.KeyedTable;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.flink.annotation.Internal;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.expressions.Expression;

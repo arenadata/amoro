@@ -57,6 +57,7 @@ import java.util.stream.IntStream;
 public class MixedFormatSourceEnumerator extends AbstractMixedFormatEnumerator {
   private static final Logger LOG = LoggerFactory.getLogger(MixedFormatSourceEnumerator.class);
   private transient KeyedTable keyedTable;
+
   /**
    * To record the snapshotId at the first planSplits.
    *
@@ -70,6 +71,7 @@ public class MixedFormatSourceEnumerator extends AbstractMixedFormatEnumerator {
   private final SplitAssigner splitAssigner;
   private final MixedFormatScanContext scanContext;
   private final long snapshotDiscoveryIntervalMs;
+
   /**
    * If true, using mixed-format table as build table. {@link MixedFormatSourceEnumerator} will
    * notify {@link MixedFormatSourceReader} after MixedFormatReaders have finished reading all
@@ -81,6 +83,7 @@ public class MixedFormatSourceEnumerator extends AbstractMixedFormatEnumerator {
   private final boolean dimTable;
 
   private volatile boolean sourceEventBeforeFirstPlan = false;
+
   /**
    * snapshotId for the last enumerated snapshot. next incremental enumeration should be based off
    * this as the starting position.

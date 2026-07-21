@@ -30,6 +30,7 @@ public class ProcessStage {
    * Action Stage description value, normally this value should be identical within certain actions
    */
   private final String desc;
+
   /**
    * the weight number of this action, the bigger the weight number, the higher position on front
    * pages

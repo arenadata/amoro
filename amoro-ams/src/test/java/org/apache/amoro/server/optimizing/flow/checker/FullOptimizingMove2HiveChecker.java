@@ -26,7 +26,7 @@ import org.apache.amoro.server.optimizing.UnKeyedTableCommit;
 import org.apache.amoro.server.optimizing.flow.view.TableDataView;
 import org.apache.amoro.table.MixedTable;
 import org.apache.amoro.utils.PropertyUtil;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import javax.annotation.Nullable;
 

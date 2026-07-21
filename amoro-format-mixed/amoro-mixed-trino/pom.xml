@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.amoro</groupId>
         <artifactId>amoro-format-mixed</artifactId>
-        <version>0.9-SNAPSHOT</version>
+        <version>0.9.0.1-4.4.0-0</version>
     </parent>
 
     <artifactId>amoro-mixed-trino</artifactId>
@@ -370,7 +370,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-hdfs-client</artifactId>
+                    <artifactId>hadoop-hdfs</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
@@ -402,7 +402,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-hdfs-client</artifactId>
+                    <artifactId>hadoop-hdfs</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
@@ -625,7 +625,7 @@
                     <skip>true</skip>
                     <java>
                         <googleJavaFormat>
-                            <version>1.15.0</version>
+                            <version>1.19.2</version>
                         </googleJavaFormat>
                     </java>
                 </configuration>

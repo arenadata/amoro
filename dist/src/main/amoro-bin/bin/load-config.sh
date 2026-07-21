@@ -22,6 +22,14 @@ CURRENT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 AMORO_HOME="$( cd "$CURRENT_DIR/../" ; pwd -P )"
 export AMORO_HOME
 
+if [ -z "$AMORO_CONF_DIR" ]; then
+    export AMORO_CONF_DIR="${AMORO_HOME}/conf"
+fi
+
+# source env.sh before resolving JAVA_RUN so that JAVA_HOME set there takes effect
+export AMORO_ENV_FILE=${AMORO_CONF_DIR}/env.sh
+test -f ${AMORO_ENV_FILE} && source ${AMORO_ENV_FILE}
+
 if [[ -d $JAVA_HOME ]]; then
     JAVA_RUN=$JAVA_HOME/bin/java
 else
@@ -32,15 +40,9 @@ if [ -z "$AMORO_LOG_DIR" ]; then
     export AMORO_LOG_DIR="${AMORO_HOME}/logs"
 fi
 
-if [ -z "$AMORO_CONF_DIR" ]; then
-    export AMORO_CONF_DIR="${AMORO_HOME}/conf"
-fi
-
 if [ -z "$AMORO_LOG_CONF_FILE" ]; then
     export AMORO_LOG_CONF_FILE="${AMORO_CONF_DIR}/log4j2.xml"
 fi
-
-export AMORO_ENV_FILE=${AMORO_CONF_DIR}/env.sh
 
 JVM_PROPERTIES=${AMORO_CONF_DIR}/jvm.properties
 JVM_VALUE=
@@ -67,8 +69,6 @@ export JVM_XMX_CONFIG
 export JVM_XMS_CONFIG
 export JMX_REMOTE_PORT_CONFIG
 export JVM_EXTRA_CONFIG
-
-test -f ${AMORO_ENV_FILE} && source ${AMORO_ENV_FILE}
 
 # set env variable amoro-addition-classpath if not exists
 if [ -z "${AMORO_ADDITION_CLASSPATH}" ]; then

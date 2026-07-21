@@ -78,7 +78,7 @@ import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
 import org.apache.amoro.table.TableProperties;
 import org.apache.amoro.utils.CatalogUtil;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.aliyun.AliyunProperties;
 import org.apache.iceberg.aws.AwsClientProperties;

@@ -27,6 +27,7 @@ public class MetricConstant {
    */
   public static final String TEMPORAL_TABLE_INITIALIZATION_START_TIMESTAMP =
       "temporalTableInitializationStartTimestamp";
+
   /**
    * The end time of mixed-format table's initialization when it used as build table in temporal
    * join.

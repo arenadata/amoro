@@ -25,7 +25,9 @@ package org.apache.amoro.events;
  */
 public interface Event {
 
-  /** @return event type */
+  /**
+   * @return event type
+   */
   EventType type();
 
   /**

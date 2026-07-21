@@ -26,6 +26,8 @@ import org.apache.iceberg.OverwriteFiles;
 import org.apache.iceberg.Transaction;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
+import org.apache.iceberg.util.DataFileSet;
+import org.apache.iceberg.util.DeleteFileSet;
 
 import java.util.List;
 
@@ -78,6 +80,19 @@ public class OverwriteHiveFiles extends UpdateHiveFiles<OverwriteFiles> implemen
     if (isHiveDataFile(file)) {
       // only handle file in hive location
       this.deleteFiles.add(file);
+    }
+    return this;
+  }
+
+  @Override
+  public OverwriteFiles deleteFiles(
+      DataFileSet dataFilesToDelete, DeleteFileSet deleteFilesToDelete) {
+    delegate.deleteFiles(dataFilesToDelete, deleteFilesToDelete);
+    for (DataFile file : dataFilesToDelete) {
+      if (isHiveDataFile(file)) {
+        // only handle file in hive location
+        this.deleteFiles.add(file);
+      }
     }
     return this;
   }

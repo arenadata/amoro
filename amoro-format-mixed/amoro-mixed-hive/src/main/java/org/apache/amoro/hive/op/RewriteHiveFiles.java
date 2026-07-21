@@ -109,6 +109,12 @@ public class RewriteHiveFiles extends UpdateHiveFiles<RewriteFiles> implements R
   }
 
   @Override
+  public RewriteFiles addFile(DeleteFile deleteFile, long dataSequenceNumber) {
+    delegate.addFile(deleteFile, dataSequenceNumber);
+    return this;
+  }
+
+  @Override
   public RewriteFiles dataSequenceNumber(long sequenceNumber) {
     delegate.dataSequenceNumber(sequenceNumber);
     return this;

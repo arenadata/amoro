@@ -54,8 +54,10 @@ public class RowDataReaderFunction extends DataIteratorReaderFunction<RowData> {
   private final boolean caseSensitive;
   private final AuthenticatedFileIO io;
   private final PrimaryKeySpec primaryKeySpec;
+
   /** The accurate selected columns size if the mixed-format source projected */
   private final int columnSize;
+
   /**
    * The index of the mixed-format file offset field in the read schema Refer to {@link
    * this#wrapFileOffsetColumnMeta}

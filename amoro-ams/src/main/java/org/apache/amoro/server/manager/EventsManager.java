@@ -32,7 +32,9 @@ public class EventsManager extends AbstractPluginManager<EventListener> {
   public static final String PLUGIN_TYPE = "event-listeners";
   private static volatile EventsManager INSTANCE;
 
-  /** @return Get the singleton object. */
+  /**
+   * @return Get the singleton object.
+   */
   public static EventsManager getInstance() {
     if (INSTANCE == null) {
       synchronized (EventsManager.class) {

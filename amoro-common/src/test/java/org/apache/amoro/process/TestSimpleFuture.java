@@ -18,6 +18,7 @@
 
 package org.apache.amoro.process;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -153,6 +154,7 @@ public class TestSimpleFuture {
   public void testCompleteException() throws ExecutionException, InterruptedException {
     CompletableFuture<?> future = mock(CompletableFuture.class);
     doReturn(true).when(future).complete(null);
+    doReturn(future).when(future).whenComplete(any());
     doThrow(new RuntimeException()).when(future).get();
     SimpleFuture simpleFuture = new SimpleFuture(future);
 

@@ -53,6 +53,7 @@ public class MixedFormatSourceReader<T>
   public static final Logger LOGGER = LoggerFactory.getLogger(MixedFormatSourceReader.class);
 
   public ReaderOutput<T> output;
+
   /** SourceEvents may be received before this#pollNext. */
   private volatile boolean maxWatermarkToBeEmitted = false;
 

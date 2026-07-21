@@ -71,6 +71,7 @@ public class RowDataPredicateExpressionVisitor
    * <p>Start from 0.
    */
   private final Map<String, Integer> fieldIndexMap;
+
   /** A map from field names to their respective data types */
   private final Map<String, DataType> fieldDataTypeMap;
 

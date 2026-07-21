@@ -27,7 +27,7 @@ import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.shade.guava32.com.google.common.base.Joiner;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;

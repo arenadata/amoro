@@ -1239,10 +1239,10 @@ public class IcebergMetadata implements ConnectorMetadata {
     return switch (procedureId) {
       case OPTIMIZE -> getTableHandleForOptimize(tableHandle, executeProperties, retryMode);
       case DROP_EXTENDED_STATS -> getTableHandleForDropExtendedStats(session, tableHandle);
-      case EXPIRE_SNAPSHOTS -> getTableHandleForExpireSnapshots(
-          session, tableHandle, executeProperties);
-      case REMOVE_ORPHAN_FILES -> getTableHandleForRemoveOrphanFiles(
-          session, tableHandle, executeProperties);
+      case EXPIRE_SNAPSHOTS ->
+          getTableHandleForExpireSnapshots(session, tableHandle, executeProperties);
+      case REMOVE_ORPHAN_FILES ->
+          getTableHandleForRemoveOrphanFiles(session, tableHandle, executeProperties);
     };
   }
 

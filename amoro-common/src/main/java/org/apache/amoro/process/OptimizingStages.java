@@ -28,20 +28,28 @@ public class OptimizingStages {
 
   /** minor optimizing executing phase */
   public static final ProcessStage MINOR = new ProcessStage("minor", 13);
+
   /** major optimizing executing phase */
   public static final ProcessStage MAJOR = new ProcessStage("major", 14);
+
   /** full optimizing executing phase */
   public static final ProcessStage FULL = new ProcessStage("full", 15);
+
   /** Committing phase of optimizing */
   public static final ProcessStage COMMITTING = new ProcessStage("committing", 18);
+
   /** Planning phase of optimizing */
   public static final ProcessStage PLANNING = new ProcessStage("planning", 17);
+
   /** evaluating phase of optimizing */
   public static final ProcessStage EVALUATING = new ProcessStage("evaluating", 16);
+
   /** When input data has been collected but waiting for quota available(not scheduled yet) */
   public static final ProcessStage PENDING = new ProcessStage("pending", 9);
+
   /** When the process has been scheduled but being waiting for quota available */
   public static final ProcessStage SUSPENDING = new ProcessStage("suspending", 9);
+
   /** When waiting for input data */
   public static final ProcessStage IDLE = new ProcessStage("idle", 1);
 

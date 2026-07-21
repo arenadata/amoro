@@ -59,6 +59,7 @@ public class MixedFormatTableLoader implements TableLoader {
   protected final InternalCatalogBuilder catalogBuilder;
   protected final TableIdentifier tableIdentifier;
   protected final Map<String, String> flinkTableProperties;
+
   /**
    * The mark of loading internal table, base or change table. For compatible with iceberg
    * committer.

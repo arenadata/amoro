@@ -19,7 +19,7 @@
 package org.apache.amoro.server.optimizing.flow.view;
 
 import org.apache.amoro.shade.guava32.com.google.common.base.MoreObjects;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.iceberg.StructLike;
 
 import java.util.List;

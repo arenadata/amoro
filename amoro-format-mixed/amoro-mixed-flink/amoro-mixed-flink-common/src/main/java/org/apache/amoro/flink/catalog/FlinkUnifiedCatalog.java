@@ -80,6 +80,7 @@ public class FlinkUnifiedCatalog extends AbstractCatalog {
   private final UnifiedCatalog unifiedCatalog;
   private final String amsUri;
   private final String amoroCatalogName;
+
   /**
    * Available Flink catalogs for Unified Catalog.
    *
@@ -298,7 +299,9 @@ public class FlinkUnifiedCatalog extends AbstractCatalog {
   @Override
   public List<CatalogPartitionSpec> listPartitions(
       ObjectPath tablePath, CatalogPartitionSpec partitionSpec)
-      throws TableNotExistException, TableNotPartitionedException, PartitionSpecInvalidException,
+      throws TableNotExistException,
+          TableNotPartitionedException,
+          PartitionSpecInvalidException,
           CatalogException {
     AbstractCatalog catalog = originalCatalog(tablePath);
     return catalog.listPartitions(tablePath, partitionSpec);
@@ -332,8 +335,11 @@ public class FlinkUnifiedCatalog extends AbstractCatalog {
       CatalogPartitionSpec partitionSpec,
       CatalogPartition partition,
       boolean ignoreIfExists)
-      throws TableNotExistException, TableNotPartitionedException, PartitionSpecInvalidException,
-          PartitionAlreadyExistsException, CatalogException {
+      throws TableNotExistException,
+          TableNotPartitionedException,
+          PartitionSpecInvalidException,
+          PartitionAlreadyExistsException,
+          CatalogException {
     AbstractCatalog catalog = originalCatalog(tablePath);
     catalog.createPartition(tablePath, partitionSpec, partition, ignoreIfExists);
   }

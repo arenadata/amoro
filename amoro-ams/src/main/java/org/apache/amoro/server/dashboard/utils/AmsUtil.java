@@ -29,6 +29,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -100,27 +103,49 @@ public class AmsUtil {
     }
   }
 
-  public static InetAddress lookForBindHost(String prefix) {
-    if (prefix.startsWith("0")) {
+  /**
+   * Resolves the expose host config to a local interface address. The value is either an IP address
+   * prefix (e.g. "10." or a full IP) matched against local interface addresses, or a hostname whose
+   * resolved addresses must include a local interface address.
+   */
+  public static InetAddress lookForBindHost(String prefixOrHostname) {
+    if (prefixOrHostname.startsWith("0")) {
       throw new RuntimeException(
           "config " + AmoroManagementConf.SERVER_EXPOSE_HOST.key() + " can't start with 0");
     }
     try {
-      Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-      while (networkInterfaces.hasMoreElements()) {
-        NetworkInterface networkInterface = networkInterfaces.nextElement();
-        for (Enumeration<InetAddress> enumeration = networkInterface.getInetAddresses();
-            enumeration.hasMoreElements(); ) {
-          InetAddress inetAddress = enumeration.nextElement();
-          if (checkHostAddress(inetAddress, prefix)) {
-            return inetAddress;
-          }
+      List<InetAddress> localAddresses = listLocalAddresses();
+      for (InetAddress inetAddress : localAddresses) {
+        if (checkHostAddress(inetAddress, prefixOrHostname)) {
+          return inetAddress;
         }
       }
-      throw new IllegalArgumentException("Can't find host address start with " + prefix);
+      try {
+        for (InetAddress resolved : InetAddress.getAllByName(prefixOrHostname)) {
+          if (localAddresses.contains(resolved)) {
+            return resolved;
+          }
+        }
+      } catch (UnknownHostException ignored) {
+      }
+      throw new IllegalArgumentException(
+          "Can't find local host address matching " + prefixOrHostname);
     } catch (Exception e) {
       throw new RuntimeException("Look for bind host failed", e);
     }
+  }
+
+  private static List<InetAddress> listLocalAddresses() throws SocketException {
+    List<InetAddress> addresses = new ArrayList<>();
+    Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+    while (networkInterfaces.hasMoreElements()) {
+      NetworkInterface networkInterface = networkInterfaces.nextElement();
+      for (Enumeration<InetAddress> enumeration = networkInterface.getInetAddresses();
+          enumeration.hasMoreElements(); ) {
+        addresses.add(enumeration.nextElement());
+      }
+    }
+    return addresses;
   }
 
   public static String getAMSThriftAddress(Configurations conf, String serviceName) {

@@ -38,6 +38,8 @@ tags:
     description: System and container settings
   - name: Overview
     description: Overview operations
+  - name: Tables
+    description: Table operations
 paths:
   /api/ams/v1/catalogs:
     get:
@@ -786,6 +788,150 @@ paths:
                     properties:
                       result:
                         type: boolean
+  /api/ams/v1/catalogs/{catalogName}/dbs/{db}/tables/{table}/partitions:
+    get:
+      tags:
+        - Tables
+      summary: Get table partitions
+      description: Get list of partitions for a specific table with optional sorting
+      parameters:
+        - name: catalogName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the catalog
+        - name: db
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The database name
+        - name: table
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table name
+        - name: filter
+          in: query
+          schema:
+            type: string
+          description: Filter partitions by name
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [partition, specId, fileCount, fileSize, lastCommitTime]
+            default: partition
+          description: Field to sort by
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order (ascending or descending)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      result:
+                        $ref: '#/components/schemas/PageResult'
+        '400':
+          description: Invalid sortBy parameter
+  /api/ams/v1/catalogs/{catalogName}/dbs/{db}/tables/{table}/snapshots:
+    get:
+      tags:
+        - Tables
+      summary: Get table snapshots
+      description: Get list of snapshots for a specific table with optional date range filtering
+      parameters:
+        - name: catalogName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The name of the catalog
+        - name: db
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The database name
+        - name: table
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The table name
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+        - name: ref
+          in: query
+          schema:
+            type: string
+          description: Reference name (tag or branch)
+        - name: operation
+          in: query
+          schema:
+            type: string
+            default: ALL
+          description: Operation type filter (ALL, OPTIMIZING, NON_OPTIMIZING)
+        - name: startTime
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Range start timestamp in seconds (inclusive). Filters snapshots with commitTime >= startTime.
+        - name: endTime
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Range end timestamp in seconds (inclusive). Filters snapshots with commitTime <= endTime.
+      responses:
+        '200':
+          description: Successful response with paginated snapshot list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      result:
+                        $ref: '#/components/schemas/PageResult'
+        '400':
+          description: Bad request - invalid parameters (e.g., startTime > endTime, invalid timestamp format)
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -980,3 +1126,34 @@ components:
           type: object
           additionalProperties:
             type: string
+    PageResult:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartitionBaseInfo'
+        total:
+          type: integer
+        offset:
+          type: integer
+        pageSize:
+          type: integer
+    PartitionBaseInfo:
+      type: object
+      properties:
+        partition:
+          type: string
+        specId:
+          type: integer
+        fileCount:
+          type: integer
+          format: int64
+        fileSize:
+          type: integer
+          format: int64
+        lastCommitTime:
+          type: integer
+          format: int64
+        size:
+          type: string

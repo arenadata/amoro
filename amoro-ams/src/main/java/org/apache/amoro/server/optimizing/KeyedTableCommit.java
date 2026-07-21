@@ -36,7 +36,7 @@ import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
 import org.apache.amoro.table.MixedTable;
 import org.apache.amoro.utils.ContentFiles;
 import org.apache.amoro.utils.MixedTableUtil;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.RewriteFiles;

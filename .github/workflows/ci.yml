@@ -1,0 +1,143 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: CI
+
+on:
+  push:
+    branches: ['develop/**', 'release/**', 'feature/**']
+  pull_request:
+    branches: ['develop/**', 'release/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_ARGS: -B -V -e -ntp
+
+jobs:
+  compile:
+    name: Compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: temurin
+        cache: maven
+        server-id: arenadata
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+    - name: Validate checkstyle
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./mvnw ${{ env.MAVEN_ARGS }} validate
+    - name: Compile
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./mvnw ${{ env.MAVEN_ARGS }} install -DskipTests
+    - name: Save m2 repository
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.m2/repository
+        key: m2-${{ github.sha }}
+
+  test:
+    name: "${{ matrix.name }}"
+    needs: compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Common
+            modules: amoro-common
+            timeout: 60
+
+          - name: Format Iceberg
+            modules: amoro-format-iceberg
+            timeout: 60
+
+          - name: Format Mixed Hive
+            modules: amoro-format-mixed/amoro-mixed-hive
+            timeout: 60
+
+          - name: Formats Other
+            modules: amoro-format-paimon,amoro-format-hudi,amoro-format-lance,amoro-metrics/amoro-metrics-prometheus
+            timeout: 60
+
+          - name: Mixed Spark
+            modules: amoro-format-mixed/amoro-mixed-spark/amoro-mixed-spark-3-common,amoro-format-mixed/amoro-mixed-spark/v3.5/amoro-mixed-spark-3.5
+            timeout: 120
+
+          - name: Optimizer
+            modules: amoro-optimizer/amoro-optimizer-common,amoro-optimizer/amoro-optimizer-standalone,amoro-optimizer/amoro-optimizer-flink,amoro-optimizer/amoro-optimizer-spark
+            timeout: 60
+
+          - name: AMS
+            modules: amoro-ams
+            timeout: 150
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: temurin
+        server-id: arenadata
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+    - name: Restore m2 repository
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.m2/repository
+        key: m2-${{ github.sha }}
+    # The amoro-mixed-spark aggregator keeps ${scala.binary.version} in its
+    # artifactId, which Maven cannot interpolate when the parent is resolved
+    # from the repository instead of the reactor. Provide the parent pom under
+    # its literal name so `-pl` builds of dependent modules can resolve it.
+    - name: Work around non-interpolated spark parent artifactId
+      run: |
+        base=~/.m2/repository/org/apache/amoro
+        for pom in "$base"/amoro-mixed-spark_2.*/*/amoro-mixed-spark_*.pom; do
+          [ -f "$pom" ] || continue
+          version=$(basename "$(dirname "$pom")")
+          literal="$base/amoro-mixed-spark_\${scala.binary.version}/$version"
+          mkdir -p "$literal"
+          cp "$pom" "$literal/amoro-mixed-spark_\${scala.binary.version}-$version.pom"
+        done
+    - name: Run tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: >-
+        ./mvnw ${{ env.MAVEN_ARGS }} test
+        -pl ${{ matrix.modules }}
+        -Dmaven.javadoc.skip=true
+        -Dsurefire.rerunFailingTestsCount=2
+        -fae
+    - name: Upload surefire reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: surefire-${{ matrix.name }}
+        path: '**/target/surefire-reports/'
+        if-no-files-found: ignore

@@ -21,7 +21,7 @@ package org.apache.amoro.server.dashboard.model;
 import org.apache.amoro.server.dashboard.utils.CommonUtil;
 import org.apache.amoro.shade.guava32.com.google.common.base.MoreObjects;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
 

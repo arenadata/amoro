@@ -790,8 +790,7 @@ public class IcebergTableMaintainer implements TableMaintainer {
               fileEntries.add(e);
             }
           });
-      fileEntries
-          .parallelStream()
+      fileEntries.parallelStream()
           .filter(e -> willNotRetain(e, expirationConfig, partitionFreshness))
           .forEach(expiredFiles::addFile);
     } catch (IOException e) {

@@ -24,6 +24,8 @@ import org.apache.iceberg.OverwriteFiles;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.Transaction;
 import org.apache.iceberg.expressions.Expression;
+import org.apache.iceberg.util.DataFileSet;
+import org.apache.iceberg.util.DeleteFileSet;
 
 import java.util.function.Supplier;
 
@@ -66,6 +68,15 @@ public class MixedOverwriteFiles extends MixedUpdate<OverwriteFiles> implements 
   public OverwriteFiles deleteFile(DataFile file) {
     overwriteFiles.deleteFile(file);
     deleteIcebergDataFile(file);
+    return this;
+  }
+
+  @Override
+  public OverwriteFiles deleteFiles(
+      DataFileSet dataFilesToDelete, DeleteFileSet deleteFilesToDelete) {
+    overwriteFiles.deleteFiles(dataFilesToDelete, deleteFilesToDelete);
+    dataFilesToDelete.forEach(this::deleteIcebergDataFile);
+    deleteFilesToDelete.forEach(this::deleteIcebergDeleteFile);
     return this;
   }
 

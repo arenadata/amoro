@@ -68,6 +68,7 @@ public class MetricsSummary {
   private long newDataSize = 0;
   private int newDataFileCnt = 0;
   private long newDataRecordCnt = 0;
+
   /** Only position delete files will be generated */
   private long newDeleteSize = 0;
 

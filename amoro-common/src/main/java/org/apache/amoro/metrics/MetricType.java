@@ -22,6 +22,7 @@ package org.apache.amoro.metrics;
 public enum MetricType {
   Counter,
   Gauge;
+
   // More metric type is not defined.
 
   public boolean isType(Metric metric) {

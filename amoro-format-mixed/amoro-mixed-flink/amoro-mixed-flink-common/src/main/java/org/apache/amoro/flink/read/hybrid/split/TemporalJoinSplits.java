@@ -48,6 +48,7 @@ public class TemporalJoinSplits implements Serializable {
   private final long startTimeMs = System.currentTimeMillis();
   private Map<String, Boolean> splits;
   private long unfinishedCount;
+
   /** transient because it is necessary to notify reader again after failover. */
   private transient boolean hasNotifiedReader = false;
 
