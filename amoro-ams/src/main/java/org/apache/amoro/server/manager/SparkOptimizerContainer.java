@@ -160,15 +160,7 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
       addKubernetesProperties(resource, resourceSparkConf);
     }
     String sparkOptions = resourceSparkConf.toConfOptions();
-    String proxyUser =
-        getContainerProperties()
-            .getOrDefault(
-                OptimizerProperties.EXPORT_PROPERTY_PREFIX + ENV_HADOOP_USER_NAME, "hadoop");
-    // impersonation requires hadoop.proxyuser.* privileges; skip the no-op case
-    String proxyUserArg =
-        proxyUser.equals(System.getProperty("user.name"))
-            ? ""
-            : String.format("--proxy-user %s ", proxyUser);
+    String proxyUserArg = buildProxyUserArg(resourceSparkConf);
     String jobArgs = super.buildOptimizerStartupArgsString(resource);
     // ./bin/spark-submit --master <master> --deploy-mode=<sparkMode> <options> --proxy-user <user>
     // --name <appName>
@@ -189,6 +181,49 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
         SPARK_JOB_MAIN_CLASS,
         jobUri,
         jobArgs);
+  }
+
+  /**
+   * spark-submit rejects --proxy-user together with a Kerberos principal ("Only one of --proxy-user
+   * or --principal can be provided"), including a principal configured via
+   * spark.kerberos.principal. When a principal is set, the keytab defines the job identity:
+   * --proxy-user is dropped if the exported HADOOP_USER_NAME is absent or matches the principal's
+   * primary component, and an explicitly conflicting value fails fast.
+   */
+  private String buildProxyUserArg(SparkConf sparkConf) {
+    String exportedUser =
+        getContainerProperties()
+            .get(OptimizerProperties.EXPORT_PROPERTY_PREFIX + ENV_HADOOP_USER_NAME);
+    String principal =
+        StringUtils.defaultIfEmpty(
+            sparkConf.configValue(SparkConfKeys.KERBEROS_PRINCIPAL),
+            sparkConf.configValue(SparkConfKeys.YARN_PRINCIPAL));
+    if (StringUtils.isEmpty(principal)) {
+      String proxyUser = StringUtils.defaultIfEmpty(exportedUser, "hadoop");
+      // impersonation requires hadoop.proxyuser.* privileges; skip the no-op case
+      return proxyUser.equals(System.getProperty("user.name"))
+          ? ""
+          : String.format("--proxy-user %s ", proxyUser);
+    }
+    String principalUser =
+        StringUtils.substringBefore(StringUtils.substringBefore(principal, "@"), "/");
+    if (StringUtils.isEmpty(exportedUser) || exportedUser.equals(principalUser)) {
+      LOG.info(
+          "Skipping --proxy-user: the Kerberos principal {} defines the optimizer job identity",
+          principal);
+      return "";
+    }
+    throw new IllegalArgumentException(
+        String.format(
+            "spark-submit does not allow --proxy-user together with a Kerberos principal, but %s%s=%s "
+                + "conflicts with %s=%s. Either remove the export so the keytab identity is used, "
+                + "configure the target user's own principal and keytab, or drop the principal/keytab "
+                + "and rely on a kinit'ed TGT with hadoop.proxyuser.* privileges.",
+            OptimizerProperties.EXPORT_PROPERTY_PREFIX,
+            ENV_HADOOP_USER_NAME,
+            exportedUser,
+            SparkConfKeys.KERBEROS_PRINCIPAL,
+            principal));
   }
 
   private Map<String, String> loadSparkConfig() {
@@ -334,6 +369,8 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
   }
 
   public static class SparkConfKeys {
+    public static final String KERBEROS_PRINCIPAL = "spark.kerberos.principal";
+    public static final String YARN_PRINCIPAL = "spark.yarn.principal";
     public static final String KUBERNETES_IMAGE_REF = "spark.kubernetes.container.image";
     public static final String KUBERNETES_DRIVER_NAME = "spark.kubernetes.driver.pod.name";
     public static final String KUBERNETES_NAMESPACE = "spark.kubernetes.namespace";

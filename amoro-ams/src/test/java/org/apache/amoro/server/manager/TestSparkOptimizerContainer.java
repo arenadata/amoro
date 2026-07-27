@@ -19,6 +19,8 @@
 package org.apache.amoro.server.manager;
 
 import org.apache.amoro.OptimizerProperties;
+import org.apache.amoro.resource.Resource;
+import org.apache.amoro.resource.ResourceType;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,5 +59,71 @@ public class TestSparkOptimizerContainer {
     Assert.assertTrue(sparkOptions.contains("--conf key1=value1"));
     Assert.assertTrue(sparkOptions.contains("--conf key2=value4"));
     Assert.assertTrue(sparkOptions.contains("--conf key5=value5"));
+  }
+
+  @Test
+  public void testProxyUserByDefault() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    String startUpArgs = buildStartupArgs(containerProperties);
+    Assert.assertTrue(startUpArgs.contains("--proxy-user hadoop "));
+  }
+
+  @Test
+  public void testProxyUserSkippedForProcessUser() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    containerProperties.put(
+        OptimizerProperties.EXPORT_PROPERTY_PREFIX + SparkOptimizerContainer.ENV_HADOOP_USER_NAME,
+        System.getProperty("user.name"));
+    String startUpArgs = buildStartupArgs(containerProperties);
+    Assert.assertFalse(startUpArgs.contains("--proxy-user"));
+  }
+
+  @Test
+  public void testProxyUserSkippedForKerberosPrincipal() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    containerProperties.put(
+        "spark-conf." + SparkOptimizerContainer.SparkConfKeys.KERBEROS_PRINCIPAL,
+        "amoro/host.example.com@EXAMPLE.COM");
+    String startUpArgs = buildStartupArgs(containerProperties);
+    Assert.assertFalse(startUpArgs.contains("--proxy-user"));
+  }
+
+  @Test
+  public void testProxyUserMatchingKerberosPrincipal() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    containerProperties.put(
+        OptimizerProperties.EXPORT_PROPERTY_PREFIX + SparkOptimizerContainer.ENV_HADOOP_USER_NAME,
+        "amoro");
+    containerProperties.put(
+        "spark-conf." + SparkOptimizerContainer.SparkConfKeys.KERBEROS_PRINCIPAL,
+        "amoro/host.example.com@EXAMPLE.COM");
+    String startUpArgs = buildStartupArgs(containerProperties);
+    Assert.assertFalse(startUpArgs.contains("--proxy-user"));
+  }
+
+  @Test
+  public void testProxyUserConflictingWithKerberosPrincipal() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    containerProperties.put(
+        OptimizerProperties.EXPORT_PROPERTY_PREFIX + SparkOptimizerContainer.ENV_HADOOP_USER_NAME,
+        "hadoop");
+    containerProperties.put(
+        "spark-conf." + SparkOptimizerContainer.SparkConfKeys.KERBEROS_PRINCIPAL,
+        "amoro/host.example.com@EXAMPLE.COM");
+    IllegalArgumentException e =
+        Assert.assertThrows(
+            IllegalArgumentException.class, () -> buildStartupArgs(containerProperties));
+    Assert.assertTrue(e.getMessage().contains("--proxy-user"));
+  }
+
+  private String buildStartupArgs(Map<String, String> containerProperties) {
+    SparkOptimizerContainer container = new SparkOptimizerContainer();
+    container.init("test", containerProperties);
+    Resource resource =
+        new Resource.Builder("test", "default", ResourceType.OPTIMIZER)
+            .setProperties(Maps.newHashMap())
+            .setThreadCount(1)
+            .build();
+    return container.buildOptimizerStartupArgsString(resource);
   }
 }
