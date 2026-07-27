@@ -97,6 +97,11 @@ table td:last-child, table th:last-child { width: 40%; word-break: break-all; }
 | http-server.ssl.keystore-path | &lt;undefined&gt; | Path to the keystore file containing the server certificate and private key. |
 | http-server.ssl.keystore-type | PKCS12 | Type of the keystore file, PKCS12 or JKS. |
 | http-server.ssl.min-tls-version | TLSv1.2 | Minimum accepted TLS protocol version, TLSv1.2 or TLSv1.3. |
+| kerberos.enabled | false | Whether to log the AMS process in from a Kerberos keytab at startup. The resulting login user becomes the process-wide Hadoop identity, e.g. for credential providers authenticating with the current UGI. |
+| kerberos.keytab |  | The keytab file path of the AMS process principal. |
+| kerberos.krb5-conf-path |  | Optional krb5.conf file path. When set, it overrides the java.security.krb5.conf system property. |
+| kerberos.principal |  | The Kerberos principal of the AMS process. _HOST is replaced with the local hostname. |
+| kerberos.relogin-interval | 5 min | Interval for checking the TGT and re-logging in from the keytab. |
 | optimizer-group.max-keeping-attempts | 3 | The maximum number of consecutive attempts to keep the optimizer group at its current parallelism. |
 | optimizer-group.min-parallelism-check-interval | 5 min | The interval for checking and ensuring the optimizer group meets its minimum parallelism requirement. When the current parallelism falls below the configured min-parallelism, the system will attempt to scale out optimizers at this interval. The actual scale-out timing is calculated as: consecutive keeping attempts * this interval. |
 | optimizer.heart-beat-timeout | 1 min | Timeout duration for Optimizer heartbeat. |
