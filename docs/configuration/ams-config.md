@@ -88,6 +88,15 @@ table td:last-child, table th:last-child { width: 40%; word-break: break-all; }
 | http-server.proxy-client-ip-header | X-Real-IP | The HTTP header to record the real client IP address. If your server is behind a load balancer or other proxy, the server will see this load balancer or proxy IP address as the client IP address, to get around this common issue, most load balancers or proxies offer the ability to record the real remote IP address in an HTTP header that will be added to the request for other devices to use. |
 | http-server.rest-auth-type | token | The authentication used by REST APIs, token (default), basic or jwt. |
 | http-server.session-timeout | 7 d | Timeout for http session. |
+| http-server.ssl.cipher-suites | &lt;undefined&gt; | Comma-separated list of enabled TLS cipher suites. Uses the JVM defaults if not set. |
+| http-server.ssl.credential-provider.core-site-path | &lt;undefined&gt; | Local core-site.xml to load into the Hadoop configuration used for resolving the credential provider, e.g. to configure a custom provider implementation. |
+| http-server.ssl.credential-provider.path | &lt;undefined&gt; | Hadoop credential provider path (e.g. jceks://file/path/to/creds.jceks) to resolve the keystore and key passwords. Aliases are the option keys http-server.ssl.keystore-password and http-server.ssl.key-password. Falls back to the plain-text options for aliases missing in the provider. |
+| http-server.ssl.enabled | false | Whether to enable TLS for the Http server. |
+| http-server.ssl.key-password | &lt;undefined&gt; | Password of the private key in the keystore, defaults to the keystore password. |
+| http-server.ssl.keystore-password | &lt;undefined&gt; | Password of the keystore file. |
+| http-server.ssl.keystore-path | &lt;undefined&gt; | Path to the keystore file containing the server certificate and private key. |
+| http-server.ssl.keystore-type | PKCS12 | Type of the keystore file, PKCS12 or JKS. |
+| http-server.ssl.min-tls-version | TLSv1.2 | Minimum accepted TLS protocol version, TLSv1.2 or TLSv1.3. |
 | optimizer-group.max-keeping-attempts | 3 | The maximum number of consecutive attempts to keep the optimizer group at its current parallelism. |
 | optimizer-group.min-parallelism-check-interval | 5 min | The interval for checking and ensuring the optimizer group meets its minimum parallelism requirement. When the current parallelism falls below the configured min-parallelism, the system will attempt to scale out optimizers at this interval. The actual scale-out timing is calculated as: consecutive keeping attempts * this interval. |
 | optimizer.heart-beat-timeout | 1 min | Timeout duration for Optimizer heartbeat. |

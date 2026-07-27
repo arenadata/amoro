@@ -65,6 +65,7 @@ import org.apache.amoro.server.table.RuntimeHandlerChain;
 import org.apache.amoro.server.table.TableManager;
 import org.apache.amoro.server.table.TableService;
 import org.apache.amoro.server.terminal.TerminalManager;
+import org.apache.amoro.server.utils.HttpsServerFactory;
 import org.apache.amoro.server.utils.ThriftServiceProxy;
 import org.apache.amoro.shade.guava32.com.google.common.annotations.VisibleForTesting;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
@@ -409,6 +410,9 @@ public class AmoroServiceContainer {
               config.jsonMapper(JavalinJsonMapper.createDefaultJsonMapper());
               config.showJavalinBanner = false;
               config.enableWebjars();
+              if (serviceConfig.getBoolean(AmoroManagementConf.HTTP_SERVER_SSL_ENABLED)) {
+                config.server(() -> HttpsServerFactory.createServer(serviceConfig));
+              }
             });
 
     httpServer.routes(
@@ -460,7 +464,13 @@ public class AmoroServiceContainer {
 
   private void startHttpService() {
     int port = serviceConfig.getInteger(AmoroManagementConf.HTTP_SERVER_PORT);
-    httpServer.start(port);
+    boolean sslEnabled = serviceConfig.getBoolean(AmoroManagementConf.HTTP_SERVER_SSL_ENABLED);
+    if (sslEnabled) {
+      // the port is already set on the TLS connector of the custom Jetty server
+      httpServer.start();
+    } else {
+      httpServer.start(port);
+    }
 
     LOG.info(
         "\n"
@@ -472,7 +482,7 @@ public class AmoroServiceContainer {
             + "                                       \n"
             + "      https://amoro.apache.org/       \n");
 
-    LOG.info("Http server start at {}.", port);
+    LOG.info("Http server start at {}, TLS {}.", port, sslEnabled ? "enabled" : "disabled");
   }
 
   private void registerAmsServiceMetric() {
