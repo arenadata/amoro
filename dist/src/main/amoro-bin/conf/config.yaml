@@ -70,6 +70,16 @@ ams:
     # Optional fallback:
     #   set default-role: VIEWER only when you intentionally want authenticated
     #   users without a matched role mapping to receive read-only access.
+    #
+    # To enable TLS, uncomment the following settings:
+    # ssl:
+    #   enabled: true
+    #   keystore-path: /path/to/keystore.p12
+    #   keystore-password: changeit
+    #   keystore-type: PKCS12          # PKCS12 or JKS
+    #   key-password: changeit         # defaults to keystore-password
+    #   min-tls-version: TLSv1.2       # TLSv1.2 or TLSv1.3
+    #   cipher-suites: "TLS_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"  # JVM defaults if not set
 
   refresh-external-catalogs:
     interval: 3min # 180000
@@ -117,7 +127,7 @@ ams:
   # Support for encrypted sensitive configuration items
   shade:
     identifier: default # Built-in support for default/base64. Defaults to "default", indicating no encryption
-    sensitive-keywords: admin-password;database.password;http-server.authorization.ldap-role-mapping.bind-password
+    sensitive-keywords: admin-password;database.password;http-server.authorization.ldap-role-mapping.bind-password;http-server.ssl.keystore-password;http-server.ssl.key-password
 
   overview-cache:
     refresh-interval: 3min          # 3 min

@@ -327,6 +327,51 @@ public class AmoroManagementConf {
           .defaultValue(19090)
           .withDescription("Port that the Http server is bound to.");
 
+  public static final ConfigOption<Boolean> HTTP_SERVER_SSL_ENABLED =
+      ConfigOptions.key("http-server.ssl.enabled")
+          .booleanType()
+          .defaultValue(false)
+          .withDescription("Whether to enable TLS for the Http server.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_KEYSTORE_PATH =
+      ConfigOptions.key("http-server.ssl.keystore-path")
+          .stringType()
+          .noDefaultValue()
+          .withDescription(
+              "Path to the keystore file containing the server certificate and private key.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_KEYSTORE_PASSWORD =
+      ConfigOptions.key("http-server.ssl.keystore-password")
+          .stringType()
+          .noDefaultValue()
+          .withDescription("Password of the keystore file.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_KEYSTORE_TYPE =
+      ConfigOptions.key("http-server.ssl.keystore-type")
+          .stringType()
+          .defaultValue("PKCS12")
+          .withDescription("Type of the keystore file, PKCS12 or JKS.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_KEY_PASSWORD =
+      ConfigOptions.key("http-server.ssl.key-password")
+          .stringType()
+          .noDefaultValue()
+          .withDescription(
+              "Password of the private key in the keystore, defaults to the keystore password.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_MIN_TLS_VERSION =
+      ConfigOptions.key("http-server.ssl.min-tls-version")
+          .stringType()
+          .defaultValue("TLSv1.2")
+          .withDescription("Minimum accepted TLS protocol version, TLSv1.2 or TLSv1.3.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_CIPHER_SUITES =
+      ConfigOptions.key("http-server.ssl.cipher-suites")
+          .stringType()
+          .noDefaultValue()
+          .withDescription(
+              "Comma-separated list of enabled TLS cipher suites. Uses the JVM defaults if not set.");
+
   public static final ConfigOption<String> HTTP_SERVER_REST_AUTH_TYPE =
       ConfigOptions.key("http-server.rest-auth-type")
           .stringType()
