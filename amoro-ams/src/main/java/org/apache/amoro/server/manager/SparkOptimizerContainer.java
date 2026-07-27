@@ -314,8 +314,15 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
         "Cannot find {} from optimizer start up stats",
         YARN_APPLICATION_ID_PROPERTY);
     String applicationId = resource.getProperties().get(YARN_APPLICATION_ID_PROPERTY);
+    SparkOptimizerContainer.SparkConf resourceSparkConf =
+        SparkOptimizerContainer.SparkConf.buildFor(loadSparkConfig(), getContainerProperties())
+            .withGroupProperties(resource.getProperties())
+            .build();
+    // the conf carries spark.kerberos.principal/keytab so the kill can log in on a secure cluster
+    String sparkOptions = resourceSparkConf.toConfOptions();
     return String.format(
-        "%s/bin/spark-submit --kill %s --master %s", sparkHome, applicationId, sparkMaster);
+        "%s/bin/spark-submit --kill %s --master %s %s",
+        sparkHome, applicationId, sparkMaster, sparkOptions);
   }
 
   private String buildReleaseKubernetesCommand(Resource resource) {
