@@ -301,7 +301,7 @@ public abstract class AdaptHiveBaseParquetReaders<T> {
           } else {
             return new ParquetValueReaders.BytesReader(desc);
           }
-          // Change for mixed-hive table ⬆
+        // Change for mixed-hive table ⬆
         case INT32:
           if (expected.typeId() == org.apache.iceberg.types.Type.TypeID.LONG) {
             return new ParquetValueReaders.IntAsLongReader(desc);
@@ -318,7 +318,7 @@ public abstract class AdaptHiveBaseParquetReaders<T> {
         case INT64:
         case DOUBLE:
           return new ParquetValueReaders.UnboxedReader<>(desc);
-          // Change for mixed-hive table ⬇
+        // Change for mixed-hive table ⬇
         case INT96:
           // Impala & Spark used to write timestamps as INT96 without a logical type. For backwards
           // compatibility we try to read INT96 as timestamps.
@@ -328,7 +328,7 @@ public abstract class AdaptHiveBaseParquetReaders<T> {
           } else {
             return new TimestampIntWithOutTZ96Reader(desc);
           }
-          // Change for mixed-hive table ⬆
+        // Change for mixed-hive table ⬆
         default:
           throw new UnsupportedOperationException("Unsupported type: " + primitive);
       }

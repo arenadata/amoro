@@ -268,7 +268,7 @@ public class SparkParquetReaders {
           } else {
             return new ParquetValueReaders.ByteArrayReader(desc);
           }
-          // Change for mixed-format table ⬆
+        // Change for mixed-format table ⬆
         case INT32:
           if (expected != null && expected.typeId() == org.apache.iceberg.types.Type.TypeID.LONG) {
             return new ParquetValueReaders.IntAsLongReader(desc);

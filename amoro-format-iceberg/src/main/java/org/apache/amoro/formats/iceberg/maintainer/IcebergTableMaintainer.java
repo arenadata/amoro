@@ -832,7 +832,7 @@ public class IcebergTableMaintainer implements TableMaintainer {
   private Comparable<?> getExpireValue(
       DataExpirationConfig expirationConfig, Types.NestedField field, long expireTimestamp) {
     switch (field.type().typeId()) {
-        // expireTimestamp is in milliseconds, TIMESTAMP type is in microseconds
+      // expireTimestamp is in milliseconds, TIMESTAMP type is in microseconds
       case TIMESTAMP:
         return expireTimestamp * 1000;
       case LONG:

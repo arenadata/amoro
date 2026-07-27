@@ -150,10 +150,10 @@ public abstract class AdaptHiveBaseParquetWriter<T> {
           return ParquetValueWriters.floats(desc);
         case DOUBLE:
           return ParquetValueWriters.doubles(desc);
-          // Change for mixed-hive table ⬇
+        // Change for mixed-hive table ⬇
         case INT96:
           return new TimestampInt96Writer(desc);
-          // Change for mixed-hive table ⬆
+        // Change for mixed-hive table ⬆
         default:
           throw new UnsupportedOperationException("Unsupported type: " + primitive);
       }
