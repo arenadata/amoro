@@ -21,6 +21,9 @@ package org.apache.amoro.server.utils;
 import io.javalin.Javalin;
 import org.apache.amoro.config.Configurations;
 import org.apache.amoro.server.AmoroManagementConf;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.alias.CredentialProvider;
+import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.junit.jupiter.api.AfterAll;
@@ -38,6 +41,7 @@ import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
 
@@ -223,6 +227,100 @@ public class TestHttpsServerFactory {
         Assertions.assertThrows(
             IllegalArgumentException.class, () -> HttpsServerFactory.createSslContextFactory(conf));
     Assertions.assertTrue(exception.getMessage().contains("Unsupported keystore type"));
+  }
+
+  @Test
+  void testCredentialProviderResolvesKeystorePassword() throws Exception {
+    String providerUri = "jceks://file" + tempDir.resolve("creds.jceks");
+    Configuration hadoopConf = new Configuration();
+    hadoopConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, providerUri);
+    CredentialProvider provider = CredentialProviderFactory.getProviders(hadoopConf).get(0);
+    provider.createCredentialEntry(
+        AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PASSWORD.key(),
+        KEYSTORE_PASSWORD.toCharArray());
+    provider.flush();
+
+    Configurations conf = new Configurations();
+    conf.setBoolean(AmoroManagementConf.HTTP_SERVER_SSL_ENABLED, true);
+    conf.setString(AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PATH, keystorePath);
+    conf.setString(AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_PATH, providerUri);
+    Assertions.assertNotNull(HttpsServerFactory.createSslContextFactory(conf));
+  }
+
+  @Test
+  void testCredentialProviderFallsBackToPlainPassword() throws Exception {
+    String providerUri = "jceks://file" + tempDir.resolve("empty-creds.jceks");
+    Configuration hadoopConf = new Configuration();
+    hadoopConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, providerUri);
+    CredentialProvider provider = CredentialProviderFactory.getProviders(hadoopConf).get(0);
+    provider.createCredentialEntry("unrelated-alias", "unrelated".toCharArray());
+    provider.flush();
+
+    Configurations conf = sslConfigurations();
+    conf.setString(AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_PATH, providerUri);
+    Assertions.assertNotNull(HttpsServerFactory.createSslContextFactory(conf));
+  }
+
+  @Test
+  void testCredentialProviderConfiguredViaConfOverrides() throws Exception {
+    String providerUri = "jceks://file" + tempDir.resolve("conf-creds.jceks");
+    Configuration hadoopConf = new Configuration();
+    hadoopConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, providerUri);
+    CredentialProvider provider = CredentialProviderFactory.getProviders(hadoopConf).get(0);
+    provider.createCredentialEntry(
+        AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PASSWORD.key(),
+        KEYSTORE_PASSWORD.toCharArray());
+    provider.flush();
+
+    Configurations conf = new Configurations();
+    conf.setBoolean(AmoroManagementConf.HTTP_SERVER_SSL_ENABLED, true);
+    conf.setString(AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PATH, keystorePath);
+    conf.setString(
+        AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CONF_PREFIX
+            + CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,
+        providerUri);
+    Assertions.assertNotNull(HttpsServerFactory.createSslContextFactory(conf));
+  }
+
+  @Test
+  void testCredentialProviderConfiguredViaCoreSiteFile() throws Exception {
+    String providerUri = "jceks://file" + tempDir.resolve("core-site-creds.jceks");
+    Configuration hadoopConf = new Configuration();
+    hadoopConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, providerUri);
+    CredentialProvider provider = CredentialProviderFactory.getProviders(hadoopConf).get(0);
+    provider.createCredentialEntry(
+        AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PASSWORD.key(),
+        KEYSTORE_PASSWORD.toCharArray());
+    provider.flush();
+
+    Path coreSite = tempDir.resolve("core-site.xml");
+    Files.write(
+        coreSite,
+        ("<configuration><property><name>"
+                + CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH
+                + "</name><value>"
+                + providerUri
+                + "</value></property></configuration>")
+            .getBytes(StandardCharsets.UTF_8));
+
+    Configurations conf = new Configurations();
+    conf.setBoolean(AmoroManagementConf.HTTP_SERVER_SSL_ENABLED, true);
+    conf.setString(AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PATH, keystorePath);
+    conf.setString(
+        AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CORE_SITE, coreSite.toString());
+    Assertions.assertNotNull(HttpsServerFactory.createSslContextFactory(conf));
+  }
+
+  @Test
+  void testMissingCoreSiteFileFails() {
+    Configurations conf = sslConfigurations();
+    conf.setString(
+        AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CORE_SITE,
+        tempDir.resolve("absent-core-site.xml").toString());
+    IllegalArgumentException exception =
+        Assertions.assertThrows(
+            IllegalArgumentException.class, () -> HttpsServerFactory.createSslContextFactory(conf));
+    Assertions.assertTrue(exception.getMessage().contains("does not exist"));
   }
 
   @Test

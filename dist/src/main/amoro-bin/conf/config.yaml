@@ -80,6 +80,18 @@ ams:
     #   key-password: changeit         # defaults to keystore-password
     #   min-tls-version: TLSv1.2       # TLSv1.2 or TLSv1.3
     #   cipher-suites: "TLS_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"  # JVM defaults if not set
+    #
+    #   Instead of plain-text passwords, a Hadoop credential provider can be used.
+    #   Aliases: http-server.ssl.keystore-password, http-server.ssl.key-password, e.g.
+    #     hadoop credential create http-server.ssl.keystore-password -provider jceks://file/path/to/creds.jceks
+    #   credential-provider:
+    #     path: jceks://file/path/to/creds.jceks
+    #     # Optional: extra Hadoop configuration for the provider, e.g. a custom
+    #     # provider implementation (OpenBao/Vault etc.) via a core-site.xml file
+    #     # and/or inline properties. Inline properties win over the file.
+    #     core-site-path: /etc/hadoop/conf/core-site.xml
+    #     conf:
+    #       hadoop.security.credential.clear-text-fallback: "false"
 
   refresh-external-catalogs:
     interval: 3min # 180000

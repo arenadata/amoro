@@ -18,9 +18,13 @@
 
 package org.apache.amoro.server.utils;
 
+import org.apache.amoro.config.ConfigOption;
 import org.apache.amoro.config.Configurations;
 import org.apache.amoro.server.AmoroManagementConf;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -43,7 +47,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /** Builds a Jetty server with a TLS connector from the AMS http-server.ssl.* options. */
@@ -84,8 +90,12 @@ public class HttpsServerFactory {
 
     String keystoreType =
         serviceConfig.getString(AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_TYPE);
+    Configuration credentialProviderConf = buildCredentialProviderConf(serviceConfig);
     String keystorePassword =
-        serviceConfig.getString(AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PASSWORD);
+        resolvePassword(
+            serviceConfig,
+            credentialProviderConf,
+            AmoroManagementConf.HTTP_SERVER_SSL_KEYSTORE_PASSWORD);
     validateKeystore(keystorePath, keystoreType, keystorePassword);
 
     SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
@@ -94,7 +104,11 @@ public class HttpsServerFactory {
     if (keystorePassword != null) {
       sslContextFactory.setKeyStorePassword(keystorePassword);
     }
-    String keyPassword = serviceConfig.getString(AmoroManagementConf.HTTP_SERVER_SSL_KEY_PASSWORD);
+    String keyPassword =
+        resolvePassword(
+            serviceConfig,
+            credentialProviderConf,
+            AmoroManagementConf.HTTP_SERVER_SSL_KEY_PASSWORD);
     if (StringUtils.isNotBlank(keyPassword)) {
       sslContextFactory.setKeyManagerPassword(keyPassword);
     }
@@ -115,6 +129,77 @@ public class HttpsServerFactory {
       sslContextFactory.setIncludeCipherSuites(suites);
     }
     return sslContextFactory;
+  }
+
+  /**
+   * Builds the Hadoop configuration used to resolve the credential provider, or null when no
+   * credential-provider option is set. Applied in order, later entries overriding earlier ones:
+   * core-site file, http-server.ssl.credential-provider.conf.* entries, the explicit provider path.
+   */
+  private static Configuration buildCredentialProviderConf(Configurations serviceConfig) {
+    String providerPath =
+        serviceConfig.getString(AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_PATH);
+    String coreSitePath =
+        serviceConfig.getString(AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CORE_SITE);
+    String confPrefix = AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CONF_PREFIX;
+    Map<String, String> confOverrides = new HashMap<>();
+    serviceConfig
+        .toMap()
+        .forEach(
+            (key, value) -> {
+              if (key.startsWith(confPrefix) && key.length() > confPrefix.length()) {
+                confOverrides.put(key.substring(confPrefix.length()), value);
+              }
+            });
+    if (StringUtils.isBlank(providerPath)
+        && StringUtils.isBlank(coreSitePath)
+        && confOverrides.isEmpty()) {
+      return null;
+    }
+
+    Configuration hadoopConf = new Configuration();
+    if (StringUtils.isNotBlank(coreSitePath)) {
+      if (!Files.isReadable(Paths.get(coreSitePath))) {
+        throw new IllegalArgumentException(
+            String.format(
+                "File %s configured by %s does not exist or is not readable",
+                coreSitePath,
+                AmoroManagementConf.HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CORE_SITE.key()));
+      }
+      hadoopConf.addResource(new Path(coreSitePath));
+    }
+    confOverrides.forEach(hadoopConf::set);
+    if (StringUtils.isNotBlank(providerPath)) {
+      hadoopConf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, providerPath);
+    }
+    return hadoopConf;
+  }
+
+  /**
+   * Resolves a password from the Hadoop credential provider, using the option key as the alias.
+   * Falls back to the plain-text option value.
+   */
+  private static String resolvePassword(
+      Configurations serviceConfig,
+      Configuration credentialProviderConf,
+      ConfigOption<String> passwordOption) {
+    if (credentialProviderConf != null) {
+      try {
+        char[] password = credentialProviderConf.getPassword(passwordOption.key());
+        if (password != null) {
+          return new String(password);
+        }
+      } catch (IOException e) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Failed to resolve alias %s from credential provider %s",
+                passwordOption.key(),
+                credentialProviderConf.get(
+                    CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, "<not set>")),
+            e);
+      }
+    }
+    return serviceConfig.getString(passwordOption);
   }
 
   /** Loads the keystore eagerly so misconfiguration fails at startup with a clear message. */

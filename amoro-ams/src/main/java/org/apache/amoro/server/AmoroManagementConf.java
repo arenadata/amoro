@@ -372,6 +372,27 @@ public class AmoroManagementConf {
           .withDescription(
               "Comma-separated list of enabled TLS cipher suites. Uses the JVM defaults if not set.");
 
+  public static final ConfigOption<String> HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_PATH =
+      ConfigOptions.key("http-server.ssl.credential-provider.path")
+          .stringType()
+          .noDefaultValue()
+          .withDescription(
+              "Hadoop credential provider path (e.g. jceks://file/path/to/creds.jceks) to resolve"
+                  + " the keystore and key passwords. Aliases are the option keys"
+                  + " http-server.ssl.keystore-password and http-server.ssl.key-password. Falls"
+                  + " back to the plain-text options for aliases missing in the provider.");
+
+  public static final ConfigOption<String> HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CORE_SITE =
+      ConfigOptions.key("http-server.ssl.credential-provider.core-site-path")
+          .stringType()
+          .noDefaultValue()
+          .withDescription(
+              "Local core-site.xml to load into the Hadoop configuration used for resolving the"
+                  + " credential provider, e.g. to configure a custom provider implementation.");
+
+  public static final String HTTP_SERVER_SSL_CREDENTIAL_PROVIDER_CONF_PREFIX =
+      "http-server.ssl.credential-provider.conf.";
+
   public static final ConfigOption<String> HTTP_SERVER_REST_AUTH_TYPE =
       ConfigOptions.key("http-server.rest-auth-type")
           .stringType()
