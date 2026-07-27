@@ -19,7 +19,7 @@ name: CI
 
 on:
   push:
-    branches: ['develop/**', 'release/**', 'feature/**']
+    branches: ['develop/**', 'release/**']
   pull_request:
     branches: ['develop/**', 'release/**']
   workflow_dispatch:
