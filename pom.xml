@@ -73,8 +73,8 @@
     <distributionManagement>
         <repository>
             <id>arenadata</id>
-            <name>GitHub Arenadata Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/arenadata/amoro</url>
+            <name>Arenadata Apache Maven Packages</name>
+            <url>https://maven.arenadata.io/arenadata</url>
         </repository>
     </distributionManagement>
 
