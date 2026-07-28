@@ -21,6 +21,16 @@ ams:
   server-bind-host: "0.0.0.0"
   server-expose-host: "127.0.0.1"
 
+  # To log the AMS process in from a Kerberos keytab at startup, uncomment the
+  # following settings. The login user becomes the process-wide Hadoop identity,
+  # e.g. for credential providers authenticating with the current UGI.
+  # kerberos:
+  #   enabled: true
+  #   principal: amoro/_HOST@EXAMPLE.COM   # _HOST resolves to the local hostname
+  #   keytab: /etc/security/keytabs/amoro.service.keytab
+  #   krb5-conf-path: /etc/krb5.conf       # optional, overrides java.security.krb5.conf
+  #   relogin-interval: 5min
+
   thrift-server:
     max-message-size: 100MB # 104857600
     selector-thread-count: 2

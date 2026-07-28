@@ -61,7 +61,7 @@ class AdaptHiveParquetConversions {
         // Add metrics for int96 type
         Function<Object, Object> timeConversion = converterFromParquet(parquetType, type);
         return (Literal<T>) Literal.of((Long) timeConversion.apply(value));
-        // Change for mixed-hive table ⬇
+      // Change for mixed-hive table ⬇
       case FLOAT:
         return (Literal<T>) Literal.of((Float) value);
       case DOUBLE:

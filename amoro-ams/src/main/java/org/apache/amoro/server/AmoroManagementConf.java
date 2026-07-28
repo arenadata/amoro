@@ -54,6 +54,42 @@ public class AmoroManagementConf {
           .defaultValue("admin")
           .withDescription("The administrator password");
 
+  public static final ConfigOption<Boolean> KERBEROS_ENABLED =
+      ConfigOptions.key("kerberos.enabled")
+          .booleanType()
+          .defaultValue(false)
+          .withDescription(
+              "Whether to log the AMS process in from a Kerberos keytab at startup. The resulting "
+                  + "login user becomes the process-wide Hadoop identity, e.g. for credential "
+                  + "providers authenticating with the current UGI.");
+
+  public static final ConfigOption<String> KERBEROS_PRINCIPAL =
+      ConfigOptions.key("kerberos.principal")
+          .stringType()
+          .defaultValue("")
+          .withDescription(
+              "The Kerberos principal of the AMS process. _HOST is replaced with the local hostname.");
+
+  public static final ConfigOption<String> KERBEROS_KEYTAB =
+      ConfigOptions.key("kerberos.keytab")
+          .stringType()
+          .defaultValue("")
+          .withDescription("The keytab file path of the AMS process principal.");
+
+  public static final ConfigOption<String> KERBEROS_KRB5_CONF_PATH =
+      ConfigOptions.key("kerberos.krb5-conf-path")
+          .stringType()
+          .defaultValue("")
+          .withDescription(
+              "Optional krb5.conf file path. When set, it overrides the java.security.krb5.conf "
+                  + "system property.");
+
+  public static final ConfigOption<Duration> KERBEROS_RELOGIN_INTERVAL =
+      ConfigOptions.key("kerberos.relogin-interval")
+          .durationType()
+          .defaultValue(Duration.ofMinutes(5))
+          .withDescription("Interval for checking the TGT and re-logging in from the keytab.");
+
   public static final ConfigOption<Boolean> AUTHORIZATION_ENABLED =
       ConfigOptions.key("http-server.authorization.enabled")
           .booleanType()

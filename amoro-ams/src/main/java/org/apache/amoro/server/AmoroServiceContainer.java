@@ -66,6 +66,7 @@ import org.apache.amoro.server.table.TableManager;
 import org.apache.amoro.server.table.TableService;
 import org.apache.amoro.server.terminal.TerminalManager;
 import org.apache.amoro.server.utils.HttpsServerFactory;
+import org.apache.amoro.server.utils.KerberosProcessLogin;
 import org.apache.amoro.server.utils.ThriftServiceProxy;
 import org.apache.amoro.shade.guava32.com.google.common.annotations.VisibleForTesting;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
@@ -132,6 +133,7 @@ public class AmoroServiceContainer {
 
   public AmoroServiceContainer() throws Exception {
     initConfig();
+    KerberosProcessLogin.start(serviceConfig);
     haContainer = HighAvailabilityContainerFactory.create(serviceConfig);
   }
 
@@ -364,6 +366,7 @@ public class AmoroServiceContainer {
   public void dispose() {
     disposeOptimizingService();
     disposeRestService();
+    KerberosProcessLogin.stop();
   }
 
   private void initConfig() throws Exception {

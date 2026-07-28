@@ -212,6 +212,17 @@ The spark optimizer may fail due to class conflicts sometimes, you can try to fi
 * Set `spark-conf.spark.executor.userClassPathFirst` to `true`.
 {{< /hint >}}
 
+{{< hint info >}}
+On a Kerberos-enabled YARN cluster, configure `spark-conf.spark.kerberos.principal` and
+`spark-conf.spark.kerberos.keytab` so that the long-running optimizer can renew its delegation
+tokens. The keytab then defines the job identity and `--proxy-user` is not applied:
+`export.HADOOP_USER_NAME` may only be omitted or match the principal's primary component,
+otherwise the submit fails with a configuration error (spark-submit does not allow `--proxy-user`
+together with a principal). Alternatively, drop the principal/keytab and rely on a regularly
+kinit'ed ticket cache of the AMS process user with `hadoop.proxyuser.*` privileges — note that
+without a keytab, delegation tokens expire after their maximum lifetime (7 days by default).
+{{< /hint >}}
+
 An example for yarn client mode:
 
 ```yaml
