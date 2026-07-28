@@ -150,7 +150,7 @@ export default defineComponent({
         try {
           const stored = localStorage.getItem('easylake-menu-catalog-db-table')
           if (stored) {
-            const parsed = JSON.parse(stored) as { catalog?: string; database?: string; tableName?: string }
+            const parsed = JSON.parse(stored) as { catalog?: string, database?: string, tableName?: string }
             catalog = parsed.catalog
             db = parsed.database
             tableName = parsed.tableName
@@ -218,10 +218,14 @@ export default defineComponent({
 
 <template>
   <div :class="{ 'side-bar-collapsed': collapsed }" class="side-bar">
-    <div :class="{ 'logo-collapsed': collapsed }" class="logo g-flex-ae" @click="viewOverview">
-      <img src="../assets/images/logo1.svg" class="logo-img" alt="">
-      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="">
-    </div>
+    <RouterLink
+      to="/overview"
+      class="logo g-flex-ae"
+      :class="{ 'logo-collapsed': collapsed }"
+    >
+      <img src="../assets/images/logo1.svg" class="logo-img" alt="" />
+      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="" />
+    </RouterLink>
     <a-menu
       v-model:selectedKeys="selectedKeys"
       mode="inline"
@@ -232,7 +236,9 @@ export default defineComponent({
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
-        <span>{{ item.title }}</span>
+        <RouterLink :to="item.key === 'tables' ? '/tables' : `/${item.key}`">
+          {{ item.title }}
+        </RouterLink>
       </a-menu-item>
     </a-menu>
     <a-button type="link" class="toggle-btn" @click="toggleCollapsed">

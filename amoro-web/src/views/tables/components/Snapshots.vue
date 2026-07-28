@@ -192,8 +192,38 @@ function toggleCharts() {
   showCharts.value = !showCharts.value
 }
 
+function getSnapshotLink(record: SnapshotItem) {
+  return {
+    path: route.path,
+    query: {
+      ...route.query,
+      snapshotId: record.snapshotId,
+      breadcrumb: '1',
+    },
+  }
+}
+
+function onSnapshotClick(event: MouseEvent, record: SnapshotItem) {
+  if (event.button === 1 || event.metaKey || event.ctrlKey) {
+    return
+  }
+  event.preventDefault()
+  snapshotId.value = record.snapshotId
+  hasBreadcrumb.value = true
+  breadcrumbPagination.current = 1
+  getBreadcrumbTable()
+}
+
 onMounted(() => {
-  hasBreadcrumb.value = false
+  if (route.query.snapshotId) {
+    snapshotId.value = String(route.query.snapshotId)
+    hasBreadcrumb.value = true
+    breadcrumbPagination.current = 1
+    getBreadcrumbTable()
+  }
+  else {
+    hasBreadcrumb.value = false
+  }
 })
 </script>
 
@@ -240,9 +270,13 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'snapshotId'">
-            <a-button type="link" @click="toggleBreadcrumb(record)">
+            <RouterLink
+              class="snapshot-link"
+              :to="getSnapshotLink(record)"
+              @click="onSnapshotClick($event, record)"
+            >
               {{ record.snapshotId }}
-            </a-button>
+            </RouterLink>
           </template>
         </template>
         <template #expandedRowRender="{ record }">
