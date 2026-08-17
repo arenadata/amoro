@@ -18,6 +18,12 @@
 
 package org.apache.amoro.server.catalog;
 
+import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY_TYPE;
+import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_AK_SK;
+import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_CUSTOM;
+import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_KERBEROS;
+import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_SIMPLE;
+
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.exception.AlreadyExistsException;
@@ -27,6 +33,7 @@ import org.apache.amoro.server.dashboard.PlatformFileManager;
 import org.apache.amoro.server.dashboard.controller.CatalogController;
 import org.apache.amoro.server.dashboard.model.CatalogRegisterInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.StreamReadFeature;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +64,13 @@ public class CatalogInitializer {
   private static final Logger LOG = LoggerFactory.getLogger(CatalogInitializer.class);
 
   public static final String CATALOGS_CONFIG_FILENAME = "catalogs.yaml";
+
+  private static final Set<String> SUPPORTED_AUTH_TYPES =
+      Set.of(
+          AUTH_CONFIGS_VALUE_TYPE_SIMPLE,
+          AUTH_CONFIGS_VALUE_TYPE_KERBEROS,
+          AUTH_CONFIGS_VALUE_TYPE_AK_SK,
+          AUTH_CONFIGS_VALUE_TYPE_CUSTOM);
 
   private static final Set<String> SUPPORTED_TYPES =
       Set.of(
@@ -169,7 +183,9 @@ public class CatalogInitializer {
 
   private List<CatalogRegisterInfo> parseCatalogs() {
     try (InputStream in = Files.newInputStream(catalogFile)) {
-      CatalogsConfig config = new YAMLMapper().readValue(in, CatalogsConfig.class);
+      YAMLMapper mapper =
+          YAMLMapper.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build();
+      CatalogsConfig config = mapper.readValue(in, CatalogsConfig.class);
       if (config == null || config.catalogs() == null) {
         return Collections.emptyList();
       }
@@ -219,6 +235,14 @@ public class CatalogInitializer {
         errors.add(
             "catalog '%s': unknown type '%s'. Supported types: %s"
                 .formatted(name, info.getType(), SUPPORTED_TYPES));
+        isValid = false;
+      }
+
+      String authType = info.getAuthConfig().getOrDefault(AUTH_CONFIGS_KEY_TYPE, "");
+      if (!SUPPORTED_AUTH_TYPES.contains(authType)) {
+        errors.add(
+            "catalog '%s': unknown auth type '%s'. Supported types: %s"
+                .formatted(name, authType, SUPPORTED_AUTH_TYPES));
         isValid = false;
       }
 

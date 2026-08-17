@@ -198,6 +198,33 @@ public class TestCatalogInitializer extends AMSManagerTestBase {
   }
 
   @Test
+  public void testInvalidAuthTypeIsRejected() throws IOException {
+    String name = "init_bad_auth";
+    String yaml =
+        """
+        catalogs:
+          - name: %s
+            type: hadoop
+            optimizerGroup: local
+            tableFormatList:
+              - ICEBERG
+            storageConfig:
+              storage.type: Hadoop
+            authConfig:
+              auth.type: Kerber
+            properties:
+              warehouse: %s
+            tableProperties: {}
+        """
+            .formatted(name, newWarehouse());
+
+    run(yaml);
+    assertFalse(
+        "a catalog with an unsupported auth type must not be created",
+        CATALOG_MANAGER.catalogExist(name));
+  }
+
+  @Test
   public void testMissingConfigFileIsNoOp() {
     long before = CATALOG_MANAGER.listCatalogMetas().size();
     catalogInitializer.initialize();
@@ -373,6 +400,32 @@ public class TestCatalogInitializer extends AMSManagerTestBase {
     run(yaml);
 
     assertEquals(0, CATALOG_MANAGER.listCatalogMetas().size());
+  }
+
+  @Test
+  public void testDuplicateKeyConfigCreatesNothing() throws IOException {
+    String yaml =
+        """
+        catalogs:
+          - name: dup_catalog
+            type: hadoop
+            type: hive
+            optimizerGroup: local
+            tableFormatList:
+              - ICEBERG
+            storageConfig:
+              storage.type: Hadoop
+            authConfig:
+              auth.type: simple
+              auth.simple.hadoop_username: test
+            properties:
+              warehouse: %s
+            tableProperties: {}
+        """
+            .formatted(newWarehouse());
+    run(yaml);
+    assertEquals(0, CATALOG_MANAGER.listCatalogMetas().size());
+    assertFalse(CATALOG_MANAGER.catalogExist("dup_catalog"));
   }
 
   private void run(String yaml) throws IOException {
