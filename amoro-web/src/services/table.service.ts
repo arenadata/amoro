@@ -67,11 +67,13 @@ export function getPartitionTable(
     filter: string
     page: number
     pageSize: number
+    sortBy?: string
+    sortOrder?: string
     token?: string
   },
 ) {
-  const { catalog, db, table, filter, page, pageSize, token } = params
-  return request.get(`api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/partitions`, { params: { filter, page, pageSize, token } })
+  const { catalog, db, table, filter, page, pageSize, sortBy, sortOrder, token } = params
+  return request.get(`api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/partitions`, { params: { filter, page, pageSize, sortBy, sortOrder, token } })
 }
 
 // get partions

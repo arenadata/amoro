@@ -28,11 +28,28 @@ import { dateFormat } from '@/utils'
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-const columns: IColumns[] = shallowReactive([
-  { title: t('partition'), dataIndex: 'partition', ellipsis: true },
-  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true },
+type PartitionSortBy = 'partition' | 'fileCount' | 'fileSize' | 'lastCommitTime'
+type SortOrder = 'asc' | 'desc'
+type AntSortOrder = 'ascend' | 'descend' | null
+
+const sortState = reactive<{
+  sortBy: PartitionSortBy
+  sortOrder: SortOrder
+}>({
+  sortBy: 'partition',
+  sortOrder: 'desc',
+})
+const partitionColumnSortFields: Record<string, PartitionSortBy> = {
+  partition: 'partition',
+  fileCount: 'fileCount',
+  size: 'fileSize',
+  lastCommitTime: 'lastCommitTime',
+}
+const columns: IColumns[] = reactive([
+  { title: t('partition'), dataIndex: 'partition', ellipsis: true, sorter: true, sortOrder: 'descend' },
+  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true, sorter: true, sortOrder: null },
+  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true, sorter: true, sortOrder: null },
+  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true, sorter: true, sortOrder: null },
 ])
 const breadcrumbColumns = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
@@ -75,6 +92,8 @@ async function getTableInfo() {
       filter: searchKey.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      sortBy: sortState.sortBy,
+      sortOrder: sortState.sortOrder,
     })
     const { list, total } = result
     pagination.total = total;
@@ -89,10 +108,28 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-function change({ current = 1, pageSize = 25 }) {
+
+function syncPartitionSort(sorter: { field?: string, columnKey?: string, order?: AntSortOrder } | Array<{ field?: string, columnKey?: string, order?: AntSortOrder }>) {
+  const activeSorter = Array.isArray(sorter) ? sorter.find(item => item.order) : sorter
+  const sortField = activeSorter?.field || activeSorter?.columnKey
+  const sortBy = sortField ? partitionColumnSortFields[sortField] : undefined
+
+  sortState.sortBy = sortBy || 'partition'
+  sortState.sortOrder = activeSorter?.order === 'ascend' ? 'asc' : 'desc'
+  columns.forEach((column) => {
+    column.sortOrder = partitionColumnSortFields[column.dataIndex] === sortState.sortBy
+      ? (sortState.sortOrder === 'asc' ? 'ascend' : 'descend')
+      : null
+  })
+}
+
+function change({ current = 1, pageSize = 25 }, _filters = {}, sorter: { field?: string, columnKey?: string, order?: AntSortOrder } | Array<{ field?: string, columnKey?: string, order?: AntSortOrder }> = {}) {
   if (!hasBreadcrumb.value && props.hasPartition) {
+    const prevSortBy = sortState.sortBy
+    const prevSortOrder = sortState.sortOrder
+    syncPartitionSort(sorter)
     pagination.current = current
-    if (pageSize !== pagination.pageSize) {
+    if (pageSize !== pagination.pageSize || sortState.sortBy !== prevSortBy || sortState.sortOrder !== prevSortOrder) {
       pagination.current = 1
     }
     pagination.pageSize = pageSize

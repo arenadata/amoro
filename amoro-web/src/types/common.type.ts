@@ -37,6 +37,8 @@ export interface IColumns {
   ellipsis?: boolean
   width?: number | string
   scopedSlots?: any
+  sorter?: boolean | ((a: any, b: any) => number)
+  sortOrder?: 'ascend' | 'descend' | null
   children?: IColumns[]
 }
 
@@ -136,6 +138,7 @@ export interface TableBasicInfo {
 export interface PartitionItem {
   partition: string
   fileCount: number
+  fileSize: number
   size: string
   lastCommitTime: number | string
   specId: number
