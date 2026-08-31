@@ -17,6 +17,7 @@ limitations under the License.
 / -->
 
 <script lang="ts" setup>
+import dayjs, { type Dayjs } from 'dayjs'
 import { onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -65,8 +66,18 @@ const recordChartOption = ref<ECOption>({})
 const fileChartOption = ref<ECOption>({})
 const tblRef = ref<string>('')
 const operation = ref<string>('')
+const isConsumerSnapshot = ref(false)
+const dateRangeMode = ref<'all' | 'day' | 'week' | 'month' | 'calendar'>('all')
+const selectedDateRange = ref<[Dayjs, Dayjs] | null>(null)
+const dateRangeOptions = [
+  { label: t('all'), value: 'all' },
+  { label: t('day'), value: 'day' },
+  { label: t('week'), value: 'week' },
+  { label: t('month'), value: 'month' },
+]
 
 function onRefChange(params: { ref: string, operation: string }) {
+  isConsumerSnapshot.value = false
   tblRef.value = params.ref
   operation.value = params.operation
   getTableInfo()
@@ -76,6 +87,7 @@ function onConsumerChange(params: {
   operation: string
   amoroCurrentSnapshotsItem: SnapshotItem
 }) {
+  isConsumerSnapshot.value = true
   tblRef.value = params.ref
   operation.value = params.operation
   dataSource.length = 0
@@ -85,6 +97,43 @@ function onConsumerChange(params: {
     : '-'
   dataSource.push(params.amoroCurrentSnapshotsItem)
   pagination.total = 1
+}
+
+function getDateRangeParams() {
+  if (!selectedDateRange.value) {
+    return {}
+  }
+  const [start, end] = selectedDateRange.value
+  if (dateRangeMode.value === 'calendar') {
+    return {
+      startTime: start.startOf('day').unix(),
+      endTime: end.endOf('day').unix(),
+    }
+  }
+  return {
+    startTime: start.unix(),
+    endTime: end.unix(),
+  }
+}
+
+function onDateRangeModeChange(value: 'all' | 'day' | 'week' | 'month' | 'calendar') {
+  dateRangeMode.value = value
+  if (value === 'all') {
+    selectedDateRange.value = null
+  }
+  else {
+    const now = dayjs()
+    selectedDateRange.value = [now.subtract(1, value), now]
+  }
+  pagination.current = 1
+  getTableInfo()
+}
+
+function onCalendarRangeChange(value: [Dayjs, Dayjs] | null) {
+  dateRangeMode.value = value ? 'calendar' : 'all'
+  selectedDateRange.value = value
+  pagination.current = 1
+  getTableInfo()
 }
 
 async function getTableInfo() {
@@ -97,6 +146,7 @@ async function getTableInfo() {
       operation: operation.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      ...getDateRangeParams(),
     })
     const { list = [], total } = result
     const rcData: ILineChartOriginalData = {}
@@ -202,6 +252,21 @@ onMounted(() => {
         </a-col>
       </a-row>
       <Selector :catalog="sourceData.catalog" :db="sourceData.db" :table="sourceData.table" :disabled="loading" @consumer-change="onConsumerChange" @ref-change="onRefChange" />
+      <div class="snapshots-date-range">
+        <a-segmented
+          v-model:value="dateRangeMode"
+          :disabled="loading || isConsumerSnapshot"
+          :options="dateRangeOptions"
+          @change="onDateRangeModeChange"
+        />
+        <a-range-picker
+          :value="selectedDateRange"
+          :disabled="loading || isConsumerSnapshot"
+          :placeholder="[$t('startTime'), $t('finishTime')]"
+          format="YYYY-MM-DD"
+          @change="onCalendarRangeChange"
+        />
+      </div>
       <a-table
         row-key="snapshotId"
         :columns="columns"
@@ -280,6 +345,13 @@ onMounted(() => {
   }
   .ant-table-wrapper {
     margin-top: 24px;
+  }
+
+  .snapshots-date-range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
   }
 }
 </style>

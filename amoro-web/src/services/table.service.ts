@@ -115,10 +115,12 @@ export function getSnapshots(
     token?: string
     ref: string
     operation: string
+    startTime?: number
+    endTime?: number
   },
 ) {
-  const { catalog, db, table, page, pageSize, token, ref, operation } = params
-  return request.get(`api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/snapshots`, { params: { page, pageSize, token, ref, operation } })
+  const { catalog, db, table, page, pageSize, token, ref, operation, startTime, endTime } = params
+  return request.get(`api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/snapshots`, { params: { page, pageSize, token, ref, operation, startTime, endTime } })
 }
 
 // get Snapshot detail
