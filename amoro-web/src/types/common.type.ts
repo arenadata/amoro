@@ -41,6 +41,7 @@ export interface IColumns {
   width?: number | string
   scopedSlots?: any
   children?: IColumns[]
+  sorter?: boolean
 }
 
 export interface IOptions {
@@ -139,9 +140,19 @@ export interface TableBasicInfo {
   tableName: string
 }
 
+export type PartitionSortField =
+  | 'partition'
+  | 'specId'
+  | 'fileCount'
+  | 'fileSize'
+  | 'lastCommitTime'
+
+export type SortOrder = 'asc' | 'desc'
+
 export interface PartitionItem {
   partition: string
   fileCount: number
+  fileSize: number
   size: string
   lastCommitTime: number | string
   specId: number

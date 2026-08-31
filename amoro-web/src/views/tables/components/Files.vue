@@ -17,24 +17,109 @@ limitations under the License.
 / -->
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref, shallowReactive } from 'vue'
+import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import type { ColumnProps } from 'ant-design-vue/es/table'
 import { usePagination } from '@/hooks/usePagination'
-import type { BreadcrumbPartitionItem, IColumns, PartitionItem } from '@/types/common.type'
+import type {
+  BreadcrumbPartitionItem,
+  IColumns,
+  PartitionItem,
+  PartitionSortField,
+  SortOrder,
+} from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
+
+type AntSortOrder = 'ascend' | 'descend' | null
+
+interface TableSorter {
+  columnKey?: string | number
+  order?: AntSortOrder
+}
+
+interface TableChangeExtra {
+  action?: 'paginate' | 'sort' | 'filter'
+}
+
+interface TablePagination {
+  current?: number
+  pageSize?: number
+}
 
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-const columns: IColumns[] = shallowReactive([
-  { title: t('partition'), dataIndex: 'partition', ellipsis: true },
-  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true },
+
+const DEFAULT_SORT_BY: PartitionSortField = 'partition'
+const DEFAULT_SORT_ORDER: SortOrder = 'desc'
+
+const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
+const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
+
+const partitionSortFields: PartitionSortField[] = [
+  'partition',
+  'specId',
+  'fileCount',
+  'fileSize',
+  'lastCommitTime',
+]
+
+function isPartitionSortField(value: unknown): value is PartitionSortField {
+  return typeof value === 'string'
+    && partitionSortFields.includes(value as PartitionSortField)
+}
+
+function getColumnSortOrder(field: PartitionSortField): AntSortOrder {
+  if (sortBy.value !== field) {
+    return null
+  }
+
+  return sortOrder.value === 'asc'
+    ? 'ascend'
+    : 'descend'
+}
+
+const columns = computed<ColumnProps[]>(() => [
+  {
+    title: t('partition'),
+    dataIndex: 'partition',
+    key: 'partition',
+    ellipsis: true,
+    sorter: true,
+    sortOrder: getColumnSortOrder('partition'),
+  },
+  {
+    title: t('fileCount'),
+    dataIndex: 'fileCount',
+    key: 'fileCount',
+    width: 120,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: getColumnSortOrder('fileCount'),
+  },
+  {
+    title: t('size'),
+    dataIndex: 'size',
+    key: 'fileSize',
+    width: 120,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: getColumnSortOrder('fileSize'),
+  },
+  {
+    title: t('lastCommitTime'),
+    dataIndex: 'lastCommitTime',
+    key: 'lastCommitTime',
+    width: 200,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: getColumnSortOrder('lastCommitTime'),
+  },
 ])
-const breadcrumbColumns = shallowReactive([
+
+const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
   // { title: t('fsn'), dataIndex: 'fsn' },
   { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
@@ -53,16 +138,19 @@ const pagination = reactive(usePagination())
 const breadcrumbPagination = reactive(usePagination())
 const route = useRoute()
 const query = route.query
+
 const sourceData = reactive({
   catalog: '',
   db: '',
   table: '',
   ...query,
 })
+
 const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
   searchKey.value = val
+  pagination.current = 1
   await getTableInfo()
 }
 
@@ -70,16 +158,25 @@ async function getTableInfo() {
   try {
     loading.value = true
     dataSource.length = 0
+
     const result = await getPartitionTable({
       ...sourceData,
       filter: searchKey.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      sortBy: sortBy.value,
+      sortOrder: sortOrder.value,
     })
+
     const { list, total } = result
-    pagination.total = total;
-    (list || []).forEach((p: PartitionItem) => {
-      p.lastCommitTime = p.lastCommitTime ? dateFormat(p.lastCommitTime) : ''
+
+    pagination.total = total
+
+    ;(list || []).forEach((p: PartitionItem) => {
+      p.lastCommitTime = p.lastCommitTime
+        ? dateFormat(p.lastCommitTime)
+        : ''
+
       dataSource.push(p)
     })
   }
@@ -89,21 +186,55 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-function change({ current = 1, pageSize = 25 }) {
+
+function change(
+  { current = 1, pageSize = 25 }: TablePagination,
+  _filters: unknown,
+  sorter: TableSorter | TableSorter[],
+  extra: TableChangeExtra,
+) {
   if (!hasBreadcrumb.value && props.hasPartition) {
-    pagination.current = current
-    if (pageSize !== pagination.pageSize) {
+    if (extra.action === 'sort') {
+      const currentSorter = Array.isArray(sorter)
+        ? sorter[0]
+        : sorter
+
+      if (
+        currentSorter?.order
+        && isPartitionSortField(currentSorter.columnKey)
+      ) {
+        sortBy.value = currentSorter.columnKey
+        sortOrder.value = currentSorter.order === 'ascend'
+          ? 'asc'
+          : 'desc'
+      }
+      else {
+        sortBy.value = DEFAULT_SORT_BY
+        sortOrder.value = DEFAULT_SORT_ORDER
+      }
+
       pagination.current = 1
     }
-    pagination.pageSize = pageSize
+    else {
+      pagination.current = current
+
+      if (pageSize !== pagination.pageSize) {
+        pagination.current = 1
+      }
+
+      pagination.pageSize = pageSize
+    }
   }
   else {
     breadcrumbPagination.current = current
+
     if (pageSize !== breadcrumbPagination.pageSize) {
       breadcrumbPagination.current = 1
     }
+
     breadcrumbPagination.pageSize = pageSize
   }
+
   refresh()
 }
 
@@ -112,6 +243,7 @@ function refresh() {
     getFiles()
     return
   }
+
   if (hasBreadcrumb.value) {
     getFiles()
   }
@@ -124,18 +256,27 @@ async function getFiles() {
   try {
     breadcrumbDataSource.length = 0
     loading.value = true
+
     const params = {
       ...sourceData,
-      partition: props.hasPartition ? encodeURIComponent(partitionId.value) : null,
+      partition: props.hasPartition
+        ? encodeURIComponent(partitionId.value)
+        : null,
       specId: specId.value,
       page: breadcrumbPagination.current,
       pageSize: breadcrumbPagination.pageSize,
     }
+
     const result = await getPartitionFiles(params)
     const { list, total } = result
-    breadcrumbPagination.total = total;
-    (list || []).forEach((p: BreadcrumbPartitionItem) => {
-      p.commitTime = p.commitTime && p.commitTime !== -1 ? dateFormat(p.commitTime) : ''
+
+    breadcrumbPagination.total = total
+
+    ;(list || []).forEach((p: BreadcrumbPartitionItem) => {
+      p.commitTime = p.commitTime && p.commitTime !== -1
+        ? dateFormat(p.commitTime)
+        : ''
+
       breadcrumbDataSource.push(p)
     })
   }
@@ -150,6 +291,7 @@ function toggleBreadcrumb(record: PartitionItem) {
   partitionId.value = record.partition
   specId.value = record.specId
   hasBreadcrumb.value = !hasBreadcrumb.value
+
   if (hasBreadcrumb.value) {
     breadcrumbPagination.current = 1
     getFiles()
@@ -186,8 +328,9 @@ onMounted(() => {
           </template>
         </a-input-search>
       </div>
+
       <a-table
-        row-key="partiton"
+        row-key="partition"
         :columns="columns"
         :data-source="dataSource"
         :pagination="pagination"
@@ -203,6 +346,7 @@ onMounted(() => {
         </template>
       </a-table>
     </template>
+
     <template v-else>
       <a-breadcrumb v-if="hasPartition" separator=">">
         <a-breadcrumb-item class="text-active" @click="toggleBreadcrumb">
@@ -210,6 +354,7 @@ onMounted(() => {
         </a-breadcrumb-item>
         <a-breadcrumb-item>{{ `${$t('partition')} ${partitionId}` }}</a-breadcrumb-item>
       </a-breadcrumb>
+
       <a-table
         row-key="file"
         :columns="breadcrumbColumns"
@@ -227,6 +372,7 @@ onMounted(() => {
               <span>{{ record.file }}</span>
             </a-tooltip>
           </template>
+
           <template v-if="column.dataIndex === 'path'">
             <a-tooltip>
               <template #title>
