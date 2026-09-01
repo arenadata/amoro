@@ -24,7 +24,12 @@ import { useRoute } from 'vue-router'
 import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
 import Selector from './Selector.vue'
 import { usePagination } from '@/hooks/usePagination'
-import type { BreadcrumbSnapshotItem, IColumns, ILineChartOriginalData, SnapshotItem } from '@/types/common.type'
+import type {
+  BreadcrumbSnapshotItem,
+  IColumns,
+  ILineChartOriginalData,
+  SnapshotItem,
+} from '@/types/common.type'
 import { getDetailBySnapshotId, getSnapshots } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 import Chart from '@/components/echarts/Chart.vue'
@@ -119,8 +124,11 @@ function getDateRangeParams() {
   }
 }
 
-function onDateRangeModeChange(value: 'all' | 'day' | 'week' | 'month' | 'calendar') {
+function onDateRangeModeChange(
+  value: 'all' | 'day' | 'week' | 'month' | 'calendar',
+) {
   dateRangeMode.value = value
+
   if (value === 'all') {
     selectedDateRange.value = null
   }
@@ -155,18 +163,35 @@ async function getTableInfo() {
     const rcData: ILineChartOriginalData = {}
     const fcData: ILineChartOriginalData = {}
     list.forEach((p: SnapshotItem) => {
-      // Assume that the time will not conflict and use the time as the unique key without formatting it.
-      const { recordsSummaryForChart, filesSummaryForChart, commitTime } = p
+      const {
+        recordsSummaryForChart,
+        filesSummaryForChart,
+        commitTime,
+      } = p
+
       rcData[commitTime] = recordsSummaryForChart || {}
       fcData[commitTime] = filesSummaryForChart || {}
       if (p.producer === 'OPTIMIZE') {
         p.operation = `${p.operation}(optimizing)`
       }
-      p.commitTime = p.commitTime ? dateFormat(p.commitTime) : '-'
+
+      p.commitTime = p.commitTime
+        ? dateFormat(p.commitTime)
+        : '-'
+
       dataSource.push(p)
     })
-    recordChartOption.value = generateLineChartOption(t('recordChartTitle'), rcData)
-    fileChartOption.value = generateLineChartOption(t('fileChartTitle'), fcData)
+
+    recordChartOption.value = generateLineChartOption(
+      t('recordChartTitle'),
+      rcData,
+    )
+
+    fileChartOption.value = generateLineChartOption(
+      t('fileChartTitle'),
+      fcData,
+    )
+
     pagination.total = total
   }
   catch (error) {
@@ -218,7 +243,10 @@ async function getBreadcrumbTable() {
     const { list, total } = result
     breadcrumbPagination.total = total
     list.forEach((p: BreadcrumbSnapshotItem) => {
-      p.commitTime = p.commitTime ? dateFormat(p.commitTime) : ''
+      p.commitTime = p.commitTime
+        ? dateFormat(p.commitTime)
+        : ''
+
       breadcrumbDataSource.push(p)
     })
   }
@@ -260,21 +288,32 @@ onMounted(() => {
       >
         <template #extra>
           <div class="snapshots-toolbar-extra">
-            <a-segmented
-              v-model:value="dateRangeMode"
-              :disabled="loading || isConsumerSnapshot"
-              :options="dateRangeOptions"
-              @change="onDateRangeModeChange"
-            />
             <a-range-picker
               :value="selectedDateRange"
               :disabled="loading || isConsumerSnapshot"
-              :placeholder="[$t('startTime'), $t('finishTime')]"
+              :placeholder="['Start date', 'End date']"
               format="YYYY-MM-DD"
               @change="onCalendarRangeChange"
-            />
-            <div class="snapshots-charts-header" @click="toggleCharts">
-              <span class="snapshots-charts-title">{{ $t('charts') }}</span>
+            >
+              <template #renderExtraFooter>
+                <div class="snapshots-date-range-footer">
+                  <a-segmented
+                    v-model:value="dateRangeMode"
+                    :options="dateRangeOptions"
+                    @change="onDateRangeModeChange"
+                  />
+                </div>
+              </template>
+            </a-range-picker>
+
+            <div
+              class="snapshots-charts-header"
+              @click="toggleCharts"
+            >
+              <span class="snapshots-charts-title">
+                {{ $t('charts') }}
+              </span>
+
               <span class="snapshots-charts-icon">
                 <CaretRightOutlined v-if="!showCharts" />
                 <CaretDownOutlined v-else />
@@ -283,15 +322,27 @@ onMounted(() => {
           </div>
         </template>
       </Selector>
-      <a-row v-if="showCharts" :gutter="32">
+
+      <a-row
+        v-if="showCharts"
+        :gutter="32"
+      >
         <a-col :span="12">
           <div class="snapshots-chart-wrap">
-            <Chart height="300px" :loading="loading" :options="recordChartOption" />
+            <Chart
+              height="300px"
+              :loading="loading"
+              :options="recordChartOption"
+            />
           </div>
         </a-col>
         <a-col :span="12">
           <div class="snapshots-chart-wrap">
-            <Chart height="300px" :loading="loading" :options="fileChartOption" />
+            <Chart
+              height="300px"
+              :loading="loading"
+              :options="fileChartOption"
+            />
           </div>
         </a-col>
       </a-row>
@@ -305,14 +356,25 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'snapshotId'">
-            <a-button type="link" @click="toggleBreadcrumb(record)">
+            <a-button
+              type="link"
+              @click="toggleBreadcrumb(record)"
+            >
               {{ record.snapshotId }}
             </a-button>
           </template>
         </template>
         <template #expandedRowRender="{ record }">
-          <a-row v-for="(value, key) in record.summary" :key="key" type="flex" :gutter="16">
-            <a-col flex="220px" style="text-align: right;">
+          <a-row
+            v-for="(value, key) in record.summary"
+            :key="key"
+            type="flex"
+            :gutter="16"
+          >
+            <a-col
+              flex="220px"
+              style="text-align: right;"
+            >
               {{ key }} :
             </a-col>
             <a-col flex="auto">
@@ -324,10 +386,16 @@ onMounted(() => {
     </template>
     <template v-else>
       <a-breadcrumb separator=">">
-        <a-breadcrumb-item class="text-active" @click="toggleBreadcrumb">
+        <a-breadcrumb-item
+          class="text-active"
+          @click="toggleBreadcrumb"
+        >
           {{ $t('all') }}
         </a-breadcrumb-item>
-        <a-breadcrumb-item>{{ `${$t('snapshotId')} ${snapshotId}` }}</a-breadcrumb-item>
+
+        <a-breadcrumb-item>
+          {{ `${$t('snapshotId')} ${snapshotId}` }}
+        </a-breadcrumb-item>
       </a-breadcrumb>
       <a-table
         row-key="file"
@@ -344,7 +412,10 @@ onMounted(() => {
               <template #title>
                 {{ record.path }}
               </template>
-              <span>{{ record.path }}</span>
+
+              <span>
+                {{ record.path }}
+              </span>
             </a-tooltip>
           </template>
           <template v-if="column.dataIndex === 'file'">
@@ -352,7 +423,10 @@ onMounted(() => {
               <template #title>
                 {{ record.file }}
               </template>
-              <span>{{ record.file }}</span>
+
+              <span>
+                {{ record.file }}
+              </span>
             </a-tooltip>
           </template>
         </template>
@@ -404,5 +478,11 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
   }
+}
+
+:global(.snapshots-date-range-footer) {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
 }
 </style>
