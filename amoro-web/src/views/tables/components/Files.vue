@@ -17,30 +17,32 @@ limitations under the License.
 / -->
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { usePagination } from '@/hooks/usePagination'
-import type { BackendSortOrder, BreadcrumbPartitionItem, IColumns, PartitionItem, TableSortOrder, TableSortState } from '@/types/common.type'
+import type { BreadcrumbPartitionItem, IColumns, PartitionItem } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-interface TableSorter {
-  field?: string | number
-  columnKey?: string | number
-  order?: TableSortOrder
-}
-
-const DEFAULT_PAGE = 1
-const DEFAULT_PAGE_SIZE = 25
-const DEFAULT_PARTITION_SORT: TableSortState = {
-  sortBy: 'partition',
-  sortOrder: 'desc',
-}
-const TABLE_SORT_DIRECTIONS: Exclude<TableSortOrder, null>[] = ['ascend', 'descend']
+const columns: IColumns[] = shallowReactive([
+  { title: t('partition'), dataIndex: 'partition', ellipsis: true },
+  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true },
+  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
+  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true },
+])
+const breadcrumbColumns = shallowReactive([
+  { title: t('file'), dataIndex: 'file', ellipsis: true },
+  // { title: t('fsn'), dataIndex: 'fsn' },
+  { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
+  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
+  { title: t('commitTime'), dataIndex: 'commitTime', width: 200, ellipsis: true },
+  { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
+  { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
+])
 
 const dataSource = reactive<PartitionItem[]>([])
 const breadcrumbDataSource = reactive<BreadcrumbPartitionItem[]>([])
@@ -51,73 +53,6 @@ const pagination = reactive(usePagination())
 const breadcrumbPagination = reactive(usePagination())
 const route = useRoute()
 const query = route.query
-const partitionSortFieldMap: Record<string, string> = {
-  partition: 'partition',
-  fileCount: 'fileCount',
-  size: 'fileSize',
-  lastCommitTime: 'lastCommitTime',
-}
-const partitionSort = reactive<TableSortState>({ ...DEFAULT_PARTITION_SORT })
-
-function getSortOrder(activeSort: TableSortState, fieldMap: Record<string, string>, dataIndex: string): TableSortOrder {
-  const sortBy = fieldMap[dataIndex]
-  if (!sortBy || activeSort.sortBy !== sortBy) {
-    return null
-  }
-
-  return activeSort.sortOrder === 'asc' ? 'ascend' : 'descend'
-}
-
-const columns = computed<IColumns[]>(() => [
-  {
-    title: t('partition'),
-    dataIndex: 'partition',
-    key: 'partition',
-    ellipsis: true,
-    sorter: true,
-    sortDirections: TABLE_SORT_DIRECTIONS,
-    sortOrder: getSortOrder(partitionSort, partitionSortFieldMap, 'partition'),
-  },
-  {
-    title: t('fileCount'),
-    dataIndex: 'fileCount',
-    key: 'fileCount',
-    width: 120,
-    ellipsis: true,
-    sorter: true,
-    sortDirections: TABLE_SORT_DIRECTIONS,
-    sortOrder: getSortOrder(partitionSort, partitionSortFieldMap, 'fileCount'),
-  },
-  {
-    title: t('size'),
-    dataIndex: 'size',
-    key: 'size',
-    width: 120,
-    ellipsis: true,
-    sorter: true,
-    sortDirections: TABLE_SORT_DIRECTIONS,
-    sortOrder: getSortOrder(partitionSort, partitionSortFieldMap, 'size'),
-  },
-  {
-    title: t('lastCommitTime'),
-    dataIndex: 'lastCommitTime',
-    key: 'lastCommitTime',
-    width: 200,
-    ellipsis: true,
-    sorter: true,
-    sortDirections: TABLE_SORT_DIRECTIONS,
-    sortOrder: getSortOrder(partitionSort, partitionSortFieldMap, 'lastCommitTime'),
-  },
-])
-const breadcrumbColumns = computed<IColumns[]>(() => [
-  { title: t('file'), dataIndex: 'file', ellipsis: true },
-  // { title: t('fsn'), dataIndex: 'fsn' },
-  { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('commitTime'), dataIndex: 'commitTime', width: 200, ellipsis: true },
-  { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
-  { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
-])
 const sourceData = reactive({
   catalog: '',
   db: '',
@@ -128,23 +63,7 @@ const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
   searchKey.value = val
-  pagination.current = DEFAULT_PAGE
   await getTableInfo()
-}
-
-function getBackendSortOrder(order: TableSortOrder): BackendSortOrder {
-  return order === 'ascend' ? 'asc' : 'desc'
-}
-
-function applyPartitionSort(sorter?: TableSorter) {
-  const dataIndex = String(sorter?.columnKey || sorter?.field || DEFAULT_PARTITION_SORT.sortBy)
-  const nextSortBy = partitionSortFieldMap[dataIndex] || DEFAULT_PARTITION_SORT.sortBy
-  const nextSortOrder = getBackendSortOrder(sorter?.order || getSortOrder(partitionSort, partitionSortFieldMap, dataIndex))
-  const changed = partitionSort.sortBy !== nextSortBy || partitionSort.sortOrder !== nextSortOrder
-
-  partitionSort.sortBy = nextSortBy
-  partitionSort.sortOrder = nextSortOrder
-  return changed
 }
 
 async function getTableInfo() {
@@ -156,13 +75,10 @@ async function getTableInfo() {
       filter: searchKey.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
-      sortBy: partitionSort.sortBy,
-      sortOrder: partitionSort.sortOrder,
     })
     const { list, total } = result
-    const partitions = list || []
-    pagination.total = total
-    partitions.forEach((p: PartitionItem) => {
+    pagination.total = total;
+    (list || []).forEach((p: PartitionItem) => {
       p.lastCommitTime = p.lastCommitTime ? dateFormat(p.lastCommitTime) : ''
       dataSource.push(p)
     })
@@ -173,26 +89,18 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-function change(
-  { current = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE },
-  _filters?: unknown,
-  sorter?: TableSorter,
-) {
+function change({ current = 1, pageSize = 25 }) {
   if (!hasBreadcrumb.value && props.hasPartition) {
-    let sortChanged = false
-    if (sorter?.columnKey || sorter?.field || sorter?.order) {
-      sortChanged = applyPartitionSort(sorter)
-    }
-    pagination.current = sortChanged ? DEFAULT_PAGE : current
+    pagination.current = current
     if (pageSize !== pagination.pageSize) {
-      pagination.current = DEFAULT_PAGE
+      pagination.current = 1
     }
     pagination.pageSize = pageSize
   }
   else {
     breadcrumbPagination.current = current
     if (pageSize !== breadcrumbPagination.pageSize) {
-      breadcrumbPagination.current = DEFAULT_PAGE
+      breadcrumbPagination.current = 1
     }
     breadcrumbPagination.pageSize = pageSize
   }
@@ -225,9 +133,8 @@ async function getFiles() {
     }
     const result = await getPartitionFiles(params)
     const { list, total } = result
-    const files = list || []
-    breadcrumbPagination.total = total
-    files.forEach((p: BreadcrumbPartitionItem) => {
+    breadcrumbPagination.total = total;
+    (list || []).forEach((p: BreadcrumbPartitionItem) => {
       p.commitTime = p.commitTime && p.commitTime !== -1 ? dateFormat(p.commitTime) : ''
       breadcrumbDataSource.push(p)
     })
@@ -244,7 +151,7 @@ function toggleBreadcrumb(record: PartitionItem) {
   specId.value = record.specId
   hasBreadcrumb.value = !hasBreadcrumb.value
   if (hasBreadcrumb.value) {
-    breadcrumbPagination.current = DEFAULT_PAGE
+    breadcrumbPagination.current = 1
     getFiles()
   }
 }
@@ -280,7 +187,7 @@ onMounted(() => {
         </a-input-search>
       </div>
       <a-table
-        row-key="partition"
+        row-key="partiton"
         :columns="columns"
         :data-source="dataSource"
         :pagination="pagination"

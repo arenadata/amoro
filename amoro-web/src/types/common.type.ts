@@ -33,23 +33,11 @@ export interface UserInfo {
   token?: string
 }
 
-export type TableSortOrder = 'ascend' | 'descend' | null
-export type BackendSortOrder = 'asc' | 'desc'
-
-export interface TableSortState {
-  sortBy: string
-  sortOrder: BackendSortOrder
-}
-
 export interface IColumns {
   title: string
   dataIndex: string
   key?: string
   ellipsis?: boolean
-  sorter?: boolean | ((a: unknown, b: unknown) => number)
-  sortOrder?: TableSortOrder
-  defaultSortOrder?: Exclude<TableSortOrder, null>
-  sortDirections?: Exclude<TableSortOrder, null>[]
   width?: number | string
   scopedSlots?: any
   children?: IColumns[]
