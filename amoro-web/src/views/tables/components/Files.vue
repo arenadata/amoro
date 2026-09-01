@@ -28,15 +28,14 @@ import type {
   PartitionItem,
   PartitionSortField,
   SortOrder,
+  TableSortOrder,
 } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 
-type AntSortOrder = 'ascend' | 'descend' | null
-
 interface TableSorter {
   columnKey?: string | number
-  order?: AntSortOrder
+  order?: TableSortOrder
 }
 
 interface TableChangeExtra {
@@ -54,6 +53,9 @@ const { t } = useI18n()
 
 const DEFAULT_SORT_BY: PartitionSortField = 'partition'
 const DEFAULT_SORT_ORDER: SortOrder = 'desc'
+const DEFAULT_PAGE = 1
+const DEFAULT_PAGE_SIZE = 25
+const PARTITION_SORT_DIRECTIONS: Exclude<TableSortOrder, null>[] = ['ascend', 'descend', 'ascend']
 
 const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
 const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
@@ -71,7 +73,7 @@ function isPartitionSortField(value: unknown): value is PartitionSortField {
     && partitionSortFields.includes(value as PartitionSortField)
 }
 
-function getColumnSortOrder(field: PartitionSortField): AntSortOrder {
+function getColumnSortOrder(field: PartitionSortField): TableSortOrder {
   if (sortBy.value !== field) {
     return null
   }
@@ -88,6 +90,7 @@ const columns = computed<ColumnProps[]>(() => [
     key: 'partition',
     ellipsis: true,
     sorter: true,
+    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('partition'),
   },
   {
@@ -97,6 +100,7 @@ const columns = computed<ColumnProps[]>(() => [
     width: 120,
     ellipsis: true,
     sorter: true,
+    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('fileCount'),
   },
   {
@@ -106,6 +110,7 @@ const columns = computed<ColumnProps[]>(() => [
     width: 120,
     ellipsis: true,
     sorter: true,
+    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('fileSize'),
   },
   {
@@ -115,6 +120,7 @@ const columns = computed<ColumnProps[]>(() => [
     width: 200,
     ellipsis: true,
     sorter: true,
+    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('lastCommitTime'),
   },
 ])
@@ -150,7 +156,7 @@ const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
   searchKey.value = val
-  pagination.current = 1
+  pagination.current = DEFAULT_PAGE
   await getTableInfo()
 }
 
@@ -188,7 +194,7 @@ async function getTableInfo() {
 }
 
 function change(
-  { current = 1, pageSize = 25 }: TablePagination,
+  { current = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE }: TablePagination,
   _filters: unknown,
   sorter: TableSorter | TableSorter[],
   extra: TableChangeExtra,
@@ -213,13 +219,13 @@ function change(
         sortOrder.value = DEFAULT_SORT_ORDER
       }
 
-      pagination.current = 1
+      pagination.current = DEFAULT_PAGE
     }
     else {
       pagination.current = current
 
       if (pageSize !== pagination.pageSize) {
-        pagination.current = 1
+        pagination.current = DEFAULT_PAGE
       }
 
       pagination.pageSize = pageSize
@@ -229,7 +235,7 @@ function change(
     breadcrumbPagination.current = current
 
     if (pageSize !== breadcrumbPagination.pageSize) {
-      breadcrumbPagination.current = 1
+      breadcrumbPagination.current = DEFAULT_PAGE
     }
 
     breadcrumbPagination.pageSize = pageSize
@@ -293,7 +299,7 @@ function toggleBreadcrumb(record: PartitionItem) {
   hasBreadcrumb.value = !hasBreadcrumb.value
 
   if (hasBreadcrumb.value) {
-    breadcrumbPagination.current = 1
+    breadcrumbPagination.current = DEFAULT_PAGE
     getFiles()
   }
 }
