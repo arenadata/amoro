@@ -55,7 +55,6 @@ const DEFAULT_SORT_BY: PartitionSortField = 'partition'
 const DEFAULT_SORT_ORDER: SortOrder = 'desc'
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 25
-const PARTITION_SORT_DIRECTIONS: Exclude<TableSortOrder, null>[] = ['ascend', 'descend', 'ascend']
 
 const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
 const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
@@ -83,6 +82,18 @@ function getColumnSortOrder(field: PartitionSortField): TableSortOrder {
     : 'descend'
 }
 
+function getNextSortOrder(sorter: TableSorter, nextSortBy: PartitionSortField): SortOrder {
+  if (sorter.order) {
+    return sorter.order === 'ascend' ? 'asc' : 'desc'
+  }
+
+  if (sortBy.value === nextSortBy) {
+    return sortOrder.value === 'asc' ? 'desc' : 'asc'
+  }
+
+  return DEFAULT_SORT_ORDER
+}
+
 const columns = computed<ColumnProps[]>(() => [
   {
     title: t('partition'),
@@ -90,7 +101,6 @@ const columns = computed<ColumnProps[]>(() => [
     key: 'partition',
     ellipsis: true,
     sorter: true,
-    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('partition'),
   },
   {
@@ -100,7 +110,6 @@ const columns = computed<ColumnProps[]>(() => [
     width: 120,
     ellipsis: true,
     sorter: true,
-    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('fileCount'),
   },
   {
@@ -110,7 +119,6 @@ const columns = computed<ColumnProps[]>(() => [
     width: 120,
     ellipsis: true,
     sorter: true,
-    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('fileSize'),
   },
   {
@@ -120,7 +128,6 @@ const columns = computed<ColumnProps[]>(() => [
     width: 200,
     ellipsis: true,
     sorter: true,
-    sortDirections: PARTITION_SORT_DIRECTIONS,
     sortOrder: getColumnSortOrder('lastCommitTime'),
   },
 ])
@@ -202,17 +209,15 @@ function change(
   if (!hasBreadcrumb.value && props.hasPartition) {
     if (extra.action === 'sort') {
       const currentSorter = Array.isArray(sorter)
-        ? sorter[0]
+        ? (sorter.find(item => item.order) || sorter[0])
         : sorter
 
       if (
-        currentSorter?.order
+        currentSorter
         && isPartitionSortField(currentSorter.columnKey)
       ) {
         sortBy.value = currentSorter.columnKey
-        sortOrder.value = currentSorter.order === 'ascend'
-          ? 'asc'
-          : 'desc'
+        sortOrder.value = getNextSortOrder(currentSorter, currentSorter.columnKey)
       }
       else {
         sortBy.value = DEFAULT_SORT_BY
