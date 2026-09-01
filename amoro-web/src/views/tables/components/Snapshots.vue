@@ -18,9 +18,10 @@ limitations under the License.
 
 <script lang="ts" setup>
 import dayjs, { type Dayjs } from 'dayjs'
-import { onMounted, reactive, ref, shallowReactive } from 'vue'
+import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
 import Selector from './Selector.vue'
 import { usePagination } from '@/hooks/usePagination'
@@ -77,12 +78,12 @@ const operation = ref<string>('')
 const isConsumerSnapshot = ref(false)
 const dateRangeMode = ref<'all' | 'day' | 'week' | 'month' | 'calendar'>('all')
 const selectedDateRange = ref<[Dayjs, Dayjs] | null>(null)
-const dateRangeOptions = [
+const dateRangeOptions = computed(() => [
   { label: t('all'), value: 'all' },
   { label: t('day'), value: 'day' },
   { label: t('week'), value: 'week' },
   { label: t('month'), value: 'month' },
-]
+])
 
 function onRefChange(params: { ref: string, operation: string }) {
   isConsumerSnapshot.value = false
@@ -125,7 +126,7 @@ function getDateRangeParams() {
 }
 
 function onDateRangeModeChange(
-  value: 'all' | 'day' | 'week' | 'month' | 'calendar',
+  value: 'all' | 'day' | 'week' | 'month',
 ) {
   dateRangeMode.value = value
 
@@ -175,8 +176,8 @@ async function getTableInfo() {
         p.operation = `${p.operation}(optimizing)`
       }
 
-      p.commitTime = p.commitTime
-        ? dateFormat(p.commitTime)
+      p.commitTime = commitTime
+        ? dateFormat(commitTime)
         : '-'
 
       dataSource.push(p)
@@ -195,6 +196,8 @@ async function getTableInfo() {
     pagination.total = total
   }
   catch (error) {
+    console.error('Failed to load snapshots:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -251,6 +254,8 @@ async function getBreadcrumbTable() {
     })
   }
   catch (error) {
+    console.error('Failed to load snapshot details:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -291,7 +296,7 @@ onMounted(() => {
             <a-range-picker
               :value="selectedDateRange"
               :disabled="loading || isConsumerSnapshot"
-              :placeholder="['Start date', 'End date']"
+              :placeholder="[$t('startDate'), $t('endDate')]"
               format="YYYY-MM-DD"
               @change="onCalendarRangeChange"
             >
