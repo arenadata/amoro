@@ -148,6 +148,7 @@ export type PartitionSortField =
   | 'lastCommitTime'
 
 export type SortOrder = 'asc' | 'desc'
+export type TableSortOrder = 'ascend' | 'descend' | null
 
 export interface PartitionItem {
   partition: string
