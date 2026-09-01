@@ -18,9 +18,10 @@ limitations under the License.
 
 <script lang="ts" setup>
 import dayjs, { type Dayjs } from 'dayjs'
-import { onMounted, reactive, ref, shallowReactive } from 'vue'
+import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { message } from 'ant-design-vue'
 import Selector from './Selector.vue'
 import { usePagination } from '@/hooks/usePagination'
 import type { BreadcrumbSnapshotItem, IColumns, ILineChartOriginalData, SnapshotItem } from '@/types/common.type'
@@ -69,12 +70,12 @@ const operation = ref<string>('')
 const isConsumerSnapshot = ref(false)
 const dateRangeMode = ref<'all' | 'day' | 'week' | 'month' | 'calendar'>('all')
 const selectedDateRange = ref<[Dayjs, Dayjs] | null>(null)
-const dateRangeOptions = [
+const dateRangeOptions = computed(() => [
   { label: t('all'), value: 'all' },
   { label: t('day'), value: 'day' },
   { label: t('week'), value: 'week' },
   { label: t('month'), value: 'month' },
-]
+])
 
 function onRefChange(params: { ref: string, operation: string }) {
   isConsumerSnapshot.value = false
@@ -116,7 +117,7 @@ function getDateRangeParams() {
   }
 }
 
-function onDateRangeModeChange(value: 'all' | 'day' | 'week' | 'month' | 'calendar') {
+function onDateRangeModeChange(value: 'all' | 'day' | 'week' | 'month') {
   dateRangeMode.value = value
   if (value === 'all') {
     selectedDateRange.value = null
@@ -159,7 +160,7 @@ async function getTableInfo() {
       if (p.producer === 'OPTIMIZE') {
         p.operation = `${p.operation}(optimizing)`
       }
-      p.commitTime = p.commitTime ? dateFormat(p.commitTime) : '-'
+      p.commitTime = commitTime ? dateFormat(commitTime) : '-'
       dataSource.push(p)
     })
     recordChartOption.value = generateLineChartOption(t('recordChartTitle'), rcData)
@@ -167,6 +168,8 @@ async function getTableInfo() {
     pagination.total = total
   }
   catch (error) {
+    console.error('Failed to load snapshots:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -220,6 +223,8 @@ async function getBreadcrumbTable() {
     })
   }
   catch (error) {
+    console.error('Failed to load snapshot details:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -251,22 +256,27 @@ onMounted(() => {
           <Chart :loading="loading" :options="fileChartOption" />
         </a-col>
       </a-row>
-      <Selector :catalog="sourceData.catalog" :db="sourceData.db" :table="sourceData.table" :disabled="loading" @consumer-change="onConsumerChange" @ref-change="onRefChange" />
-      <div class="snapshots-date-range">
-        <a-segmented
-          v-model:value="dateRangeMode"
-          :disabled="loading || isConsumerSnapshot"
-          :options="dateRangeOptions"
-          @change="onDateRangeModeChange"
-        />
-        <a-range-picker
-          :value="selectedDateRange"
-          :disabled="loading || isConsumerSnapshot"
-          :placeholder="[$t('startTime'), $t('finishTime')]"
-          format="YYYY-MM-DD"
-          @change="onCalendarRangeChange"
-        />
-      </div>
+      <Selector :catalog="sourceData.catalog" :db="sourceData.db" :table="sourceData.table" :disabled="loading" @consumer-change="onConsumerChange" @ref-change="onRefChange">
+        <template #extra>
+          <a-range-picker
+            :value="selectedDateRange"
+            :disabled="loading || isConsumerSnapshot"
+            :placeholder="[$t('startDate'), $t('endDate')]"
+            format="YYYY-MM-DD"
+            @change="onCalendarRangeChange"
+          >
+            <template #renderExtraFooter>
+              <div class="snapshots-date-range-footer">
+                <a-segmented
+                  v-model:value="dateRangeMode"
+                  :options="dateRangeOptions"
+                  @change="onDateRangeModeChange"
+                />
+              </div>
+            </template>
+          </a-range-picker>
+        </template>
+      </Selector>
       <a-table
         row-key="snapshotId"
         :columns="columns"
@@ -346,12 +356,10 @@ onMounted(() => {
   .ant-table-wrapper {
     margin-top: 24px;
   }
-
-  .snapshots-date-range {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 16px;
-  }
+}
+:global(.snapshots-date-range-footer) {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
 }
 </style>
