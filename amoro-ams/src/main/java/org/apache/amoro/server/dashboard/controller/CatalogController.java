@@ -615,6 +615,11 @@ public class CatalogController {
     }
   }
 
+  public CatalogMeta buildCatalogMeta(CatalogRegisterInfo info) {
+    validateCatalogRegisterInfo(info);
+    return constructCatalogMeta(info, null);
+  }
+
   /** Register catalog to ams. */
   public void createCatalog(Context ctx) {
     CatalogRegisterInfo info = ctx.bodyAsClass(CatalogRegisterInfo.class);
@@ -627,7 +632,7 @@ public class CatalogController {
     ctx.json(OkResponse.of(""));
   }
 
-  private void validateCatalogRegisterInfo(CatalogRegisterInfo info) {
+  public void validateCatalogRegisterInfo(CatalogRegisterInfo info) {
     Preconditions.checkNotNull(info.getAuthConfig(), "Catalog auth config must not be null");
     Preconditions.checkNotNull(info.getStorageConfig(), "Catalog storage config must not be null");
     Preconditions.checkNotNull(info.getProperties(), "Catalog properties must not be null");

@@ -36,6 +36,7 @@ import org.apache.amoro.exception.AmoroRuntimeException;
 import org.apache.amoro.process.ActionCoordinator;
 import org.apache.amoro.process.ExecuteEngine;
 import org.apache.amoro.process.ProcessFactory;
+import org.apache.amoro.server.catalog.CatalogInitializer;
 import org.apache.amoro.server.catalog.CatalogManager;
 import org.apache.amoro.server.catalog.DefaultCatalogManager;
 import org.apache.amoro.server.dashboard.DashboardServer;
@@ -218,6 +219,8 @@ public class AmoroServiceContainer {
     tableManager = new DefaultTableManager(serviceConfig, catalogManager);
     optimizerManager = new DefaultOptimizerManager(serviceConfig, catalogManager);
     terminalManager = new TerminalManager(serviceConfig, catalogManager);
+
+    new CatalogInitializer(catalogManager, Environments.getConfigPath()).initialize();
 
     initHttpService();
     startHttpService();
