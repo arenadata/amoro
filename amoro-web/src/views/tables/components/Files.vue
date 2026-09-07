@@ -138,14 +138,12 @@ const pagination = reactive(usePagination())
 const breadcrumbPagination = reactive(usePagination())
 const route = useRoute()
 const query = route.query
-
 const sourceData = reactive({
   catalog: '',
   db: '',
   table: '',
   ...query,
 })
-
 const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
@@ -158,7 +156,6 @@ async function getTableInfo() {
   try {
     loading.value = true
     dataSource.length = 0
-
     const result = await getPartitionTable({
       ...sourceData,
       filter: searchKey.value,
@@ -167,7 +164,6 @@ async function getTableInfo() {
       sortBy: sortBy.value,
       sortOrder: sortOrder.value,
     })
-
     const { list, total } = result
     pagination.total = total;
     (list || []).forEach((p: PartitionItem) => {
@@ -181,7 +177,6 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-
 function change(
   { current = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE }: TablePagination,
   _filters: unknown,
@@ -206,7 +201,8 @@ function change(
       }
       pagination.pageSize = pageSize
     }
-  } else {
+  }
+  else {
     breadcrumbPagination.current = current
     if (pageSize !== breadcrumbPagination.pageSize) {
       breadcrumbPagination.current = DEFAULT_PAGE

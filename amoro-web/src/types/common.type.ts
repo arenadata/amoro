@@ -143,7 +143,6 @@ export interface TableBasicInfo {
 export type PartitionSortField = 'partition' | 'specId' | 'fileCount' | 'fileSize' | 'lastCommitTime'
 export type SortOrder = 'asc' | 'desc'
 export type TableSortOrder = 'ascend' | 'descend' | null
-
 export interface PartitionItem {
   partition: string
   fileCount: number
