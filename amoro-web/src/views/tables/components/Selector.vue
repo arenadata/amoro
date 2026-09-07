@@ -171,6 +171,9 @@ onMounted(() => {
         </a-select-option>
       </a-select>
     </div>
+    <div class="selector-extra">
+      <slot name="extra" />
+    </div>
   </div>
 </template>
 
@@ -179,6 +182,12 @@ onMounted(() => {
   margin-top: 32px;
   display: flex;
   align-items: center;
+
+  .selector-extra {
+    display: flex;
+    align-items: center;
+    padding-left: 18px;
+  }
 
   .branch-btn {
     display: flex;
