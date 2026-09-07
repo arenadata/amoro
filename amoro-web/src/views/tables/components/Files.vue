@@ -21,14 +21,7 @@ import { onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { usePagination } from '@/hooks/usePagination'
-import type {
-  BreadcrumbPartitionItem,
-  IColumns,
-  PartitionItem,
-  PartitionSortField,
-  SortOrder,
-  TableSortOrder,
-} from '@/types/common.type'
+import type { BreadcrumbPartitionItem, IColumns, PartitionItem, PartitionSortField, SortOrder, TableSortOrder } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 
@@ -69,13 +62,7 @@ const partitionColumnSortFields: Record<string, PartitionSortField> = {
   size: 'fileSize',
   lastCommitTime: 'lastCommitTime',
 }
-const partitionSortFields: PartitionSortField[] = [
-  'partition',
-  'specId',
-  'fileCount',
-  'fileSize',
-  'lastCommitTime',
-]
+const partitionSortFields: PartitionSortField[] = [ 'partition', 'specId', 'fileCount', 'fileSize', 'lastCommitTime']
 const columns: IColumns[] = reactive([
   {
     title: t('partition'),
