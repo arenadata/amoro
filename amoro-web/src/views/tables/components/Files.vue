@@ -291,7 +291,6 @@ onMounted(() => {
           </template>
         </a-input-search>
       </div>
-
       <a-table
         row-key="partition"
         :columns="columns"
@@ -309,7 +308,6 @@ onMounted(() => {
         </template>
       </a-table>
     </template>
-
     <template v-else>
       <a-breadcrumb v-if="hasPartition" separator=">">
         <a-breadcrumb-item class="text-active" @click="toggleBreadcrumb">
@@ -317,7 +315,6 @@ onMounted(() => {
         </a-breadcrumb-item>
         <a-breadcrumb-item>{{ `${$t('partition')} ${partitionId}` }}</a-breadcrumb-item>
       </a-breadcrumb>
-
       <a-table
         row-key="file"
         :columns="breadcrumbColumns"
@@ -335,7 +332,6 @@ onMounted(() => {
               <span>{{ record.file }}</span>
             </a-tooltip>
           </template>
-
           <template v-if="column.dataIndex === 'path'">
             <a-tooltip>
               <template #title>
