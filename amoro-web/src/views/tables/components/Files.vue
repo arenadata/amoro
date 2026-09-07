@@ -49,6 +49,15 @@ const columns = computed<ColumnProps[]>(() => [
   { title: t('size'), dataIndex: 'size', key: 'fileSize', width: 120, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('fileSize') },
   { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', key: 'lastCommitTime', width: 200, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('lastCommitTime') },
 ])
+const breadcrumbColumns: IColumns[] = shallowReactive([
+  { title: t('file'), dataIndex: 'file', ellipsis: true },
+  // { title: t('fsn'), dataIndex: 'fsn' },
+  { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
+  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
+  { title: t('commitTime'), dataIndex: 'commitTime', width: 200, ellipsis: true },
+  { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
+  { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
+])
 const DEFAULT_SORT_BY: PartitionSortField = 'partition'
 const DEFAULT_SORT_ORDER: SortOrder = 'desc'
 const DEFAULT_PAGE = 1
@@ -77,15 +86,6 @@ function getNextSortOrder(sorter: TableSorter, nextSortBy: PartitionSortField): 
   }
   return DEFAULT_SORT_ORDER
 }
-const breadcrumbColumns: IColumns[] = shallowReactive([
-  { title: t('file'), dataIndex: 'file', ellipsis: true },
-  // { title: t('fsn'), dataIndex: 'fsn' },
-  { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('commitTime'), dataIndex: 'commitTime', width: 200, ellipsis: true },
-  { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
-  { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
-])
 
 const dataSource = reactive<PartitionItem[]>([])
 const breadcrumbDataSource = reactive<BreadcrumbPartitionItem[]>([])
