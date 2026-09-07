@@ -43,7 +43,12 @@ interface TablePagination {
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-
+const columns = computed<ColumnProps[]>(() => [
+  { title: t('partition'), dataIndex: 'partition', key: 'partition', ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('partition') },
+  { title: t('fileCount'), dataIndex: 'fileCount', key: 'fileCount', width: 120, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('fileCount') },
+  { title: t('size'), dataIndex: 'size', key: 'fileSize', width: 120, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('fileSize') },
+  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', key: 'lastCommitTime', width: 200, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('lastCommitTime') },
+])
 const DEFAULT_SORT_BY: PartitionSortField = 'partition'
 const DEFAULT_SORT_ORDER: SortOrder = 'desc'
 const DEFAULT_PAGE = 1
@@ -72,43 +77,6 @@ function getNextSortOrder(sorter: TableSorter, nextSortBy: PartitionSortField): 
   }
   return DEFAULT_SORT_ORDER
 }
-const columns = computed<ColumnProps[]>(() => [
-  {
-    title: t('partition'),
-    dataIndex: 'partition',
-    key: 'partition',
-    ellipsis: true,
-    sorter: true,
-    sortOrder: getColumnSortOrder('partition'),
-  },
-  {
-    title: t('fileCount'),
-    dataIndex: 'fileCount',
-    key: 'fileCount',
-    width: 120,
-    ellipsis: true,
-    sorter: true,
-    sortOrder: getColumnSortOrder('fileCount'),
-  },
-  {
-    title: t('size'),
-    dataIndex: 'size',
-    key: 'fileSize',
-    width: 120,
-    ellipsis: true,
-    sorter: true,
-    sortOrder: getColumnSortOrder('fileSize'),
-  },
-  {
-    title: t('lastCommitTime'),
-    dataIndex: 'lastCommitTime',
-    key: 'lastCommitTime',
-    width: 200,
-    ellipsis: true,
-    sorter: true,
-    sortOrder: getColumnSortOrder('lastCommitTime'),
-  },
-])
 const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
   // { title: t('fsn'), dataIndex: 'fsn' },
@@ -118,6 +86,7 @@ const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
   { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
 ])
+
 const dataSource = reactive<PartitionItem[]>([])
 const breadcrumbDataSource = reactive<BreadcrumbPartitionItem[]>([])
 const partitionId = ref<string>('')
@@ -140,6 +109,7 @@ async function handleSearch(val: string) {
   pagination.current = DEFAULT_PAGE
   await getTableInfo()
 }
+
 async function getTableInfo() {
   try {
     loading.value = true
@@ -243,7 +213,6 @@ function toggleBreadcrumb(record: PartitionItem) {
   partitionId.value = record.partition
   specId.value = record.specId
   hasBreadcrumb.value = !hasBreadcrumb.value
-
   if (hasBreadcrumb.value) {
     breadcrumbPagination.current = DEFAULT_PAGE
     getFiles()
