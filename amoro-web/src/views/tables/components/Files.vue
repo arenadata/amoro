@@ -48,7 +48,6 @@ const DEFAULT_SORT_BY: PartitionSortField = 'partition'
 const DEFAULT_SORT_ORDER: SortOrder = 'desc'
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 25
-
 const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
 const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
 
@@ -58,29 +57,21 @@ function isPartitionSortField(value: unknown): value is PartitionSortField {
   return typeof value === 'string'
     && partitionSortFields.includes(value as PartitionSortField)
 }
-
 function getColumnSortOrder(field: PartitionSortField): TableSortOrder {
   if (sortBy.value !== field) {
     return null
   }
-
-  return sortOrder.value === 'asc'
-    ? 'ascend'
-    : 'descend'
+  return sortOrder.value === 'asc' ? 'ascend' : 'descend'
 }
-
 function getNextSortOrder(sorter: TableSorter, nextSortBy: PartitionSortField): SortOrder {
   if (sorter.order) {
     return sorter.order === 'ascend' ? 'asc' : 'desc'
   }
-
   if (sortBy.value === nextSortBy) {
     return sortOrder.value === 'asc' ? 'desc' : 'asc'
   }
-
   return DEFAULT_SORT_ORDER
 }
-
 const columns = computed<ColumnProps[]>(() => [
   {
     title: t('partition'),
@@ -118,7 +109,6 @@ const columns = computed<ColumnProps[]>(() => [
     sortOrder: getColumnSortOrder('lastCommitTime'),
   },
 ])
-
 const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
   // { title: t('fsn'), dataIndex: 'fsn' },
@@ -128,7 +118,6 @@ const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
   { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
 ])
-
 const dataSource = reactive<PartitionItem[]>([])
 const breadcrumbDataSource = reactive<BreadcrumbPartitionItem[]>([])
 const partitionId = ref<string>('')
@@ -151,7 +140,6 @@ async function handleSearch(val: string) {
   pagination.current = DEFAULT_PAGE
   await getTableInfo()
 }
-
 async function getTableInfo() {
   try {
     loading.value = true
@@ -219,7 +207,8 @@ function refresh() {
   }
   if (hasBreadcrumb.value) {
     getFiles()
-  } else {
+  }
+  else {
     getTableInfo()
   }
 }
