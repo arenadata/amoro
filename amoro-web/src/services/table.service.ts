@@ -17,12 +17,7 @@
   */
 
 // import { IOptions } from '@/types/common.type'
-import type {
-  ICatalogItem,
-  IMap,
-  PartitionSortField,
-  SortOrder,
-} from '@/types/common.type'
+import type { ICatalogItem, IMap, PartitionSortField, SortOrder } from '@/types/common.type'
 import request from '@/utils/request'
 
 export function getCatalogList(): Promise<ICatalogItem[]> {
@@ -77,31 +72,8 @@ export function getPartitionTable(
     sortOrder?: SortOrder
   },
 ) {
-  const {
-    catalog,
-    db,
-    table,
-    filter,
-    page,
-    pageSize,
-    token,
-    sortBy,
-    sortOrder,
-  } = params
-
-  return request.get(
-    `api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/partitions`,
-    {
-      params: {
-        filter,
-        page,
-        pageSize,
-        token,
-        sortBy,
-        sortOrder,
-      },
-    },
-  )
+  const { catalog, db, table, filter, page, pageSize, token, sortBy, sortOrder } = params
+  return request.get(`api/ams/v1/tables/catalogs/${catalog}/dbs/${db}/tables/${table}/partitions`, { params: { filter, page, pageSize, token, sortBy, sortOrder }, })
 }
 
 // get partions

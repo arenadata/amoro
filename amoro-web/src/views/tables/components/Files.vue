@@ -22,14 +22,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import type { ColumnProps } from 'ant-design-vue/es/table'
 import { usePagination } from '@/hooks/usePagination'
-import type {
-  BreadcrumbPartitionItem,
-  IColumns,
-  PartitionItem,
-  PartitionSortField,
-  SortOrder,
-  TableSortOrder,
-} from '@/types/common.type'
+import type { BreadcrumbPartitionItem, IColumns, PartitionItem, PartitionSortField, SortOrder, TableSortOrder } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 
@@ -59,13 +52,7 @@ const DEFAULT_PAGE_SIZE = 25
 const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
 const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
 
-const partitionSortFields: PartitionSortField[] = [
-  'partition',
-  'specId',
-  'fileCount',
-  'fileSize',
-  'lastCommitTime',
-]
+const partitionSortFields: PartitionSortField[] = ['partition', 'specId', 'fileCount', 'fileSize', 'lastCommitTime']
 
 function isPartitionSortField(value: unknown): value is PartitionSortField {
   return typeof value === 'string'
@@ -182,14 +169,9 @@ async function getTableInfo() {
     })
 
     const { list, total } = result
-
-    pagination.total = total
-
-    ;(list || []).forEach((p: PartitionItem) => {
-      p.lastCommitTime = p.lastCommitTime
-        ? dateFormat(p.lastCommitTime)
-        : ''
-
+    pagination.total = total;
+    (list || []).forEach((p: PartitionItem) => {
+      p.lastCommitTime = p.lastCommitTime ? dateFormat(p.lastCommitTime) : ''
       dataSource.push(p)
     })
   }
@@ -208,44 +190,29 @@ function change(
 ) {
   if (!hasBreadcrumb.value && props.hasPartition) {
     if (extra.action === 'sort') {
-      const currentSorter = Array.isArray(sorter)
-        ? (sorter.find(item => item.order) || sorter[0])
-        : sorter
-
-      if (
-        currentSorter
-        && isPartitionSortField(currentSorter.columnKey)
-      ) {
+      const currentSorter = Array.isArray(sorter) ? (sorter.find(item => item.order) || sorter[0]) : sorter
+      if (currentSorter && isPartitionSortField(currentSorter.columnKey)) {
         sortBy.value = currentSorter.columnKey
         sortOrder.value = getNextSortOrder(currentSorter, currentSorter.columnKey)
-      }
-      else {
+      } else {
         sortBy.value = DEFAULT_SORT_BY
         sortOrder.value = DEFAULT_SORT_ORDER
       }
-
       pagination.current = DEFAULT_PAGE
-    }
-    else {
+    } else {
       pagination.current = current
-
       if (pageSize !== pagination.pageSize) {
         pagination.current = DEFAULT_PAGE
       }
-
       pagination.pageSize = pageSize
     }
-  }
-  else {
+  } else {
     breadcrumbPagination.current = current
-
     if (pageSize !== breadcrumbPagination.pageSize) {
       breadcrumbPagination.current = DEFAULT_PAGE
     }
-
     breadcrumbPagination.pageSize = pageSize
   }
-
   refresh()
 }
 
@@ -254,11 +221,9 @@ function refresh() {
     getFiles()
     return
   }
-
   if (hasBreadcrumb.value) {
     getFiles()
-  }
-  else {
+  } else {
     getTableInfo()
   }
 }
@@ -267,27 +232,18 @@ async function getFiles() {
   try {
     breadcrumbDataSource.length = 0
     loading.value = true
-
     const params = {
       ...sourceData,
-      partition: props.hasPartition
-        ? encodeURIComponent(partitionId.value)
-        : null,
+      partition: props.hasPartition ? encodeURIComponent(partitionId.value) : null,
       specId: specId.value,
       page: breadcrumbPagination.current,
       pageSize: breadcrumbPagination.pageSize,
     }
-
     const result = await getPartitionFiles(params)
     const { list, total } = result
-
-    breadcrumbPagination.total = total
-
-    ;(list || []).forEach((p: BreadcrumbPartitionItem) => {
-      p.commitTime = p.commitTime && p.commitTime !== -1
-        ? dateFormat(p.commitTime)
-        : ''
-
+    breadcrumbPagination.total = total;
+    (list || []).forEach((p: BreadcrumbPartitionItem) => {
+      p.commitTime = p.commitTime && p.commitTime !== -1 ? dateFormat(p.commitTime) : ''
       breadcrumbDataSource.push(p)
     })
   }
