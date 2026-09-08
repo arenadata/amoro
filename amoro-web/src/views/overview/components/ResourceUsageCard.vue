@@ -18,7 +18,7 @@ limitations under the License.
 
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import Chart from '@/components/echarts/Chart.vue'
 import { bytesToSize, dateFormat } from '@/utils'
 import { getResourceUsageList } from '@/services/overview.service'
@@ -27,6 +27,71 @@ import type { ResourceUsageItem } from '@/types/common.type'
 const { t } = useI18n()
 const timeRange = ref('24')
 const loading = ref<boolean>(false)
+const isFullscreen = ref<boolean>(false)
+const sidebarWidth = ref('200px')
+
+const chartHeight = computed(() => {
+  if (isFullscreen.value) {
+    // Viewport height - topbar (48px) - card header (~57px)
+    return 'calc(100vh - 105px)'
+  }
+  return '350px'
+})
+
+const fullscreenStyle = computed(() => {
+  if (isFullscreen.value) {
+    return {
+      position: 'fixed' as const,
+      top: '48px',
+      left: sidebarWidth.value,
+      right: '0',
+      bottom: '0',
+      zIndex: 100,
+      margin: '0',
+      borderRadius: '0',
+    }
+  }
+  return {}
+})
+
+const SIDEBAR_SELECTOR = '.side-bar .ant-menu'
+
+function updateSidebarWidth() {
+  const sidebar = document.querySelector(SIDEBAR_SELECTOR)
+  if (sidebar) {
+    sidebarWidth.value = `${sidebar.clientWidth}px`
+  }
+}
+
+function toggleFullscreen() {
+  updateSidebarWidth()
+  isFullscreen.value = !isFullscreen.value
+  nextTick(() => {
+    window.dispatchEvent(new Event('resize'))
+  })
+}
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  window.addEventListener('resize', updateSidebarWidth)
+
+  const sidebar = document.querySelector(SIDEBAR_SELECTOR)
+  if (sidebar) {
+    resizeObserver = new ResizeObserver(() => {
+      updateSidebarWidth()
+    })
+    resizeObserver.observe(sidebar)
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateSidebarWidth)
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+})
 
 function resourceFormatter(params: any[]): string {
   const cpuParam = params[0]
@@ -86,11 +151,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-card>
+  <a-card :style="fullscreenStyle">
     <template #title>
       <a-row justify="space-between">
         <span class="card-title" v-text="t('resourceUsage')" />
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
           <a-select v-model:value="timeRange" style="width: 120px" @change="updateData">
             <a-select-option value="1">
               {{ t('last1h') }}
@@ -105,15 +170,34 @@ onMounted(() => {
               {{ t('last7day') }}
             </a-select-option>
           </a-select>
+          <a-tooltip :title="isFullscreen ? t('recovery') : t('fullscreen')" placement="bottom">
+            <svg-icon
+              class-name="fullscreen-icon"
+              :icon-class="isFullscreen ? 'sqlinit' : 'sqlmax'"
+              :is-stroke="true"
+              @click="toggleFullscreen"
+            />
+          </a-tooltip>
         </div>
       </a-row>
     </template>
-    <Chart :loading="loading" :options="option" />
+    <Chart :loading="loading" :options="option" :height="chartHeight" />
   </a-card>
 </template>
 
 <style scoped>
 .card-title {
   font-size: 18px;
+}
+
+.fullscreen-icon {
+  cursor: pointer;
+  font-size: 20px;
+  color: #666;
+  transition: color 0.3s;
+}
+
+.fullscreen-icon:hover {
+  color: #1890ff;
 }
 </style>
