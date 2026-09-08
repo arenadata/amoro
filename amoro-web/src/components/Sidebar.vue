@@ -17,7 +17,7 @@
  / -->
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect, onMounted, onBeforeUnmount } from 'vue'
+import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRefs, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import useStore from '@/store/index'
@@ -29,6 +29,8 @@ interface MenuItem {
   title: string
   icon: string
 }
+
+type MenuClickEvent = MouseEvent | { domEvent?: Event }
 
 export default defineComponent({
   name: 'Sidebar',
@@ -47,6 +49,9 @@ export default defineComponent({
     })
     const hasToken = computed(() => {
       return !!(getQueryString('token') || '')
+    })
+    const enableLegacyTablesHover = computed(() => {
+      return import.meta.env.VITE_ENABLE_LEGACY_TABLES_HOVER === 'true'
     })
     const timer = ref(0)
     const menuList = computed(() => {
@@ -110,13 +115,29 @@ export default defineComponent({
       }, 300)
     }
 
-    const navClick = (item: MenuItem) => {
+    const stopMenuClickPropagation = (event?: MenuClickEvent) => {
+      if (!event) {
+        return
+      }
+      if ('stopPropagation' in event) {
+        event.stopPropagation()
+        return
+      }
+      event.domEvent?.stopPropagation()
+    }
+
+    const navClick = (item: MenuItem, event?: MenuClickEvent) => {
       if (item.key === 'tables') {
+        stopMenuClickPropagation(event)
+        if (!enableLegacyTablesHover.value) {
+          store.updateTablesMenu(true)
+        }
         nextTick(() => {
           setCurMenu()
         })
         return
       }
+      store.updateTablesMenu(false)
       router.replace({
         path: `/${item.key}`,
       })
@@ -126,7 +147,10 @@ export default defineComponent({
     }
 
     const mouseenter = (item: MenuItem) => {
-      toggleTablesMenu(item.key === 'tables')
+      if (!enableLegacyTablesHover.value || item.key !== 'tables') {
+        return
+      }
+      toggleTablesMenu(true)
     }
 
     const goCreatePage = () => {
@@ -134,6 +158,17 @@ export default defineComponent({
       router.push({
         path: '/tables/create',
       })
+    }
+
+    const hideTablesMenu = () => {
+      if (!enableLegacyTablesHover.value) {
+        return
+      }
+      toggleTablesMenu(false)
+    }
+
+    const hideTablesMenuByLogoHover = () => {
+      hideTablesMenu()
     }
 
     function toggleTablesMenu(flag = false) {
@@ -148,6 +183,7 @@ export default defineComponent({
     }
 
     const viewOverview = () => {
+      store.updateTablesMenu(false)
       router.push({
         path: '/overview',
       })
@@ -171,6 +207,7 @@ export default defineComponent({
     return {
       ...toRefs(state),
       hasToken,
+      enableLegacyTablesHover,
       menuList,
       toggleCollapsed,
       navClick,
@@ -179,6 +216,8 @@ export default defineComponent({
       toggleTablesMenu,
       tableMenusRef,
       goCreatePage,
+      hideTablesMenu,
+      hideTablesMenuByLogoHover,
       viewOverview,
     }
   },
@@ -187,7 +226,7 @@ export default defineComponent({
 
 <template>
   <div :class="{ 'side-bar-collapsed': collapsed }" class="side-bar">
-    <div :class="{ 'logo-collapsed': collapsed }" class="logo g-flex-ae" @mouseenter="toggleTablesMenu(false)" @click="viewOverview">
+    <div :class="{ 'logo-collapsed': collapsed }" class="logo g-flex-ae" @mouseenter="hideTablesMenuByLogoHover" @click="viewOverview">
       <img src="../assets/images/logo1.svg" class="logo-img" alt="">
       <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="">
     </div>
@@ -197,7 +236,7 @@ export default defineComponent({
       theme="dark"
       :inline-collapsed="collapsed"
     >
-      <a-menu-item v-for="item in menuList" :key="item.key" :class="{ 'active-color': (store.isShowTablesMenu && item.key === 'tables'), 'table-item-tab': item.key === 'tables' }" @click="navClick(item)" @mouseenter="mouseenter(item)">
+      <a-menu-item v-for="item in menuList" :key="item.key" :class="{ 'active-color': (store.isShowTablesMenu && item.key === 'tables'), 'table-item-tab': item.key === 'tables' }" @click="navClick(item, $event)" @mouseenter="mouseenter(item)">
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
@@ -208,7 +247,15 @@ export default defineComponent({
       <MenuUnfoldOutlined v-if="collapsed" />
       <MenuFoldOutlined v-else />
     </a-button>
-    <div ref="tableMenusRef" v-if="store.isShowTablesMenu && !hasToken" :class="{ 'collapsed-sub-menu': collapsed }" class="tables-menu-wrap" @click.self="toggleTablesMenu(false)" @mouseenter="toggleTablesMenu(true)">
+    <div
+      v-if="store.isShowTablesMenu && !hasToken"
+      ref="tableMenusRef"
+      :class="{ 'collapsed-sub-menu': collapsed }"
+      class="tables-menu-wrap"
+      @click.self="toggleTablesMenu(false)"
+      @mouseenter="toggleTablesMenu(true)"
+      @mouseleave="hideTablesMenu"
+    >
       <TableMenu @go-create-page="goCreatePage" />
     </div>
   </div>
