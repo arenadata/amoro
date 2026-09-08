@@ -17,9 +17,11 @@ limitations under the License.
 / -->
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref, shallowReactive } from 'vue'
+import dayjs, { type Dayjs } from 'dayjs'
+import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
 import Selector from './Selector.vue'
 import { usePagination } from '@/hooks/usePagination'
@@ -68,8 +70,18 @@ const fileChartOption = ref<ECOption>({})
 const showCharts = ref(false)
 const tblRef = ref<string>('')
 const operation = ref<string>('')
+const isConsumerSnapshot = ref(false)
+const dateRangeMode = ref<'all' | 'day' | 'week' | 'month' | 'calendar'>('all')
+const selectedDateRange = ref<[Dayjs, Dayjs] | null>(null)
+const dateRangeOptions = computed(() => [
+  { label: t('all'), value: 'all' },
+  { label: t('day'), value: 'day' },
+  { label: t('week'), value: 'week' },
+  { label: t('month'), value: 'month' },
+])
 
 function onRefChange(params: { ref: string, operation: string }) {
+  isConsumerSnapshot.value = false
   tblRef.value = params.ref
   operation.value = params.operation
   getTableInfo()
@@ -79,6 +91,7 @@ function onConsumerChange(params: {
   operation: string
   amoroCurrentSnapshotsItem: SnapshotItem
 }) {
+  isConsumerSnapshot.value = true
   tblRef.value = params.ref
   operation.value = params.operation
   dataSource.length = 0
@@ -88,6 +101,46 @@ function onConsumerChange(params: {
     : '-'
   dataSource.push(params.amoroCurrentSnapshotsItem)
   pagination.total = 1
+}
+
+function getDateRangeParams() {
+  if (!selectedDateRange.value) {
+    return {}
+  }
+  const [start, end] = selectedDateRange.value
+  if (dateRangeMode.value === 'calendar') {
+    return {
+      startTime: start.startOf('day').unix(),
+      endTime: end.endOf('day').unix(),
+    }
+  }
+  return {
+    startTime: start.unix(),
+    endTime: end.unix(),
+  }
+}
+
+function onDateRangeModeChange(
+  value: 'all' | 'day' | 'week' | 'month',
+) {
+  dateRangeMode.value = value
+
+  if (value === 'all') {
+    selectedDateRange.value = null
+  }
+  else {
+    const now = dayjs()
+    selectedDateRange.value = [now.subtract(1, value), now]
+  }
+  pagination.current = 1
+  getTableInfo()
+}
+
+function onCalendarRangeChange(value: [Dayjs, Dayjs] | null) {
+  dateRangeMode.value = value ? 'calendar' : 'all'
+  selectedDateRange.value = value
+  pagination.current = 1
+  getTableInfo()
 }
 
 async function getTableInfo() {
@@ -100,6 +153,7 @@ async function getTableInfo() {
       operation: operation.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      ...getDateRangeParams(),
     })
     const { list = [], total } = result
     const rcData: ILineChartOriginalData = {}
@@ -120,6 +174,8 @@ async function getTableInfo() {
     pagination.total = total
   }
   catch (error) {
+    console.error('Failed to load snapshots:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -173,6 +229,8 @@ async function getBreadcrumbTable() {
     })
   }
   catch (error) {
+    console.error('Failed to load snapshot details:', error)
+    message.error(t('loadSnapshotsFailed'))
   }
   finally {
     loading.value = false
@@ -239,12 +297,32 @@ onMounted(() => {
         @ref-change="onRefChange"
       >
         <template #extra>
-          <div class="snapshots-charts-header" @click="toggleCharts">
-            <span class="snapshots-charts-title">{{ $t('charts') }}</span>
-            <span class="snapshots-charts-icon">
-              <CaretRightOutlined v-if="!showCharts" />
-              <CaretDownOutlined v-else />
-            </span>
+          <div class="snapshots-toolbar-extra">
+            <a-range-picker
+              :value="selectedDateRange"
+              :disabled="loading || isConsumerSnapshot"
+              :placeholder="[$t('startDate'), $t('endDate')]"
+              format="YYYY-MM-DD"
+              @change="onCalendarRangeChange"
+            >
+              <template #renderExtraFooter>
+                <div class="snapshots-date-range-footer">
+                  <a-segmented
+                    v-model:value="dateRangeMode"
+                    :options="dateRangeOptions"
+                    @change="onDateRangeModeChange"
+                  />
+                </div>
+              </template>
+            </a-range-picker>
+
+            <div class="snapshots-charts-header" @click="toggleCharts">
+              <span class="snapshots-charts-title">{{ $t('charts') }}</span>
+              <span class="snapshots-charts-icon">
+                <CaretRightOutlined v-if="!showCharts" />
+                <CaretDownOutlined v-else />
+              </span>
+            </div>
           </div>
         </template>
       </Selector>
@@ -351,6 +429,12 @@ onMounted(() => {
     margin-top: 18px;
   }
 
+  .snapshots-toolbar-extra {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   .snapshots-charts-header {
     display: flex;
     align-items: center;
@@ -367,5 +451,11 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
   }
+}
+
+:global(.snapshots-date-range-footer) {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
 }
 </style>
