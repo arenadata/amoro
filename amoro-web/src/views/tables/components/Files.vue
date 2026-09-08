@@ -17,24 +17,39 @@ limitations under the License.
 / -->
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref, shallowReactive } from 'vue'
+import { computed, onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import type { ColumnProps } from 'ant-design-vue/es/table'
 import { usePagination } from '@/hooks/usePagination'
-import type { BreadcrumbPartitionItem, IColumns, PartitionItem } from '@/types/common.type'
+import type { BreadcrumbPartitionItem, IColumns, PartitionItem, PartitionSortField, SortOrder, TableSortOrder } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
+
+interface TableSorter {
+  columnKey?: string | number
+  order?: TableSortOrder
+}
+
+interface TableChangeExtra {
+  action?: 'paginate' | 'sort' | 'filter'
+}
+
+interface TablePagination {
+  current?: number
+  pageSize?: number
+}
 
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-const columns: IColumns[] = shallowReactive([
-  { title: t('partition'), dataIndex: 'partition', ellipsis: true },
-  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true },
+const columns = computed<ColumnProps[]>(() => [
+  { title: t('partition'), dataIndex: 'partition', key: 'partition', ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('partition') },
+  { title: t('fileCount'), dataIndex: 'fileCount', key: 'fileCount', width: 120, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('fileCount') },
+  { title: t('size'), dataIndex: 'size', key: 'fileSize', width: 120, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('fileSize') },
+  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', key: 'lastCommitTime', width: 200, ellipsis: true, sorter: true, sortOrder: getColumnSortOrder('lastCommitTime') },
 ])
-const breadcrumbColumns = shallowReactive([
+const breadcrumbColumns: IColumns[] = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
   // { title: t('fsn'), dataIndex: 'fsn' },
   { title: t('fileType'), dataIndex: 'fileType', width: 120, ellipsis: true },
@@ -43,6 +58,34 @@ const breadcrumbColumns = shallowReactive([
   { title: t('commitId'), dataIndex: 'commitId', width: 200, ellipsis: true },
   { title: t('path'), dataIndex: 'path', ellipsis: true, scopedSlots: { customRender: 'path' } },
 ])
+const DEFAULT_SORT_BY: PartitionSortField = 'partition'
+const DEFAULT_SORT_ORDER: SortOrder = 'desc'
+const DEFAULT_PAGE = 1
+const DEFAULT_PAGE_SIZE = 25
+const sortBy = ref<PartitionSortField>(DEFAULT_SORT_BY)
+const sortOrder = ref<SortOrder>(DEFAULT_SORT_ORDER)
+
+const partitionSortFields: PartitionSortField[] = ['partition', 'specId', 'fileCount', 'fileSize', 'lastCommitTime']
+
+function isPartitionSortField(value: unknown): value is PartitionSortField {
+  return typeof value === 'string'
+    && partitionSortFields.includes(value as PartitionSortField)
+}
+function getColumnSortOrder(field: PartitionSortField): TableSortOrder {
+  if (sortBy.value !== field) {
+    return null
+  }
+  return sortOrder.value === 'asc' ? 'ascend' : 'descend'
+}
+function getNextSortOrder(sorter: TableSorter, nextSortBy: PartitionSortField): SortOrder {
+  if (sorter.order) {
+    return sorter.order === 'ascend' ? 'asc' : 'desc'
+  }
+  if (sortBy.value === nextSortBy) {
+    return sortOrder.value === 'asc' ? 'desc' : 'asc'
+  }
+  return DEFAULT_SORT_ORDER
+}
 
 const dataSource = reactive<PartitionItem[]>([])
 const breadcrumbDataSource = reactive<BreadcrumbPartitionItem[]>([])
@@ -63,6 +106,7 @@ const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
   searchKey.value = val
+  pagination.current = DEFAULT_PAGE
   await getTableInfo()
 }
 
@@ -75,6 +119,8 @@ async function getTableInfo() {
       filter: searchKey.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      sortBy: sortBy.value,
+      sortOrder: sortOrder.value,
     })
     const { list, total } = result
     pagination.total = total;
@@ -89,18 +135,35 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-function change({ current = 1, pageSize = 25 }) {
+function change(
+  { current = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE }: TablePagination,
+  _filters: unknown,
+  sorter: TableSorter | TableSorter[],
+  extra: TableChangeExtra,
+) {
   if (!hasBreadcrumb.value && props.hasPartition) {
-    pagination.current = current
-    if (pageSize !== pagination.pageSize) {
-      pagination.current = 1
+    if (extra.action === 'sort') {
+      const currentSorter = Array.isArray(sorter) ? (sorter.find(item => item.order) || sorter[0]) : sorter
+      if (currentSorter && isPartitionSortField(currentSorter.columnKey)) {
+        sortBy.value = currentSorter.columnKey
+        sortOrder.value = getNextSortOrder(currentSorter, currentSorter.columnKey)
+      } else {
+        sortBy.value = DEFAULT_SORT_BY
+        sortOrder.value = DEFAULT_SORT_ORDER
+      }
+      pagination.current = DEFAULT_PAGE
+    } else {
+      pagination.current = current
+      if (pageSize !== pagination.pageSize) {
+        pagination.current = DEFAULT_PAGE
+      }
+      pagination.pageSize = pageSize
     }
-    pagination.pageSize = pageSize
   }
   else {
     breadcrumbPagination.current = current
     if (pageSize !== breadcrumbPagination.pageSize) {
-      breadcrumbPagination.current = 1
+      breadcrumbPagination.current = DEFAULT_PAGE
     }
     breadcrumbPagination.pageSize = pageSize
   }
@@ -151,7 +214,7 @@ function toggleBreadcrumb(record: PartitionItem) {
   specId.value = record.specId
   hasBreadcrumb.value = !hasBreadcrumb.value
   if (hasBreadcrumb.value) {
-    breadcrumbPagination.current = 1
+    breadcrumbPagination.current = DEFAULT_PAGE
     getFiles()
   }
 }
@@ -187,7 +250,7 @@ onMounted(() => {
         </a-input-search>
       </div>
       <a-table
-        row-key="partiton"
+        row-key="partition"
         :columns="columns"
         :data-source="dataSource"
         :pagination="pagination"
