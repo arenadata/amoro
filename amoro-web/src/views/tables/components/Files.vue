@@ -21,18 +21,80 @@ import { onMounted, reactive, ref, shallowReactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { usePagination } from '@/hooks/usePagination'
-import type { BreadcrumbPartitionItem, IColumns, PartitionItem } from '@/types/common.type'
+import type { BreadcrumbPartitionItem, IColumns, PartitionItem, PartitionSortField, SortOrder, TableSortOrder } from '@/types/common.type'
 import { getPartitionFiles, getPartitionTable } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 
 const props = defineProps<{ hasPartition: boolean }>()
 const hasBreadcrumb = ref<boolean>(false)
 const { t } = useI18n()
-const columns: IColumns[] = shallowReactive([
-  { title: t('partition'), dataIndex: 'partition', ellipsis: true },
-  { title: t('fileCount'), dataIndex: 'fileCount', width: 120, ellipsis: true },
-  { title: t('size'), dataIndex: 'size', width: 120, ellipsis: true },
-  { title: t('lastCommitTime'), dataIndex: 'lastCommitTime', width: 200, ellipsis: true },
+
+interface TablePagination {
+  current?: number
+  pageSize?: number
+}
+
+interface TableSorter {
+  field?: string | number
+  columnKey?: string | number
+  order?: TableSortOrder
+}
+
+interface TableChangeExtra {
+  action?: 'paginate' | 'sort' | 'filter'
+}
+
+const DEFAULT_SORT_BY: PartitionSortField = 'partition'
+const DEFAULT_SORT_ORDER: SortOrder = 'desc'
+const DEFAULT_PAGE = 1
+const DEFAULT_PAGE_SIZE = 25
+
+const sortState = reactive<{
+  sortBy: PartitionSortField
+  sortOrder: SortOrder
+}>({
+  sortBy: DEFAULT_SORT_BY,
+  sortOrder: DEFAULT_SORT_ORDER,
+})
+const partitionColumnSortFields: Record<string, PartitionSortField> = {
+  partition: 'partition',
+  fileCount: 'fileCount',
+  size: 'fileSize',
+  lastCommitTime: 'lastCommitTime',
+}
+const partitionSortFields: PartitionSortField[] = [ 'partition', 'specId', 'fileCount', 'fileSize', 'lastCommitTime']
+const columns: IColumns[] = reactive([
+  {
+    title: t('partition'),
+    dataIndex: 'partition',
+    ellipsis: true,
+    sorter: true,
+    sortOrder: 'descend',
+  },
+  {
+    title: t('fileCount'),
+    dataIndex: 'fileCount',
+    width: 120,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: null,
+  },
+  {
+    title: t('size'),
+    dataIndex: 'size',
+    width: 120,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: null,
+  },
+  {
+    title: t('lastCommitTime'),
+    dataIndex: 'lastCommitTime',
+    width: 200,
+    ellipsis: true,
+    sorter: true,
+    sortOrder: null,
+  },
 ])
 const breadcrumbColumns = shallowReactive([
   { title: t('file'), dataIndex: 'file', ellipsis: true },
@@ -63,7 +125,35 @@ const searchKey = ref<string>('')
 
 async function handleSearch(val: string) {
   searchKey.value = val
+  pagination.current = DEFAULT_PAGE
   await getTableInfo()
+}
+
+function isPartitionSortField(value: unknown): value is PartitionSortField {
+  return typeof value === 'string'
+    && partitionSortFields.includes(value as PartitionSortField)
+}
+
+function getBackendSortOrder(order: TableSortOrder): SortOrder {
+  return order === 'ascend' ? 'asc' : 'desc'
+}
+
+function getNextSortOrder(sorter: TableSorter | undefined, nextSortBy: PartitionSortField): SortOrder {
+  if (sorter?.order) {
+    return getBackendSortOrder(sorter.order)
+  }
+
+  if (sortState.sortBy === nextSortBy) {
+    return sortState.sortOrder === 'asc' ? 'desc' : 'asc'
+  }
+
+  return DEFAULT_SORT_ORDER
+}
+
+function getColumnSortOrder(sortBy: PartitionSortField): TableSortOrder {
+  return sortState.sortBy === sortBy
+    ? (sortState.sortOrder === 'asc' ? 'ascend' : 'descend')
+    : null
 }
 
 async function getTableInfo() {
@@ -75,6 +165,8 @@ async function getTableInfo() {
       filter: searchKey.value,
       page: pagination.current,
       pageSize: pagination.pageSize,
+      sortBy: sortState.sortBy,
+      sortOrder: sortState.sortOrder,
     })
     const { list, total } = result
     pagination.total = total;
@@ -89,18 +181,44 @@ async function getTableInfo() {
     loading.value = false
   }
 }
-function change({ current = 1, pageSize = 25 }) {
+
+function syncPartitionSort(sorter: TableSorter | TableSorter[]) {
+  const activeSorter = Array.isArray(sorter) ? (sorter.find(item => item.order) || sorter[0]) : sorter
+  const sortField = activeSorter?.field || activeSorter?.columnKey
+  const sortBy = sortField ? partitionColumnSortFields[String(sortField)] : undefined
+  const nextSortBy = isPartitionSortField(sortBy) ? sortBy : DEFAULT_SORT_BY
+
+  sortState.sortOrder = getNextSortOrder(activeSorter, nextSortBy)
+  sortState.sortBy = nextSortBy
+  columns.forEach((column) => {
+    const columnSortBy = partitionColumnSortFields[column.dataIndex]
+    column.sortOrder = columnSortBy ? getColumnSortOrder(columnSortBy) : null
+  })
+}
+
+function change(
+  { current = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE }: TablePagination,
+  _filters: unknown,
+  sorter: TableSorter | TableSorter[],
+  extra: TableChangeExtra,
+) {
   if (!hasBreadcrumb.value && props.hasPartition) {
-    pagination.current = current
-    if (pageSize !== pagination.pageSize) {
-      pagination.current = 1
+    if (extra.action === 'sort') {
+      syncPartitionSort(sorter)
+      pagination.current = DEFAULT_PAGE
+    }
+    else {
+      pagination.current = current
+      if (pageSize !== pagination.pageSize) {
+        pagination.current = DEFAULT_PAGE
+      }
     }
     pagination.pageSize = pageSize
   }
   else {
     breadcrumbPagination.current = current
     if (pageSize !== breadcrumbPagination.pageSize) {
-      breadcrumbPagination.current = 1
+      breadcrumbPagination.current = DEFAULT_PAGE
     }
     breadcrumbPagination.pageSize = pageSize
   }
@@ -151,7 +269,7 @@ function toggleBreadcrumb(record: PartitionItem) {
   specId.value = record.specId
   hasBreadcrumb.value = !hasBreadcrumb.value
   if (hasBreadcrumb.value) {
-    breadcrumbPagination.current = 1
+    breadcrumbPagination.current = DEFAULT_PAGE
     getFiles()
   }
 }
@@ -187,7 +305,7 @@ onMounted(() => {
         </a-input-search>
       </div>
       <a-table
-        row-key="partiton"
+        row-key="partition"
         :columns="columns"
         :data-source="dataSource"
         :pagination="pagination"
