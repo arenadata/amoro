@@ -17,7 +17,7 @@
  / -->
 
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue'
+import { defineComponent, nextTick, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue'
 import echarts from './index'
 
 export default defineComponent({
@@ -41,7 +41,7 @@ export default defineComponent({
   },
   setup(props) {
     let echartsInst: any = null
-    const { options } = toRefs(props)
+    const { options, height } = toRefs(props)
     const echart = ref()
 
     const echartsInit = () => {
@@ -70,6 +70,15 @@ export default defineComponent({
       },
       {
         deep: true,
+      },
+    )
+
+    watch(
+      () => height.value,
+      () => {
+        nextTick(() => {
+          resize()
+        })
       },
     )
 
