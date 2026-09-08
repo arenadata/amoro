@@ -23,7 +23,7 @@ import CreateDBModal from './CreateDB.vue'
 import useStore from '@/store/index'
 import { getCatalogList, getDatabaseList, getTableList } from '@/services/table.service'
 import type { ICatalogItem, ILableAndValue, IMap } from '@/types/common.type'
-import { debounce } from '@/utils/index'
+import { debounce } from '@/utils'
 import { usePlaceholder } from '@/hooks/usePlaceholder'
 import virtualRecycleScroller from '@/components/VirtualRecycleScroller.vue'
 
@@ -258,6 +258,21 @@ export default defineComponent({
       })
     }
 
+    const  tableHref = (item: IMap<string>) => {
+      const path = item.type === 'HIVE' ? '/hive-tables' : '/tables'
+
+      return router.resolve({
+        path,
+        query: {
+          catalog: state.curCatalog,
+          db: state.database,
+          table: item.label,
+          type: item.type,
+        },
+      }).href
+    }
+
+
     onBeforeMount(() => {
       const { database, tableName } = storageCataDBTable
       state.database = database
@@ -278,6 +293,7 @@ export default defineComponent({
       handleClickTable,
       handleSearch,
       clearSearch,
+      tableHref,
     }
   },
 })
@@ -319,7 +335,14 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="loading" />
-          <VirtualRecycleScroller :loading="loading" :items="databaseList" :active-item="database" :item-size="40" icon-name="database" @handle-click-table="handleClickDb" />
+          <VirtualRecycleScroller
+              :loading="loading"
+              :items="databaseList"
+              :active-item="database"
+              :item-size="40"
+              icon-name="database"
+              @handle-click-table="handleClickDb"
+          />
         </div>
       </div>
       <div class="table-list">
@@ -344,7 +367,15 @@ export default defineComponent({
             </a-input-search>
           </div>
           <u-loading v-if="tableLoading" />
-          <VirtualRecycleScroller :loading="tableLoading" :items="tableList" :active-item="tableName" :item-size="40" icon-name="tableOutlined" @handle-click-table="handleClickTable" />
+          <VirtualRecycleScroller
+              :loading="tableLoading"
+              :items="tableList"
+              :active-item="tableName"
+              :item-size="40"
+              icon-name="tableOutlined"
+              :get-href="tableHref"
+              @handle-click-table="handleClickTable"
+          />
         </div>
       </div>
     </div>

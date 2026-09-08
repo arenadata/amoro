@@ -17,12 +17,12 @@
  / -->
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import {computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRefs, watchEffect} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useI18n} from 'vue-i18n'
 import useStore from '@/store/index'
 import TableMenu from '@/components/tables-sub-menu/TablesMenu.vue'
-import { getQueryString } from '@/utils'
+import {getQueryString} from '@/utils'
 
 interface MenuItem {
   key: string
@@ -187,21 +187,38 @@ export default defineComponent({
 
 <template>
   <div :class="{ 'side-bar-collapsed': collapsed }" class="side-bar">
-    <div :class="{ 'logo-collapsed': collapsed }" class="logo g-flex-ae" @mouseenter="toggleTablesMenu(false)" @click="viewOverview">
-      <img src="../assets/images/logo1.svg" class="logo-img" alt="">
-      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="">
-    </div>
+    <RouterLink
+        to="/overview"
+        class="logo g-flex-ae"
+        :class="{ 'logo-collapsed': collapsed }"
+        @mouseenter="toggleTablesMenu(false)"
+    >
+      <img src="../assets/images/logo1.svg" class="logo-img" alt="" />
+      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="" />
+    </RouterLink>
+
     <a-menu
       v-model:selectedKeys="selectedKeys"
       mode="inline"
       theme="dark"
       :inline-collapsed="collapsed"
     >
-      <a-menu-item v-for="item in menuList" :key="item.key" :class="{ 'active-color': (store.isShowTablesMenu && item.key === 'tables'), 'table-item-tab': item.key === 'tables' }" @click="navClick(item)" @mouseenter="mouseenter(item)">
+      <a-menu-item
+          v-for="item in menuList"
+          :key="item.key"
+          :class="{
+            'active-color': (store.isShowTablesMenu && item.key === 'tables'),
+            'table-item-tab': item.key === 'tables'
+          }"
+          @mouseenter="mouseenter(item)"
+      >
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
-        <span>{{ item.title }}</span>
+
+        <RouterLink :to="item.key === 'tables' ? '/tables' : `/${item.key}`">
+          {{ item.title }}
+        </RouterLink>
       </a-menu-item>
     </a-menu>
     <a-button type="link" class="toggle-btn" @click="toggleCollapsed">

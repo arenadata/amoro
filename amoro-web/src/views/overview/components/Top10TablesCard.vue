@@ -19,16 +19,15 @@ limitations under the License.
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import type { ITopTableItem } from '@/types/common.type'
 import { getTop10TableList } from '@/services/overview.service'
 import { bytesToSize } from '@/utils'
 
 const { t } = useI18n()
-const router = useRouter()
 const orderBy = ref('healthScore')
 const loading = ref<boolean>(false)
 const dataSource = reactive<ITopTableItem[]>([])
+import type { RouteLocationRaw } from 'vue-router'
 
 const columns = computed(() => [
   {
@@ -63,19 +62,11 @@ const columns = computed(() => [
   },
 ])
 
-function goTableDetail(record: ITopTableItem) {
-  try {
-    const table = (record.tableName || '').split('.')
-    router.push({
-      path: '/tables',
-      query: {
-        catalog: table[0],
-        db: table[1],
-        table: table[2],
-      },
-    })
-  }
-  catch (error) {
+const tableTo = (record: ITopTableItem): RouteLocationRaw => {
+  const [catalog, db, table] = (record.tableName || '').split('.')
+  return {
+    path: '/tables',
+    query: { catalog, db, table },
   }
 }
 
@@ -133,9 +124,13 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'tableName'">
-            <span :title="record.tableName" class="primary-link" @click="goTableDetail(record)">
+            <RouterLink
+                :to="tableTo(record)"
+                class="primary-link"
+                :title="record.tableName"
+            >
               {{ record.tableName }}
-            </span>
+            </RouterLink>
           </template>
           <template v-if="column.dataIndex === 'tableSize'">
             {{ bytesToSize(record.tableSize) }}
