@@ -17,7 +17,8 @@
  / -->
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, reactive, toRefs, watchEffect } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
+import { computed, defineComponent, reactive, toRefs, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import useStore from '@/store/index'
@@ -141,60 +142,44 @@ export default defineComponent({
       }, 300)
     }
 
-    const navClick = (item: MenuItem) => {
-      if (item.key === 'tables') {
-        let catalog: string | undefined
-        let db: string | undefined
-        let tableName: string | undefined
-
-        try {
-          const stored = localStorage.getItem('easylake-menu-catalog-db-table')
-          if (stored) {
-            const parsed = JSON.parse(stored) as { catalog?: string; database?: string; tableName?: string }
-            catalog = parsed.catalog
-            db = parsed.database
-            tableName = parsed.tableName
-          }
-        }
-        catch (e) {
-          // ignore localStorage read/parse errors
-        }
-
-        if (catalog && db && tableName) {
-          router.replace({
-            path: '/tables',
-            query: {
-              catalog,
-              db,
-              table: tableName,
-            },
-          })
-        }
-        else {
-          router.replace({
-            path: '/tables',
-          })
-        }
-
-        nextTick(() => {
-          setCurMenu()
-        })
-        return
-      }
-
-      const targetPath = `/${item.key}`
-      router.replace({
-        path: targetPath,
-      })
-      nextTick(() => {
-        setCurMenu()
-      })
-    }
-
     const viewOverview = () => {
       router.push({
         path: canAccessSystem.value ? '/overview' : getDefaultRoute(),
       })
+    }
+
+    const getMenuRoute = (item: MenuItem): RouteLocationRaw => {
+      if (item.key !== 'tables') {
+        return `/${item.key}`
+      }
+
+      try {
+        const stored = localStorage.getItem('easylake-menu-catalog-db-table')
+
+        if (stored) {
+          const parsed = JSON.parse(stored) as {
+            catalog?: string
+            database?: string
+            tableName?: string
+          }
+
+          if (parsed.catalog && parsed.database && parsed.tableName) {
+            return {
+              path: '/tables',
+              query: {
+                catalog: parsed.catalog,
+                db: parsed.database,
+                table: parsed.tableName,
+              },
+            }
+          }
+        }
+      }
+      catch {
+        // Navigate to the default tables route
+      }
+
+      return '/tables'
     }
 
     return {
@@ -208,9 +193,9 @@ export default defineComponent({
       canAccessSettings,
       menuList,
       toggleCollapsed,
-      navClick,
       store,
       viewOverview,
+      getMenuRoute,
     }
   },
 })
@@ -218,21 +203,39 @@ export default defineComponent({
 
 <template>
   <div :class="{ 'side-bar-collapsed': collapsed }" class="side-bar">
-    <div :class="{ 'logo-collapsed': collapsed }" class="logo g-flex-ae" @click="viewOverview">
-      <img src="../assets/images/logo1.svg" class="logo-img" alt="">
-      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="">
-    </div>
+    <RouterLink
+      to="/overview"
+      class="logo g-flex-ae"
+      :class="{ 'logo-collapsed': collapsed }"
+    >
+      <img src="../assets/images/logo1.svg" class="logo-img" alt="" />
+      <img v-show="!collapsed" src="../assets/images/arctic-dashboard1.svg" class="arctic-name" alt="" />
+    </RouterLink>
     <a-menu
       v-model:selectedKeys="selectedKeys"
       mode="inline"
       theme="dark"
       :inline-collapsed="collapsed"
     >
-      <a-menu-item v-for="item in menuList" :key="item.key" :class="{ 'active-color': (store.isShowTablesMenu && item.key === 'tables'), 'table-item-tab': item.key === 'tables' }" @click="navClick(item)">
+      <a-menu-item
+        v-for="item in menuList"
+        :key="item.key"
+        :class="{
+          'active-color': (store.isShowTablesMenu && item.key === 'tables'),
+          'table-item-tab': item.key === 'tables',
+        }"
+      >
         <template #icon>
           <svg-icon :icon-class="item.icon" class="svg-icon" />
         </template>
-        <span>{{ item.title }}</span>
+
+        <RouterLink
+          :to="getMenuRoute(item)"
+          class="menu-item-link"
+          @click.stop
+        >
+          {{ item.title }}
+        </RouterLink>
       </a-menu-item>
     </a-menu>
     <a-button type="link" class="toggle-btn" @click="toggleCollapsed">
@@ -270,6 +273,7 @@ export default defineComponent({
     :deep(.ant-menu-item) {
       margin: 0;
       padding-left: 22px !important;
+      position: relative;
       .ant-menu-title-content {
         width: 100%;
         margin-left: 12px;
@@ -287,6 +291,15 @@ export default defineComponent({
       }
       &.table-item-tab:hover {
         background-color: @dark-bg-color;
+      }
+    }
+    .menu-item-link {
+      position: static;
+
+      &::after {
+        position: absolute;
+        inset: 0;
+        content: '';
       }
     }
     .logo {
