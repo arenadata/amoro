@@ -25,12 +25,7 @@ import { message } from 'ant-design-vue'
 import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons-vue'
 import Selector from './Selector.vue'
 import { usePagination } from '@/hooks/usePagination'
-import type {
-  BreadcrumbSnapshotItem,
-  IColumns,
-  ILineChartOriginalData,
-  SnapshotItem,
-} from '@/types/common.type'
+import type { BreadcrumbSnapshotItem, IColumns, ILineChartOriginalData, SnapshotItem } from '@/types/common.type'
 import { getDetailBySnapshotId, getSnapshots } from '@/services/table.service'
 import { dateFormat } from '@/utils'
 import Chart from '@/components/echarts/Chart.vue'
@@ -164,35 +159,18 @@ async function getTableInfo() {
     const rcData: ILineChartOriginalData = {}
     const fcData: ILineChartOriginalData = {}
     list.forEach((p: SnapshotItem) => {
-      const {
-        recordsSummaryForChart,
-        filesSummaryForChart,
-        commitTime,
-      } = p
-
+      // Assume that the time will not conflict and use the time as the unique key without formatting it.
+      const { recordsSummaryForChart, filesSummaryForChart, commitTime } = p
       rcData[commitTime] = recordsSummaryForChart || {}
       fcData[commitTime] = filesSummaryForChart || {}
       if (p.producer === 'OPTIMIZE') {
         p.operation = `${p.operation}(optimizing)`
       }
-
-      p.commitTime = commitTime
-        ? dateFormat(commitTime)
-        : '-'
-
+      p.commitTime = p.commitTime ? dateFormat(p.commitTime) : '-'
       dataSource.push(p)
     })
-
-    recordChartOption.value = generateLineChartOption(
-      t('recordChartTitle'),
-      rcData,
-    )
-
-    fileChartOption.value = generateLineChartOption(
-      t('fileChartTitle'),
-      fcData,
-    )
-
+    recordChartOption.value = generateLineChartOption(t('recordChartTitle'), rcData)
+    fileChartOption.value = generateLineChartOption(t('fileChartTitle'), fcData)
     pagination.total = total
   }
   catch (error) {
@@ -246,10 +224,7 @@ async function getBreadcrumbTable() {
     const { list, total } = result
     breadcrumbPagination.total = total
     list.forEach((p: BreadcrumbSnapshotItem) => {
-      p.commitTime = p.commitTime
-        ? dateFormat(p.commitTime)
-        : ''
-
+      p.commitTime = p.commitTime ? dateFormat(p.commitTime) : ''
       breadcrumbDataSource.push(p)
     })
   }
@@ -275,8 +250,38 @@ function toggleCharts() {
   showCharts.value = !showCharts.value
 }
 
+function getSnapshotLink(record: SnapshotItem) {
+  return {
+    path: route.path,
+    query: {
+      ...route.query,
+      snapshotId: record.snapshotId,
+      breadcrumb: '1',
+    },
+  }
+}
+
+function onSnapshotClick(event: MouseEvent, record: SnapshotItem) {
+  if (event.button === 1 || event.metaKey || event.ctrlKey) {
+    return
+  }
+  event.preventDefault()
+  snapshotId.value = record.snapshotId
+  hasBreadcrumb.value = true
+  breadcrumbPagination.current = 1
+  getBreadcrumbTable()
+}
+
 onMounted(() => {
-  hasBreadcrumb.value = false
+  if (route.query.snapshotId) {
+    snapshotId.value = String(route.query.snapshotId)
+    hasBreadcrumb.value = true
+    breadcrumbPagination.current = 1
+    getBreadcrumbTable()
+  }
+  else {
+    hasBreadcrumb.value = false
+  }
 })
 </script>
 
@@ -311,14 +316,8 @@ onMounted(() => {
               </template>
             </a-range-picker>
 
-            <div
-              class="snapshots-charts-header"
-              @click="toggleCharts"
-            >
-              <span class="snapshots-charts-title">
-                {{ $t('charts') }}
-              </span>
-
+            <div class="snapshots-charts-header" @click="toggleCharts">
+              <span class="snapshots-charts-title">{{ $t('charts') }}</span>
               <span class="snapshots-charts-icon">
                 <CaretRightOutlined v-if="!showCharts" />
                 <CaretDownOutlined v-else />
@@ -327,27 +326,15 @@ onMounted(() => {
           </div>
         </template>
       </Selector>
-
-      <a-row
-        v-if="showCharts"
-        :gutter="32"
-      >
+      <a-row v-if="showCharts" :gutter="32">
         <a-col :span="12">
           <div class="snapshots-chart-wrap">
-            <Chart
-              height="300px"
-              :loading="loading"
-              :options="recordChartOption"
-            />
+            <Chart height="300px" :loading="loading" :options="recordChartOption" />
           </div>
         </a-col>
         <a-col :span="12">
           <div class="snapshots-chart-wrap">
-            <Chart
-              height="300px"
-              :loading="loading"
-              :options="fileChartOption"
-            />
+            <Chart height="300px" :loading="loading" :options="fileChartOption" />
           </div>
         </a-col>
       </a-row>
@@ -361,25 +348,18 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'snapshotId'">
-            <a-button
-              type="link"
-              @click="toggleBreadcrumb(record)"
+            <RouterLink
+              class="snapshot-link"
+              :to="getSnapshotLink(record)"
+              @click="onSnapshotClick($event, record)"
             >
               {{ record.snapshotId }}
-            </a-button>
+            </RouterLink>
           </template>
         </template>
         <template #expandedRowRender="{ record }">
-          <a-row
-            v-for="(value, key) in record.summary"
-            :key="key"
-            type="flex"
-            :gutter="16"
-          >
-            <a-col
-              flex="220px"
-              style="text-align: right;"
-            >
+          <a-row v-for="(value, key) in record.summary" :key="key" type="flex" :gutter="16">
+            <a-col flex="220px" style="text-align: right;">
               {{ key }} :
             </a-col>
             <a-col flex="auto">
@@ -391,16 +371,10 @@ onMounted(() => {
     </template>
     <template v-else>
       <a-breadcrumb separator=">">
-        <a-breadcrumb-item
-          class="text-active"
-          @click="toggleBreadcrumb"
-        >
+        <a-breadcrumb-item class="text-active" @click="toggleBreadcrumb">
           {{ $t('all') }}
         </a-breadcrumb-item>
-
-        <a-breadcrumb-item>
-          {{ `${$t('snapshotId')} ${snapshotId}` }}
-        </a-breadcrumb-item>
+        <a-breadcrumb-item>{{ `${$t('snapshotId')} ${snapshotId}` }}</a-breadcrumb-item>
       </a-breadcrumb>
       <a-table
         row-key="file"
@@ -417,10 +391,7 @@ onMounted(() => {
               <template #title>
                 {{ record.path }}
               </template>
-
-              <span>
-                {{ record.path }}
-              </span>
+              <span>{{ record.path }}</span>
             </a-tooltip>
           </template>
           <template v-if="column.dataIndex === 'file'">
@@ -428,10 +399,7 @@ onMounted(() => {
               <template #title>
                 {{ record.file }}
               </template>
-
-              <span>
-                {{ record.file }}
-              </span>
+              <span>{{ record.file }}</span>
             </a-tooltip>
           </template>
         </template>

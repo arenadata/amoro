@@ -18,15 +18,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import type { PropType } from 'vue'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { Empty as AEmpty } from 'ant-design-vue'
 import type { IMap } from '@/types/common.type'
 import { tableTypeIconMap } from '@/types/common.type'
 
-export default defineComponent ({
+export default defineComponent({
+  name: 'VirtualRecycleScroller',
   components: {
     RecycleScroller,
+    AEmpty,
   },
   props: {
     items: {
@@ -49,15 +52,22 @@ export default defineComponent ({
       type: Boolean,
       default: false,
     },
+    getHref: {
+      type: Function as PropType<(item: IMap<string>) => string>,
+      required: false,
+    },
   },
   emits: ['mouseEnter', 'handleClickTable'],
-  setup(_, { emit }) {
-    const handleMouseEnter = (item: IMap<string>) => {
-      emit('mouseEnter', item.label)
-    }
+  setup(props, { emit }) {
+    const handleMouseEnter = (item: IMap<string>) => emit('mouseEnter', item.label)
+    const handleClickTable = (item: IMap<string>) => emit('handleClickTable', item)
+    const hrefOf = (item: IMap<string>) => props.getHref?.(item) ?? ''
 
-    const handleClickTable = (item: IMap<string>) => {
-      emit('handleClickTable', item)
+    const openNewTab = (href: string) => {
+      if (!href) {
+        return
+      }
+      window.open(href, '_blank', 'noopener,noreferrer')
     }
 
     return {
@@ -65,6 +75,8 @@ export default defineComponent ({
       tableTypeIconMap,
       handleMouseEnter,
       handleClickTable,
+      hrefOf,
+      openNewTab,
     }
   },
 })
@@ -76,10 +88,32 @@ export default defineComponent ({
     v-slot="{ item }"
     class="scroller"
     :items="items"
-    :item-size="40"
+    :item-size="itemSize"
     key-field="id"
   >
-    <div :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }" class="desc" @mouseenter="handleMouseEnter(item)" @click="handleClickTable(item)">
+    <a
+      v-if="getHref"
+      :href="hrefOf(item)"
+      class="desc"
+      :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }"
+      @mouseenter="handleMouseEnter(item)"
+      @click.left.exact.prevent="handleClickTable(item)"
+      @click.meta.prevent.stop="openNewTab(hrefOf(item))"
+      @click.ctrl.prevent.stop="openNewTab(hrefOf(item))"
+      @mousedown.middle.prevent.stop="openNewTab(hrefOf(item))"
+    >
+      <svg-icon v-if="iconName === 'database'" icon-class="database" class="table-icon g-mr-8" />
+      <svg-icon v-else :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap]" class="table-icon g-mr-8" />
+      <p :title="item.label" class="name g-text-nowrap">{{ item.label }}</p>
+    </a>
+
+    <div
+      v-else
+      class="desc"
+      :class="{ 'active': activeItem === item.label, 'hive-table': item.type === 'HIVE' }"
+      @mouseenter="handleMouseEnter(item)"
+      @click="handleClickTable(item)"
+    >
       <svg-icon v-if="iconName === 'database'" icon-class="database" class="table-icon g-mr-8" />
       <svg-icon v-else :icon-class="tableTypeIconMap[item.type as keyof typeof tableTypeIconMap]" class="table-icon g-mr-8" />
       <p :title="item.label" class="name g-text-nowrap">
@@ -87,7 +121,8 @@ export default defineComponent ({
       </p>
     </div>
   </RecycleScroller>
-  <a-empty v-if="!items.length && !loading" class="theme-dark" :image="simpleImage" />
+
+  <a-empty v-else-if="!items.length && !loading" class="theme-dark" :image="simpleImage" />
 </template>
 
 <style lang="less" scoped>
@@ -96,26 +131,33 @@ export default defineComponent ({
   padding: 4px 0 0 4px;
   margin-top: 4px;
   box-sizing: border-box;
+
   :deep(.vue-recycle-scroller__item-view) {
     padding-right: 4px;
   }
 }
+
 .desc {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   padding: 10px 12px;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+
   &.active,
   &:hover {
     background-color: @dark-gray-color;
     color: #fff;
   }
+
   .name {
     max-width: 200px;
     margin-top: -2px;
   }
+
   .table-icon {
     font-size: 14px;
   }

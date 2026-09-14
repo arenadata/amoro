@@ -30,11 +30,11 @@ export default defineComponent({
       <p class="title">
         404 - Not Found
       </p>
-      <router-link to="/" style="text-align: center">
+      <RouterLink to="/" style="text-align: center">
         <a-button class="button g-mt-32">
           {{ $t('backHome') }}
         </a-button>
-      </router-link>
+      </RouterLink>
     </div>
   </div>
 </template>
