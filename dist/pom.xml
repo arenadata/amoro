@@ -58,6 +58,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.amoro</groupId>
+            <artifactId>amoro-optimizer-spark-4.2_2.13</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.amoro</groupId>
             <artifactId>amoro-metrics-prometheus</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

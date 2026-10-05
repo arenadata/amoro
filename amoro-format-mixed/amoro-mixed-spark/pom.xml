@@ -32,8 +32,11 @@
 
     <modules>
         <module>amoro-mixed-spark-3-common</module>
+        <module>amoro-mixed-spark-4-common</module>
         <module>v${spark.major.version}/amoro-mixed-spark-${spark.major.version}</module>
         <module>v${spark.major.version}/amoro-mixed-spark-runtime-${spark.major.version}</module>
+        <module>v4.2/amoro-mixed-spark-4.2</module>
+        <module>v4.2/amoro-mixed-spark-runtime-4.2</module>
     </modules>
 
     <dependencyManagement>

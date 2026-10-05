@@ -31,6 +31,20 @@ The Iceberg Format can be accessed using the Connector provided by Iceberg.
 Refer to the documentation at [Iceberg Spark Connector](https://iceberg.apache.org/docs/latest/getting-started/)
 for more information.
 
+Spark 4.2 uses the Amoro unified catalog and the shaded runtime
+`org.apache.amoro:amoro-format-mixed-spark-runtime-4.2_2.13`. Put that jar on
+`--jars` and do not also add a separate Iceberg Spark runtime.
+
+```bash
+${SPARK_HOME}/bin/spark-sql \
+    --jars amoro-format-mixed-spark-runtime-4.2_2.13-${AMORO_VERSION}.jar \
+    --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions \
+    --conf spark.sql.catalog.local_catalog=org.apache.amoro.spark.SparkUnifiedCatalog \
+    --conf spark.sql.catalog.local_catalog.ams.uri=thrift://${AMS_HOST}:${AMS_PORT}/${AMS_CATALOG_NAME}
+```
+
+Paimon tables are not loaded by this runtime yet. Mixed-format SQL stays on the Spark 3.x runtime below.
+
 # Paimon Format
 
 The Paimon Format can be accessed using the Connector provided by Paimon.
