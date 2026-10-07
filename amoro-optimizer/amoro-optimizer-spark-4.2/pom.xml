@@ -183,6 +183,11 @@
                                     <exclude>org.apache.hadoop:*</exclude>
                                     <exclude>org.apache.hive:*</exclude>
                                     <exclude>io.netty:*</exclude>
+                                    <!-- Hadoop YARN timeline client needs the cluster's Jersey.
+                                         A second copy here breaks driver userClassPathFirst. -->
+                                    <exclude>com.sun.jersey:*</exclude>
+                                    <exclude>com.sun.jersey.contribs:*</exclude>
+                                    <exclude>javax.ws.rs:jsr311-api</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>
@@ -190,6 +195,15 @@
                                     <artifact>org.apache.amoro:amoro-shade-zookeeper-3</artifact>
                                     <excludes>
                                         <exclude>org/apache/commons/io/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>com/sun/jersey/**</exclude>
+                                        <exclude>com/sun/ws/rs/**</exclude>
+                                        <exclude>META-INF/services/javax.ws.rs.ext.RuntimeDelegate</exclude>
+                                        <exclude>META-INF/services/com.sun.jersey.spi.HeaderDelegateProvider</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
