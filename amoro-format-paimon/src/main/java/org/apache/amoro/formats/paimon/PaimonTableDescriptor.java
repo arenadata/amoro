@@ -504,12 +504,8 @@ public class PaimonTableDescriptor implements FormatTableDescriptor {
     }
 
     // record number
-    if (snapshot.totalRecordCount() != null) {
-      summary.put("total-records", String.valueOf(snapshot.totalRecordCount()));
-    }
-    if (snapshot.deltaRecordCount() != null) {
-      summary.put("delta-records", String.valueOf(snapshot.deltaRecordCount()));
-    }
+    summary.put("total-records", String.valueOf(snapshot.totalRecordCount()));
+    summary.put("delta-records", String.valueOf(snapshot.deltaRecordCount()));
     if (snapshot.changelogRecordCount() != null) {
       summary.put("changelog-records", String.valueOf(snapshot.changelogRecordCount()));
     }
@@ -622,12 +618,11 @@ public class PaimonTableDescriptor implements FormatTableDescriptor {
         }
       }
     }
-    Long totalRecordCount = snapshot.totalRecordCount();
     return new AmoroSnapshotsOfTable(
         String.valueOf(snapshot.id()),
         fileCount,
         fileSize,
-        totalRecordCount == null ? 0L : totalRecordCount,
+        snapshot.totalRecordCount(),
         snapshot.timeMillis(),
         snapshot.commitKind().toString(),
         snapshot.commitKind() == Snapshot.CommitKind.COMPACT
