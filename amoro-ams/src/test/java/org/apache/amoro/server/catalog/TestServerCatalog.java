@@ -23,7 +23,6 @@ import org.apache.amoro.formats.AmoroCatalogTestHelper;
 import org.apache.amoro.formats.IcebergHadoopCatalogTestHelper;
 import org.apache.amoro.formats.MixedIcebergHadoopCatalogTestHelper;
 import org.apache.amoro.formats.paimon.PaimonHadoopCatalogTestHelper;
-import org.apache.amoro.formats.paimon.PaimonHiveCatalogTestHelper;
 import org.apache.amoro.hive.formats.IcebergHiveCatalogTestHelper;
 import org.apache.amoro.hive.formats.MixedIcebergHiveCatalogTestHelper;
 import org.apache.amoro.properties.CatalogMetaProperties;
@@ -47,9 +46,10 @@ public class TestServerCatalog extends TableCatalogTestBase {
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
+    // PaimonHiveCatalogTestHelper is omitted: Paimon 1.2 calls
+    // HiveMetaStoreClient.newSynchronizedClient, which Hive 4.3 removed.
     return new Object[] {
       PaimonHadoopCatalogTestHelper.defaultHelper(),
-      PaimonHiveCatalogTestHelper.defaultHelper(),
       IcebergHadoopCatalogTestHelper.defaultHelper(),
       IcebergHiveCatalogTestHelper.defaultHelper(),
       MixedIcebergHadoopCatalogTestHelper.defaultHelper(),
