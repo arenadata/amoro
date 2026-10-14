@@ -18,6 +18,7 @@
 
 package org.apache.amoro.server.catalog;
 
+import static org.apache.amoro.server.table.internal.InternalTableConstants.CHANGE_STORE_SEPARATOR;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.CHANGE_STORE_TABLE_NAME_SUFFIX;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -30,66 +31,29 @@ import org.apache.amoro.config.Configurations;
 import org.apache.amoro.exception.ObjectNotExistsException;
 import org.apache.amoro.formats.iceberg.IcebergTable;
 import org.apache.amoro.io.AuthenticatedFileIO;
-import org.apache.amoro.mixed.InternalMixedIcebergCatalog;
-import org.apache.amoro.server.AmoroManagementConf;
-import org.apache.amoro.server.RestCatalogService;
 import org.apache.amoro.server.table.TableMetadata;
 import org.apache.amoro.server.table.internal.InternalIcebergCreator;
 import org.apache.amoro.server.table.internal.InternalIcebergHandler;
-import org.apache.amoro.server.table.internal.InternalMixedIcebergCreator;
-import org.apache.amoro.server.table.internal.InternalMixedIcebergHandler;
 import org.apache.amoro.server.table.internal.InternalTableCreator;
 import org.apache.amoro.server.table.internal.InternalTableHandler;
 import org.apache.amoro.server.utils.InternalTableUtil;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
-import org.apache.amoro.table.BasicKeyedTable;
-import org.apache.amoro.table.BasicUnkeyedTable;
-import org.apache.amoro.table.MixedTable;
-import org.apache.amoro.table.PrimaryKeySpec;
 import org.apache.amoro.utils.CatalogUtil;
 import org.apache.iceberg.BaseTable;
-import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.TableOperations;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.exceptions.AlreadyExistsException;
 import org.apache.iceberg.io.FileIO;
-import org.apache.iceberg.rest.RESTCatalog;
 import org.apache.iceberg.rest.requests.CreateTableRequest;
 
 public class InternalCatalogImpl extends InternalCatalog {
-
-  private static final String URI = "uri";
-
-  final int httpPort;
-  final String exposedHost;
 
   final Cache<AmoroTable<?>, FileIO> fileIOCloser;
 
   protected InternalCatalogImpl(CatalogMeta metadata, Configurations serverConfiguration) {
     super(metadata);
-    this.httpPort = serverConfiguration.getInteger(AmoroManagementConf.HTTP_SERVER_PORT);
-    this.exposedHost = serverConfiguration.getString(AmoroManagementConf.SERVER_EXPOSE_HOST);
+    Preconditions.checkNotNull(serverConfiguration, "server configuration is null");
     this.fileIOCloser = newFileIOCloser();
-  }
-
-  @Override
-  public CatalogMeta getMetadata() {
-    CatalogMeta meta = super.getMetadata();
-    if (!meta.getCatalogProperties().containsKey(URI)) {
-      meta.putToCatalogProperties(URI, defaultRestURI());
-    }
-    meta.putToCatalogProperties(CatalogProperties.CATALOG_IMPL, RESTCatalog.class.getName());
-    return meta.deepCopy();
-  }
-
-  @Override
-  public void updateMetadata(CatalogMeta metadata) {
-    String defaultUrl = defaultRestURI();
-    String uri = metadata.getCatalogProperties().getOrDefault(URI, defaultUrl);
-    if (defaultUrl.equals(uri)) {
-      metadata.getCatalogProperties().remove(URI);
-    }
-    super.updateMetadata(metadata);
   }
 
   @Override
@@ -105,12 +69,9 @@ public class InternalCatalogImpl extends InternalCatalog {
     }
     if (TableFormat.ICEBERG.equals(handler.tableMetadata().getFormat())) {
       return loadIcebergTable(database, tableName, handler);
-    } else if (TableFormat.MIXED_ICEBERG.equals(handler.tableMetadata().getFormat())) {
-      return loadMixedIcebergTable(database, tableName, handler);
-    } else {
-      throw new IllegalArgumentException(
-          "Unsupported table format:" + handler.tableMetadata().getFormat());
     }
+    throw new IllegalArgumentException(
+        "Unsupported table format:" + handler.tableMetadata().getFormat());
   }
 
   private AmoroTable<?> loadIcebergTable(
@@ -137,55 +98,6 @@ public class InternalCatalogImpl extends InternalCatalog {
     return amoroTable;
   }
 
-  private AmoroTable<?> loadMixedIcebergTable(
-      String database, String tableName, InternalTableHandler<TableOperations> handler) {
-    TableMetadata tableMetadata = handler.tableMetadata();
-    org.apache.amoro.table.TableIdentifier tableIdentifier =
-        org.apache.amoro.table.TableIdentifier.of(name(), database, tableName);
-    AuthenticatedFileIO fileIO = InternalTableUtil.newIcebergFileIo(getMetadata());
-    MixedTable mixedIcebergTable;
-
-    BaseTable baseTable = loadTableStore(tableMetadata, false);
-    if (InternalTableUtil.isKeyedMixedTable(tableMetadata)) {
-      BaseTable changeTable = loadTableStore(tableMetadata, true);
-
-      PrimaryKeySpec.Builder keySpecBuilder = PrimaryKeySpec.builderFor(baseTable.schema());
-      tableMetadata.buildTableMeta().getKeySpec().getFields().forEach(keySpecBuilder::addColumn);
-      PrimaryKeySpec keySpec = keySpecBuilder.build();
-
-      mixedIcebergTable =
-          new BasicKeyedTable(
-              tableMetadata.getTableLocation(),
-              keySpec,
-              new BasicKeyedTable.BaseInternalTable(
-                  tableIdentifier, baseTable, fileIO, getMetadata().getCatalogProperties()),
-              new BasicKeyedTable.ChangeInternalTable(
-                  tableIdentifier, changeTable, fileIO, getMetadata().getCatalogProperties()));
-    } else {
-      mixedIcebergTable =
-          new BasicUnkeyedTable(
-              tableIdentifier, baseTable, fileIO, getMetadata().getCatalogProperties());
-    }
-    AmoroTable<?> amoroTable =
-        new org.apache.amoro.formats.mixed.MixedTable(mixedIcebergTable, TableFormat.MIXED_ICEBERG);
-    fileIOCloser.put(amoroTable, fileIO);
-    return amoroTable;
-  }
-
-  private BaseTable loadTableStore(TableMetadata tableMetadata, boolean isChangeStore) {
-    TableOperations ops = newTableStoreHandler(tableMetadata, isChangeStore).newTableOperator();
-    return new BaseTable(
-        ops,
-        TableIdentifier.of(
-                tableMetadata.getTableIdentifier().getDatabase(),
-                tableMetadata.getTableIdentifier().getTableName())
-            .toString());
-  }
-
-  private String defaultRestURI() {
-    return "http://" + exposedHost + ":" + httpPort + RestCatalogService.ICEBERG_REST_API_PREFIX;
-  }
-
   @Override
   public InternalTableCreator newTableCreator(
       String database, String tableName, TableFormat format, CreateTableRequest creatorArguments) {
@@ -195,11 +107,8 @@ public class InternalCatalogImpl extends InternalCatalog {
     }
     if (TableFormat.ICEBERG.equals(format)) {
       return new InternalIcebergCreator(getMetadata(), database, tableName, creatorArguments);
-    } else if (TableFormat.MIXED_ICEBERG.equals(format)) {
-      return new InternalMixedIcebergCreator(getMetadata(), database, tableName, creatorArguments);
-    } else {
-      throw new IllegalArgumentException("Unsupported table format:" + format);
     }
+    throw new IllegalArgumentException("Unsupported table format:" + format);
   }
 
   @Override
@@ -209,12 +118,8 @@ public class InternalCatalogImpl extends InternalCatalog {
     TableMetadata metadata = loadTableMetadata(database, realTableName);
     if (TableFormat.ICEBERG.equals(metadata.getFormat())) {
       return new InternalIcebergHandler(getMetadata(), metadata);
-    } else if (TableFormat.MIXED_ICEBERG.equals(metadata.getFormat())) {
-      boolean isChangeStore = isChangeStoreName(tableName);
-      return newTableStoreHandler(metadata, isChangeStore);
-    } else {
-      throw new IllegalArgumentException("Unsupported table format:" + metadata.getFormat());
     }
+    throw new IllegalArgumentException("Unsupported table format:" + metadata.getFormat());
   }
 
   private String realTableName(String tableStoreName) {
@@ -226,7 +131,7 @@ public class InternalCatalogImpl extends InternalCatalog {
   }
 
   private boolean isChangeStoreName(String tableName) {
-    String separator = InternalMixedIcebergCatalog.CHANGE_STORE_SEPARATOR;
+    String separator = CHANGE_STORE_SEPARATOR;
     if (!tableName.contains(separator)) {
       return false;
     }
@@ -238,11 +143,6 @@ public class InternalCatalogImpl extends InternalCatalog {
         separator);
 
     return true;
-  }
-
-  private InternalTableHandler<TableOperations> newTableStoreHandler(
-      TableMetadata metadata, boolean isChangeStore) {
-    return new InternalMixedIcebergHandler(getMetadata(), metadata, isChangeStore);
   }
 
   private Cache<AmoroTable<?>, FileIO> newFileIOCloser() {

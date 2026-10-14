@@ -47,7 +47,7 @@ public class TestUpsertPushDown extends TableTestBase {
 
   public TestUpsertPushDown(PartitionSpec partitionSpec) {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             BasicTableTestHelper.TABLE_SCHEMA,
             BasicTableTestHelper.PRIMARY_KEY_SPEC,

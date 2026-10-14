@@ -49,11 +49,7 @@ public class TableMaintainers {
    */
   public static TableMaintainer create(AmoroTable<?> amoroTable, DefaultTableRuntime tableRuntime) {
     TableFormat format = amoroTable.format();
-    if (format.in(TableFormat.MIXED_HIVE, TableFormat.MIXED_ICEBERG)) {
-      MixedTable mixedTable = (MixedTable) amoroTable.originalTable();
-      return new MixedTableMaintainer(
-          mixedTable, new DefaultTableMaintainerContext(tableRuntime, mixedTable));
-    } else if (TableFormat.ICEBERG.equals(format)) {
+    if (TableFormat.ICEBERG.equals(format)) {
       return TableMaintainerFactory.createIcebergMaintainer(
           (Table) amoroTable.originalTable(), tableRuntime);
     } else {

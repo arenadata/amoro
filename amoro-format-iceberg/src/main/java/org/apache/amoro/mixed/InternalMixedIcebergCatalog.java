@@ -18,7 +18,6 @@
 
 package org.apache.amoro.mixed;
 
-import org.apache.amoro.TableFormat;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
 import org.apache.amoro.table.MixedTable;
@@ -61,7 +60,7 @@ public class InternalMixedIcebergCatalog extends BasicMixedIcebergCatalog {
     // add table-filter to http header.
     // list table only return mixed-iceberg table.
     Map<String, String> headers = Maps.newHashMap();
-    headers.put(HTTP_HEADER_LIST_TABLE_FILTER, TableFormat.MIXED_ICEBERG.name());
+    headers.put(HTTP_HEADER_LIST_TABLE_FILTER, "MIXED_ICEBERG");
     String uri = properties.get(CatalogProperties.URI);
     Catalog catalog =
         new RESTCatalog(config -> HTTPClient.builder(config).uri(uri).withHeaders(headers).build());

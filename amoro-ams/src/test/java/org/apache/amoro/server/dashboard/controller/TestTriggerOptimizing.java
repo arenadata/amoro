@@ -36,7 +36,7 @@ public class TestTriggerOptimizing {
 
   @Test
   public void testRejectNonIceberg() {
-    TableController controller = controller(TableFormat.MIXED_ICEBERG, null);
+    TableController controller = controller(TableFormat.ICEBERG, null);
     try {
       controller.triggerOptimizing(context());
       Assert.fail("non-iceberg table should be rejected");

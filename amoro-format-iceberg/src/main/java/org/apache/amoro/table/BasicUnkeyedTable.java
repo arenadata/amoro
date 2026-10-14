@@ -108,7 +108,7 @@ public class BasicUnkeyedTable implements UnkeyedTable, HasTableOperations {
 
   @Override
   public TableFormat format() {
-    return TableFormat.MIXED_ICEBERG;
+    return TableFormat.ICEBERG;
   }
 
   @Override

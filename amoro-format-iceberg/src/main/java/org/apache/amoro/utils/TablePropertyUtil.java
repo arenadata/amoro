@@ -139,14 +139,14 @@ public class TablePropertyUtil {
     boolean baseStore = TableProperties.MIXED_FORMAT_TABLE_STORE_BASE.equalsIgnoreCase(tableStore);
     boolean changeStore =
         TableProperties.MIXED_FORMAT_TABLE_STORE_CHANGE.equalsIgnoreCase(tableStore);
-    return TableFormat.MIXED_ICEBERG.name().equalsIgnoreCase(format) && (baseStore || changeStore);
+    return "MIXED_ICEBERG".equalsIgnoreCase(format) && (baseStore || changeStore);
   }
 
   /**
    * Check if the given table properties is the base store of mixed-format,
    *
    * @param properties properties of the table.
-   * @param format - {@link TableFormat#MIXED_ICEBERG} or {@link TableFormat#MIXED_HIVE}
+   * @param format table format stored on the base or change store properties
    * @return true if this is a base store of mixed-format.
    */
   public static boolean isBaseStore(Map<String, String> properties, TableFormat format) {

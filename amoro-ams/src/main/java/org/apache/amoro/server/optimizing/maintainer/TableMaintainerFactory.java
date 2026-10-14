@@ -59,11 +59,7 @@ public class TableMaintainerFactory {
     DefaultTableRuntime runtime = (DefaultTableRuntime) tableRuntime;
     TableFormat format = amoroTable.format();
 
-    if (format.in(TableFormat.MIXED_HIVE, TableFormat.MIXED_ICEBERG)) {
-      MixedTable mixedTable = (MixedTable) amoroTable.originalTable();
-      return new MixedTableMaintainer(
-          mixedTable, new DefaultTableMaintainerContext(runtime, mixedTable));
-    } else if (TableFormat.ICEBERG.equals(format)) {
+    if (TableFormat.ICEBERG.equals(format)) {
       return new IcebergTableMaintainer(
           (Table) amoroTable.originalTable(),
           amoroTable.id(),

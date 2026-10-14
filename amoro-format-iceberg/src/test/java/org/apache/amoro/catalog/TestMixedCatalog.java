@@ -51,7 +51,7 @@ public class TestMixedCatalog extends CatalogTestBase {
 
   @Parameterized.Parameters(name = "testFormat = {0}")
   public static Object[] parameters() {
-    return new Object[] {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG)};
+    return new Object[] {new BasicCatalogTestHelper(TableFormat.ICEBERG)};
   }
 
   @Before

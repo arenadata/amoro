@@ -86,6 +86,8 @@ public class DefaultCatalogManager extends PersistentBase implements CatalogMana
                 serverCatalogMap.put(c.getCatalogName(), serverCatalog);
                 metaCache.put(c.getCatalogName(), Optional.of(c));
                 LOG.info("Load catalog {}, type:{}", c.getCatalogName(), c.getCatalogType());
+              } catch (UnsupportedCatalogException e) {
+                throw e;
               } catch (Exception e) {
                 LOG.error(
                     "Failed to load catalog {}, type:{}, skipping",

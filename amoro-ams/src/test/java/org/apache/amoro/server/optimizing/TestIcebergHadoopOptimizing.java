@@ -21,7 +21,6 @@ package org.apache.amoro.server.optimizing;
 import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AmsEnvironment;
-import org.apache.amoro.server.RestCatalogService;
 import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.server.catalog.ServerCatalog;
 import org.apache.amoro.server.process.TableProcessMeta;
@@ -42,7 +41,6 @@ import org.apache.iceberg.data.GenericRecord;
 import org.apache.iceberg.data.InternalRecordWrapper;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.hadoop.HadoopCatalog;
-import org.apache.iceberg.rest.RESTCatalog;
 import org.apache.iceberg.types.Types;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -81,7 +79,7 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG, AmsEnvironment.INTERNAL_ICEBERG_CATALOG})
+  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG})
   public void testIcebergTableOptimizing(String catalog) throws IOException {
     Table table = createIcebergTable(catalog, PartitionSpec.unpartitioned(), 2);
     BaseOptimizingChecker checker = newOptimizingChecker(catalog);
@@ -157,7 +155,7 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG, AmsEnvironment.INTERNAL_ICEBERG_CATALOG})
+  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG})
   public void testV1IcebergTableOptimizing(String catalog) throws IOException {
     Table table = createIcebergTable(catalog, PartitionSpec.unpartitioned(), 1);
     BaseOptimizingChecker checker = newOptimizingChecker(catalog);
@@ -199,7 +197,7 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG, AmsEnvironment.INTERNAL_ICEBERG_CATALOG})
+  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG})
   public void testPartitionIcebergTableOptimizing(String catalog) throws IOException {
     Table table = createIcebergTable(catalog, SPEC, 2);
     BaseOptimizingChecker checker = newOptimizingChecker(catalog);
@@ -272,7 +270,7 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG, AmsEnvironment.INTERNAL_ICEBERG_CATALOG})
+  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG})
   public void testIcebergTableFullOptimize(String catalog) throws IOException {
     Table table = createIcebergTable(catalog, PartitionSpec.unpartitioned(), 2);
     BaseOptimizingChecker checker = newOptimizingChecker(catalog);
@@ -344,7 +342,7 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG, AmsEnvironment.INTERNAL_ICEBERG_CATALOG})
+  @ValueSource(strings = {AmsEnvironment.ICEBERG_CATALOG})
   public void testPartitionIcebergTablePartialOptimizing(String catalog) throws IOException {
     Table table = createIcebergTable(catalog, SPEC, 2);
     BaseOptimizingChecker checker = newOptimizingChecker(catalog);
@@ -418,21 +416,13 @@ public class TestIcebergHadoopOptimizing extends AbstractOptimizingTest {
 
     String impl;
     Map<String, String> properties = Maps.newHashMap();
-    if (catalog.equalsIgnoreCase(AmsEnvironment.ICEBERG_CATALOG)) {
-      impl = HadoopCatalog.class.getName();
-      String warehouse =
-          serverCatalog
-              .getMetadata()
-              .getCatalogProperties()
-              .get(CatalogMetaProperties.KEY_WAREHOUSE);
-      properties.put(CatalogMetaProperties.KEY_WAREHOUSE, warehouse);
-    } else if (catalog.equalsIgnoreCase(AmsEnvironment.INTERNAL_ICEBERG_CATALOG)) {
-      impl = RESTCatalog.class.getName();
-      properties.put("uri", amsEnv.getHttpUrl() + RestCatalogService.ICEBERG_REST_API_PREFIX);
-      properties.put(CatalogMetaProperties.KEY_WAREHOUSE, AmsEnvironment.INTERNAL_ICEBERG_CATALOG);
-    } else {
+    if (!catalog.equalsIgnoreCase(AmsEnvironment.ICEBERG_CATALOG)) {
       throw new IllegalStateException("unknown catalog");
     }
+    impl = HadoopCatalog.class.getName();
+    String warehouse =
+        serverCatalog.getMetadata().getCatalogProperties().get(CatalogMetaProperties.KEY_WAREHOUSE);
+    properties.put(CatalogMetaProperties.KEY_WAREHOUSE, warehouse);
 
     TableMetaStore tms = CatalogUtil.buildMetaStore(serverCatalog.getMetadata());
     Catalog icebergCatalog =

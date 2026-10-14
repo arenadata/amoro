@@ -34,7 +34,7 @@
 
         <dependency>
             <groupId>org.apache.amoro</groupId>
-            <artifactId>amoro-mixed-hive</artifactId>
+            <artifactId>amoro-format-iceberg</artifactId>
         </dependency>
 
         <dependency>

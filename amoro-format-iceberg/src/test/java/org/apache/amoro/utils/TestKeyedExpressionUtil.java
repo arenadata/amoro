@@ -50,7 +50,7 @@ public class TestKeyedExpressionUtil extends TableTestBase {
 
   public TestKeyedExpressionUtil(PartitionSpec partitionSpec) {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA, true, partitionSpec));
   }
 

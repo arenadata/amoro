@@ -28,7 +28,6 @@ import org.apache.amoro.exception.AlreadyExistsException;
 import org.apache.amoro.exception.IllegalMetadataException;
 import org.apache.amoro.exception.ObjectNotExistsException;
 import org.apache.amoro.hive.TestHMS;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AMSServiceTestBase;
 import org.apache.amoro.server.catalog.InternalCatalog;
@@ -50,8 +49,7 @@ public class TestCatalogService extends AMSServiceTestBase {
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
     return new Object[][] {
-      {TestedCatalogs.internalCatalog(TableFormat.MIXED_ICEBERG)},
-      {new HiveCatalogTestHelper(TableFormat.MIXED_HIVE, TEST_HMS.getHiveConf())}
+      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG)}
     };
   }
 
@@ -126,7 +124,7 @@ public class TestCatalogService extends AMSServiceTestBase {
 
   @Test
   public void testDropCatalogWithDatabase() {
-    Assume.assumeTrue(catalogTestHelper.tableFormat().equals(TableFormat.MIXED_ICEBERG));
+    Assume.assumeTrue(catalogTestHelper.tableFormat().equals(TableFormat.ICEBERG));
     CatalogMeta catalogMeta = catalogTestHelper.buildCatalogMeta("/tmp");
     CATALOG_MANAGER.createCatalog(catalogMeta);
     InternalCatalog catalog = CATALOG_MANAGER.getInternalCatalog(catalogMeta.getCatalogName());

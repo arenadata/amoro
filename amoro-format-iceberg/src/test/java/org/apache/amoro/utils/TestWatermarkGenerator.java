@@ -44,7 +44,7 @@ public class TestWatermarkGenerator extends TableTestBase {
 
   public TestWatermarkGenerator() {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, false));
   }
 

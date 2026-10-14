@@ -236,3 +236,7 @@ CREATE INDEX IF NOT EXISTS idx_bucket_assignments_cluster ON bucket_assignments 
 
 -- ADD node_heartbeat_ts to table bucket_assignments
 ALTER TABLE bucket_assignments ADD COLUMN node_heartbeat_ts BIGINT NOT NULL DEFAULT 0;
+
+-- AMS is no longer a metastore. Namespace and table metadata live in the external catalog.
+DROP TABLE IF EXISTS table_metadata;
+DROP TABLE IF EXISTS database_metadata;

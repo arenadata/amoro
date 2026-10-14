@@ -102,7 +102,7 @@ public class DefaultTableRuntimeFactory implements TableRuntimeFactory {
       ServerTableIdentifier tableIdentifier, Map<String, String> tableProperties) {
     TableFormat format = tableIdentifier.getFormat();
     boolean defaultSupported =
-        format.in(TableFormat.MIXED_ICEBERG, TableFormat.MIXED_HIVE, TableFormat.ICEBERG);
+        format == TableFormat.ICEBERG;
     boolean hasProcessFactories = factoriesByFormat.containsKey(format);
 
     if (!defaultSupported && !hasProcessFactories) {

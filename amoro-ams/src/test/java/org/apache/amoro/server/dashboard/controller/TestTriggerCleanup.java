@@ -64,7 +64,7 @@ public class TestTriggerCleanup {
   @Test
   public void testRejectDanglingDeleteOnMixedTable() {
     DefaultTableRuntime runtime = Mockito.mock(DefaultTableRuntime.class);
-    TableController controller = controller(TableFormat.MIXED_ICEBERG, runtime, null);
+    TableController controller = controller(TableFormat.ICEBERG, runtime, null);
     try {
       controller.triggerCleanup(context("clean-dangling-delete-files"));
       Assert.fail("dangling delete on a mixed table should be rejected");

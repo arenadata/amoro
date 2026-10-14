@@ -34,7 +34,6 @@ import loginService from './services/login.service'
 import { getQueryString } from './utils'
 import { resetLoginTip } from './utils/request'
 import {
-  canExecuteSql,
   canManagePlatform,
   canManageTable,
   canViewCatalog,
@@ -119,12 +118,6 @@ RegisterComponents(app);
         return
       }
       if (to.path === '/overview' && !canViewSystem()) {
-        next({
-          path: getDefaultRoute(),
-        })
-        return
-      }
-      if (to.path === '/terminal' && !canExecuteSql()) {
         next({
           path: getDefaultRoute(),
         })

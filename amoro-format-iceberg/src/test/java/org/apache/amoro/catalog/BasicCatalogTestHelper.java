@@ -94,7 +94,7 @@ public class BasicCatalogTestHelper implements CatalogTestHelper {
 
   @Override
   public MixedTables buildMixedTables(CatalogMeta catalogMeta) {
-    if (!TableFormat.MIXED_ICEBERG.equals(tableFormat)) {
+    if (!TableFormat.ICEBERG.equals(tableFormat)) {
       throw new UnsupportedOperationException(
           "Cannot build mixed-tables for table format:" + tableFormat);
     }

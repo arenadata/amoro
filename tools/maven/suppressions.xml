@@ -26,11 +26,6 @@ under the License.
     <!-- Using ([/\\]) as the file path separator instead of (/)
     enables it to be compatible with both Linux and Windows systems. -->
 
-    <!-- Limited by the Javalin framework, it is not possible to use shade classes. -->
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]server[/\\]RestCatalogService\.java"
-            checks="Regexp"/>
-
     <suppress
             files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]iceberg[/\\]BaseConnectorTest\.java"
             checks="FileLength"/>

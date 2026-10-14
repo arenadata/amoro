@@ -21,11 +21,8 @@ package org.apache.amoro.server.catalog;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.formats.AmoroCatalogTestHelper;
 import org.apache.amoro.formats.IcebergHadoopCatalogTestHelper;
-import org.apache.amoro.formats.MixedIcebergHadoopCatalogTestHelper;
 import org.apache.amoro.formats.paimon.PaimonHadoopCatalogTestHelper;
 import org.apache.amoro.formats.paimon.PaimonHiveCatalogTestHelper;
-import org.apache.amoro.hive.formats.IcebergHiveCatalogTestHelper;
-import org.apache.amoro.hive.formats.MixedIcebergHiveCatalogTestHelper;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -50,10 +47,7 @@ public class TestServerCatalog extends TableCatalogTestBase {
     return new Object[] {
       PaimonHadoopCatalogTestHelper.defaultHelper(),
       PaimonHiveCatalogTestHelper.defaultHelper(),
-      IcebergHadoopCatalogTestHelper.defaultHelper(),
-      IcebergHiveCatalogTestHelper.defaultHelper(),
-      MixedIcebergHadoopCatalogTestHelper.defaultHelper(),
-      MixedIcebergHiveCatalogTestHelper.defaultHelper()
+      IcebergHadoopCatalogTestHelper.defaultHelper()
     };
   }
 

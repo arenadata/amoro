@@ -21,8 +21,6 @@ package org.apache.amoro.server.dashboard.controller;
 import static org.apache.amoro.TableFormat.HUDI;
 import static org.apache.amoro.TableFormat.ICEBERG;
 import static org.apache.amoro.TableFormat.LANCE;
-import static org.apache.amoro.TableFormat.MIXED_HIVE;
-import static org.apache.amoro.TableFormat.MIXED_ICEBERG;
 import static org.apache.amoro.TableFormat.PAIMON;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY_ACCESS_KEY;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY_HADOOP_USERNAME;
@@ -34,7 +32,6 @@ import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_AK_SK;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_KERBEROS;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_VALUE_TYPE_SIMPLE;
-import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_AMS;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_CUSTOM;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_FILESYSTEM;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_GLUE;
@@ -61,7 +58,6 @@ import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AmoroManagementConf;
 import org.apache.amoro.server.catalog.CatalogManager;
-import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.server.catalog.ServerCatalog;
 import org.apache.amoro.server.dashboard.PlatformFileManager;
 import org.apache.amoro.server.dashboard.model.CatalogRegisterInfo;
@@ -106,7 +102,6 @@ public class CatalogController {
 
   static {
     CATALOG_REQUIRED_PROPERTIES = Maps.newHashMap();
-    CATALOG_REQUIRED_PROPERTIES.put(CATALOG_TYPE_AMS, Lists.newArrayList(KEY_WAREHOUSE));
     CATALOG_REQUIRED_PROPERTIES.put(
         CATALOG_TYPE_HADOOP, Lists.newArrayList(CatalogProperties.WAREHOUSE_LOCATION));
     CATALOG_REQUIRED_PROPERTIES.put(
@@ -121,39 +116,17 @@ public class CatalogController {
   static {
     VALIDATE_CATALOGS = Sets.newHashSet();
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_S3, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_S3, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_OSS, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_OSS, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_AMS, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_HIVE));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, PAIMON));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, HUDI));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(
-            CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, PAIMON));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_S3, PAIMON));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(
-            CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
     VALIDATE_CATALOGS.add(
@@ -177,8 +150,6 @@ public class CatalogController {
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_GLUE, STORAGE_CONFIGS_VALUE_TYPE_S3, ICEBERG));
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_GLUE, STORAGE_CONFIGS_VALUE_TYPE_S3, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_CUSTOM, STORAGE_CONFIGS_VALUE_TYPE_S3, ICEBERG));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_CUSTOM, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
@@ -189,25 +160,14 @@ public class CatalogController {
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_GLUE, STORAGE_CONFIGS_VALUE_TYPE_OSS, ICEBERG));
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_GLUE, STORAGE_CONFIGS_VALUE_TYPE_OSS, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_CUSTOM, STORAGE_CONFIGS_VALUE_TYPE_OSS, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(
-            CATALOG_TYPE_CUSTOM, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
 
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_S3, ICEBERG));
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_S3, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, MIXED_ICEBERG));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_OSS, ICEBERG));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_REST, STORAGE_CONFIGS_VALUE_TYPE_OSS, MIXED_ICEBERG));
   }
 
   private final PlatformFileManager platformFileInfoService;
@@ -262,7 +222,6 @@ public class CatalogController {
     List<ImmutableMap<String, String>> catalogTypes = new ArrayList<>();
     String valueKey = "value";
     String displayKey = "display";
-    catalogTypes.add(ImmutableMap.of(valueKey, CATALOG_TYPE_AMS, displayKey, "Internal"));
     catalogTypes.add(ImmutableMap.of(valueKey, CATALOG_TYPE_HIVE, displayKey, "Hive"));
     catalogTypes.add(ImmutableMap.of(valueKey, CATALOG_TYPE_FILESYSTEM, displayKey, "FileSystem"));
     catalogTypes.add(ImmutableMap.of(valueKey, CATALOG_TYPE_GLUE, displayKey, "Glue"));
@@ -440,9 +399,7 @@ public class CatalogController {
           S3FileIOProperties.ENDPOINT,
           STORAGE_CONFIGS_KEY_S3_ENDPOINT);
     } else if (STORAGE_CONFIGS_VALUE_TYPE_OSS.equals(storageType)) {
-      if (tableFormats.contains(ICEBERG.name())
-          || tableFormats.contains(MIXED_ICEBERG.name())
-          || tableFormats.contains(LANCE.name())) {
+      if (tableFormats.contains(ICEBERG.name()) || tableFormats.contains(LANCE.name())) {
         CatalogUtil.copyProperty(
             catalogMeta.getCatalogProperties(),
             storageConfig,
@@ -538,7 +495,6 @@ public class CatalogController {
           S3FileIOProperties.ENDPOINT);
     } else if (storageType.equals(STORAGE_CONFIGS_VALUE_TYPE_OSS)) {
       if (info.getTableFormatList().contains(ICEBERG.name())
-          || info.getTableFormatList().contains(MIXED_ICEBERG.name())
           || info.getTableFormatList().contains(LANCE.name())) {
         CatalogUtil.copyProperty(
             info.getStorageConfig(),
@@ -663,22 +619,12 @@ public class CatalogController {
 
     if (catalogService.catalogExist(catalogName)) {
       info.setName(catalogMeta.getCatalogName());
-      if (CATALOG_TYPE_HADOOP.equals(catalogMeta.getCatalogType())
-          && !catalogMeta.getCatalogProperties().containsKey(TABLE_FORMATS)) {
-        info.setType(CATALOG_TYPE_AMS);
-      } else {
-        info.setType(CatalogUtil.normalizeMetastoreType(catalogMeta.getCatalogType()));
-      }
+      info.setType(CatalogUtil.normalizeMetastoreType(catalogMeta.getCatalogType()));
 
-      // we put the table format single
       String tableFormat =
           catalogMeta.getCatalogProperties().get(CatalogMetaProperties.TABLE_FORMATS);
       if (StringUtils.isEmpty(tableFormat)) {
-        if (catalogMeta.getCatalogType().equals(CATALOG_TYPE_HIVE)) {
-          tableFormat = TableFormat.MIXED_HIVE.name();
-        } else {
-          tableFormat = TableFormat.MIXED_ICEBERG.name();
-        }
+        tableFormat = TableFormat.ICEBERG.name();
       }
       info.setTableFormatList(Arrays.asList(tableFormat.split(",")));
 
@@ -725,11 +671,7 @@ public class CatalogController {
     Preconditions.checkArgument(
         StringUtils.isNotEmpty(ctx.pathParam("catalogName")), "Catalog name is empty!");
     ServerCatalog serverCatalog = catalogService.getServerCatalog(catalogName);
-    if (serverCatalog instanceof InternalCatalog) {
-      ctx.json(OkResponse.of(serverCatalog.listTables().isEmpty()));
-    } else {
-      ctx.json(OkResponse.of(true));
-    }
+    ctx.json(OkResponse.of(true));
   }
 
   /** Delete some catalog and information associate with the catalog */

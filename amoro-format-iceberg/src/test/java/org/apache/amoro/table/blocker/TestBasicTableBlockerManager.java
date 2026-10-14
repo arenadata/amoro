@@ -42,7 +42,7 @@ public class TestBasicTableBlockerManager extends TableTestBase {
 
   public TestBasicTableBlockerManager() {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true));
   }
 

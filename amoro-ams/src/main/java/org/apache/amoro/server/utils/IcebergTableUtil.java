@@ -23,16 +23,12 @@ import org.apache.amoro.ServerTableIdentifier;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CommitMetaProducer;
 import org.apache.amoro.config.OptimizingConfig;
-import org.apache.amoro.hive.optimizing.plan.MixedHiveOptimizingEvaluator;
-import org.apache.amoro.hive.optimizing.plan.MixedHiveOptimizingPlanner;
 import org.apache.amoro.iceberg.Constants;
 import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.optimizing.plan.AbstractOptimizingEvaluator;
 import org.apache.amoro.optimizing.plan.AbstractOptimizingPlanner;
 import org.apache.amoro.optimizing.plan.IcebergOptimizerEvaluator;
 import org.apache.amoro.optimizing.plan.IcebergOptimizingPlanner;
-import org.apache.amoro.optimizing.plan.MixedIcebergOptimizingEvaluator;
-import org.apache.amoro.optimizing.plan.MixedIcebergOptimizingPlanner;
 import org.apache.amoro.scan.TableEntriesScan;
 import org.apache.amoro.server.table.DefaultTableRuntime;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
@@ -253,26 +249,6 @@ public class IcebergTableUtil {
           lastMinor,
           lastFull,
           lastMajor);
-    } else if (TableFormat.MIXED_ICEBERG.equals(table.format())) {
-      return new MixedIcebergOptimizingEvaluator(
-          identifier,
-          config,
-          table,
-          snapshot,
-          maxPendingPartitions,
-          lastMinor,
-          lastFull,
-          lastMajor);
-    } else if (TableFormat.MIXED_HIVE.equals(table.format())) {
-      return new MixedHiveOptimizingEvaluator(
-          identifier,
-          config,
-          table,
-          snapshot,
-          maxPendingPartitions,
-          lastMinor,
-          lastFull,
-          lastMajor);
     }
     throw new IllegalStateException("Un-supported table-format:" + table.format().toString());
   }
@@ -320,32 +296,6 @@ public class IcebergTableUtil {
           lastFull,
           lastMajor,
           forcedType);
-    } else if (TableFormat.MIXED_ICEBERG.equals(table.format())) {
-      return new MixedIcebergOptimizingPlanner(
-          identifier,
-          config,
-          table,
-          snapshot,
-          partitionFilter,
-          processId,
-          availableCore,
-          maxInputSizePerThread,
-          lastMinor,
-          lastFull,
-          lastMajor);
-    } else if (TableFormat.MIXED_HIVE.equals(table.format())) {
-      return new MixedHiveOptimizingPlanner(
-          identifier,
-          config,
-          table,
-          snapshot,
-          partitionFilter,
-          processId,
-          availableCore,
-          maxInputSizePerThread,
-          lastMinor,
-          lastFull,
-          lastMajor);
     }
     throw new IllegalStateException("Unsupported table format:" + table.format().toString());
   }

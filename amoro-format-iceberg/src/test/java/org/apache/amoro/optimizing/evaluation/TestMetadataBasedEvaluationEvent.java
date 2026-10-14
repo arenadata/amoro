@@ -102,7 +102,7 @@ public class TestMetadataBasedEvaluationEvent extends TableTestBase {
         new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA, true, SPEC)
       },
-      {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG), new BasicTableTestHelper(true, true)}
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
     };
   }
 
@@ -436,7 +436,7 @@ public class TestMetadataBasedEvaluationEvent extends TableTestBase {
       Map<String, String> partitionProperties =
           TablePropertyUtil.getPartitionProperties(getMixedTable(), partition.second());
       return new MixedIcebergPartitionPlan.MixedIcebergPartitionEvaluator(
-          ServerTableIdentifier.of(TableTestHelper.TEST_TABLE_ID, TableFormat.MIXED_ICEBERG),
+          ServerTableIdentifier.of(TableTestHelper.TEST_TABLE_ID, TableFormat.ICEBERG),
           config,
           partition,
           partitionProperties,

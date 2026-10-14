@@ -24,8 +24,6 @@ import org.apache.amoro.TableTestHelper;
 import org.apache.amoro.TestedCatalogs;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.config.OptimizingConfig;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
-import org.apache.amoro.hive.catalog.HiveTableTestHelper;
 import org.apache.amoro.server.table.AMSTableTestBase;
 import org.apache.amoro.server.table.DefaultTableRuntime;
 import org.apache.amoro.table.TableRuntimeStore;
@@ -40,36 +38,20 @@ public class TestTableRuntimeRefreshExecutor extends AMSTableTestBase {
   public static Object[] parameters() {
     return new Object[][] {
       {
-        TestedCatalogs.hadoopCatalog(TableFormat.MIXED_ICEBERG),
+        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true)
       },
       {
-        TestedCatalogs.hadoopCatalog(TableFormat.MIXED_ICEBERG),
+        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, true)
       },
       {
-        TestedCatalogs.hadoopCatalog(TableFormat.MIXED_ICEBERG),
+        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, false)
       },
       {
-        TestedCatalogs.hadoopCatalog(TableFormat.MIXED_ICEBERG),
+        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, false)
-      },
-      {
-        new HiveCatalogTestHelper(TableFormat.ICEBERG, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, true)
-      },
-      {
-        new HiveCatalogTestHelper(TableFormat.ICEBERG, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(false, true)
-      },
-      {
-        new HiveCatalogTestHelper(TableFormat.ICEBERG, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(false, false)
-      },
-      {
-        new HiveCatalogTestHelper(TableFormat.ICEBERG, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, false)
       },
     };
   }

@@ -35,7 +35,7 @@ public class TestUpdatePartitionProperties extends TableTestBase {
 
   public TestUpdatePartitionProperties() {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, true));
   }
 

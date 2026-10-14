@@ -421,7 +421,7 @@ public class BasicMixedCatalog implements MixedFormatCatalog {
       builder
           .withTableLocation(tableLocation)
           .withProperties(this.properties)
-          .withFormat(TableFormat.MIXED_ICEBERG)
+          .withFormat(TableFormat.ICEBERG)
           .withPrimaryKeySpec(this.primaryKeySpec);
 
       if (this.primaryKeySpec.primaryKeyExisted()) {

@@ -28,8 +28,6 @@ import org.apache.amoro.catalog.BasicCatalogTestHelper;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.config.Configurations;
 import org.apache.amoro.config.TableConfiguration;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
-import org.apache.amoro.hive.catalog.HiveTableTestHelper;
 import org.apache.amoro.server.manager.EventsManager;
 import org.apache.amoro.server.manager.MetricManager;
 import org.apache.amoro.server.optimizing.OptimizingStatus;
@@ -53,12 +51,8 @@ public class TestDefaultTableRuntimeHandler extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG), new BasicTableTestHelper(true, true)},
-      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)},
-      {
-        new HiveCatalogTestHelper(TableFormat.MIXED_HIVE, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, true)
-      }
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)}
     };
   }
 
@@ -74,7 +68,7 @@ public class TestDefaultTableRuntimeHandler extends AMSTableTestBase {
     TestHandler handler = new TestHandler();
     tableService.addHandlerChain(handler);
     tableService.initialize();
-    if (!(catalogTestHelper().tableFormat().equals(TableFormat.MIXED_HIVE)
+    if (!(catalogTestHelper().tableFormat().equals(TableFormat.ICEBERG)
         && TEST_HMS.getHiveClient().getDatabase(TableTestHelper.TEST_DB_NAME) != null)) {
       createDatabase();
     }
@@ -130,7 +124,7 @@ public class TestDefaultTableRuntimeHandler extends AMSTableTestBase {
     TestHandler handler = new TestHandler();
     tableService.addHandlerChain(handler);
     tableService.initialize();
-    if (!(catalogTestHelper().tableFormat().equals(TableFormat.MIXED_HIVE)
+    if (!(catalogTestHelper().tableFormat().equals(TableFormat.ICEBERG)
         && TEST_HMS.getHiveClient().getDatabase(TableTestHelper.TEST_DB_NAME) != null)) {
       createDatabase();
     }

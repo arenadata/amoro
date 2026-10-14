@@ -70,7 +70,7 @@ public class MixedTables {
    * @return base store of mixed-iceberg
    */
   public boolean isBaseStore(Table table) {
-    return TablePropertyUtil.isBaseStore(table.properties(), TableFormat.MIXED_ICEBERG);
+    return TablePropertyUtil.isBaseStore(table.properties(), TableFormat.ICEBERG);
   }
 
   /**
@@ -185,7 +185,7 @@ public class MixedTables {
     Map<String, String> baseProperties = Maps.newHashMap(properties);
     baseProperties.putAll(
         TablePropertyUtil.baseStoreProperties(
-            keySpec, changeIdentifier, TableFormat.MIXED_ICEBERG));
+            keySpec, changeIdentifier, TableFormat.ICEBERG));
     Catalog.TableBuilder baseBuilder =
         icebergCatalog
             .buildTable(baseIdentifier, schema)
@@ -214,7 +214,7 @@ public class MixedTables {
       Map<String, String> properties) {
     Map<String, String> changeProperties = Maps.newHashMap(properties);
     changeProperties.putAll(
-        TablePropertyUtil.changeStoreProperties(keySpec, TableFormat.MIXED_ICEBERG));
+        TablePropertyUtil.changeStoreProperties(keySpec, TableFormat.ICEBERG));
     Catalog.TableBuilder changeBuilder =
         icebergCatalog
             .buildTable(changeIdentifier, schema)

@@ -19,15 +19,14 @@
 package org.apache.amoro.server.optimizing;
 
 import org.apache.amoro.data.ChangeAction;
-import org.apache.amoro.hive.io.writer.AdaptHiveGenericTaskWriterBuilder;
 import org.apache.amoro.io.MixedDataTestHelpers;
+import org.apache.amoro.io.writer.GenericTaskWriters;
 import org.apache.amoro.server.AmsEnvironment;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Lists;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
 import org.apache.amoro.table.KeyedTable;
 import org.apache.amoro.table.MixedTable;
 import org.apache.amoro.table.UnkeyedTable;
-import org.apache.amoro.table.WriteOperationKind;
 import org.apache.iceberg.AppendFiles;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DeleteFile;
@@ -266,9 +265,9 @@ public abstract class AbstractOptimizingTest {
   protected static List<DataFile> write(UnkeyedTable table, List<Record> rows) {
     if (rows != null && !rows.isEmpty()) {
       try (TaskWriter<Record> writer =
-          AdaptHiveGenericTaskWriterBuilder.builderFor(table)
+          GenericTaskWriters.builderFor(table)
               .withChangeAction(ChangeAction.INSERT)
-              .buildWriter(WriteOperationKind.APPEND)) {
+              .buildBaseWriter()) {
         rows.forEach(
             row -> {
               try {
@@ -289,10 +288,10 @@ public abstract class AbstractOptimizingTest {
       List<Record> rows, KeyedTable table, ChangeAction action, Long txId) {
     if (rows != null && !rows.isEmpty()) {
       try (TaskWriter<Record> writer =
-          AdaptHiveGenericTaskWriterBuilder.builderFor(table)
+          GenericTaskWriters.builderFor(table)
               .withChangeAction(action)
               .withTransactionId(txId)
-              .buildWriter(WriteOperationKind.APPEND)) {
+              .buildBaseWriter()) {
         rows.forEach(
             row -> {
               try {

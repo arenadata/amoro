@@ -88,18 +88,9 @@ public class IcebergProcessFactory implements ProcessFactory {
           .durationType()
           .defaultValue(Duration.ofMinutes(1));
 
-  public static final ConfigOption<Boolean> SYNC_HIVE_TABLES_ENABLED =
-      ConfigOptions.key("sync-hive-tables.enabled").booleanType().defaultValue(false);
-
-  public static final ConfigOption<Duration> SYNC_HIVE_TABLES_INTERVAL =
-      ConfigOptions.key("sync-hive-tables.interval")
-          .durationType()
-          .defaultValue(Duration.ofMinutes(10));
-
   private ExecuteEngine localEngine;
   private final Map<Action, ProcessTriggerStrategy> actions = Maps.newHashMap();
-  private final List<TableFormat> formats =
-      Lists.newArrayList(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG, TableFormat.MIXED_HIVE);
+  private final List<TableFormat> formats = Lists.newArrayList(TableFormat.ICEBERG);
 
   @Override
   public void availableExecuteEngines(Collection<ExecuteEngine> allAvailableEngines) {
@@ -138,8 +129,6 @@ public class IcebergProcessFactory implements ProcessFactory {
       return triggerDataExpiring(tableRuntime);
     } else if (IcebergActions.AUTO_CREATE_TAGS.equals(action)) {
       return triggerAutoCreateTag(tableRuntime);
-    } else if (IcebergActions.SYNC_HIVE_TABLES.equals(action)) {
-      return triggerHiveCommitSync(tableRuntime);
     }
 
     return Optional.empty();
@@ -169,8 +158,6 @@ public class IcebergProcessFactory implements ProcessFactory {
       return new DataExpiringProcess(tableRuntime, localEngine);
     } else if (IcebergActions.AUTO_CREATE_TAGS.equals(action)) {
       return new TagsAutoCreatingProcess(tableRuntime, localEngine);
-    } else if (IcebergActions.SYNC_HIVE_TABLES.equals(action)) {
-      return new HiveCommitSyncProcess(tableRuntime, localEngine);
     }
 
     throw new RecoverProcessFailedException(
@@ -211,12 +198,6 @@ public class IcebergProcessFactory implements ProcessFactory {
       Duration interval = configs.getDuration(AUTO_CREATE_TAGS_INTERVAL);
       this.actions.put(
           IcebergActions.AUTO_CREATE_TAGS, ProcessTriggerStrategy.triggerAtFixRate(interval));
-    }
-
-    if (configs.getBoolean(SYNC_HIVE_TABLES_ENABLED)) {
-      Duration interval = configs.getDuration(SYNC_HIVE_TABLES_INTERVAL);
-      this.actions.put(
-          IcebergActions.SYNC_HIVE_TABLES, ProcessTriggerStrategy.triggerAtFixRate(interval));
     }
   }
 
@@ -322,14 +303,6 @@ public class IcebergProcessFactory implements ProcessFactory {
     }
 
     return Optional.of(new TagsAutoCreatingProcess(tableRuntime, localEngine));
-  }
-
-  private Optional<TableProcess> triggerHiveCommitSync(TableRuntime tableRuntime) {
-    if (localEngine == null || tableRuntime.getFormat() != TableFormat.MIXED_HIVE) {
-      return Optional.empty();
-    }
-
-    return Optional.of(new HiveCommitSyncProcess(tableRuntime, localEngine));
   }
 
   @Override

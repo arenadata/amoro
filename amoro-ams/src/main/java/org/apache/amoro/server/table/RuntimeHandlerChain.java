@@ -134,7 +134,7 @@ public abstract class RuntimeHandlerChain {
 
   // Currently, paimon is unsupported
   protected boolean formatSupported(TableFormat format) {
-    return format.in(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG, TableFormat.MIXED_HIVE);
+    return format == TableFormat.ICEBERG;
   }
 
   protected abstract void handleStatusChanged(

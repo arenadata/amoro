@@ -96,9 +96,6 @@ export function getDefaultRoute(): string {
   if (canViewSystem()) {
     return '/overview'
   }
-  if (canExecuteSql()) {
-    return '/terminal'
-  }
   if (canManagePlatform()) {
     return '/settings'
   }

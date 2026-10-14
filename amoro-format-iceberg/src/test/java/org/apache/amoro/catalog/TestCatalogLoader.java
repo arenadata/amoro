@@ -46,7 +46,7 @@ public class TestCatalogLoader {
             TEST_CATALOG_NAME,
             CatalogMetaProperties.CATALOG_TYPE_HADOOP,
             properties,
-            TableFormat.MIXED_ICEBERG);
+            TableFormat.ICEBERG);
     TEST_AMS.getAmsHandler().createCatalog(catalogMeta);
     MixedFormatCatalog loadCatalog = CatalogLoader.load(getCatalogUrl(TEST_CATALOG_NAME));
     Assert.assertEquals(TEST_CATALOG_NAME, loadCatalog.name());

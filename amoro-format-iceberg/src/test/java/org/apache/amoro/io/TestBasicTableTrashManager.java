@@ -47,7 +47,7 @@ public class TestBasicTableTrashManager extends TableTestBase {
 
   public TestBasicTableTrashManager(boolean keyedTable, boolean partitionedTable) {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(keyedTable, partitionedTable));
   }
 

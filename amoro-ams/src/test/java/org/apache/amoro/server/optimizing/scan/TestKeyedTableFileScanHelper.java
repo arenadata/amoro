@@ -57,8 +57,8 @@ public class TestKeyedTableFileScanHelper extends TableFileScanHelperTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[][] parameters() {
     return new Object[][] {
-      {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG), new BasicTableTestHelper(true, true)},
-      {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG), new BasicTableTestHelper(true, false)}
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, false)}
     };
   }
 

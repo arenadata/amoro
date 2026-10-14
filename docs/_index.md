@@ -72,9 +72,7 @@ Amoro support multiple processing engines for Mixed format as below:
 | Flink             | 1.18.x, 1.19.x          |  &#x2714;   |   &#x2714;   |       &#x2716;   |      &#x2714;   |       &#x2714;   |    &#x2714;   |   &#x2716;   |
 | Spark             | 3.3, 3.4, 3.5          |  &#x2714;   |   &#x2714;   |       &#x2714;   |      &#x2716;   |       &#x2716;   |    &#x2714;   |   &#x2714;   |
 
-Spark 4.2 (Scala 2.13) reads and writes Iceberg tables through `amoro-format-mixed-spark-runtime-4.2_2.13` and `org.apache.amoro.spark.SparkUnifiedCatalog`. Paimon on Spark 4.2 and mixed-format SQL stay on the Spark 3.x connector.
-
-Spark 4.2 (Scala 2.13) reads and writes Iceberg tables through `amoro-format-mixed-spark-runtime-4.2_2.13` and `org.apache.amoro.spark.SparkUnifiedCatalog`. Paimon on Spark 4.2 and mixed-format SQL stay on the Spark 3.x connector.
+Spark talks to Hive Metastore or another Iceberg catalog directly. AMS registers that catalog and maintains the tables. It does not serve Iceberg REST or a Thrift metastore.
 | Hive              | 2.x, 3.x               |  &#x2714;  |   &#x2716;  |       &#x2714;  |      &#x2716;  |       &#x2716;  |    &#x2716;  |   &#x2714;  |
 | Trino             | 406                    |  &#x2714;  |   &#x2716;  |       &#x2714;  |      &#x2716;  |       &#x2716;  |    &#x2716;  |   &#x2714;  |
 

@@ -25,7 +25,6 @@ import errorMsg from './components/ErrorMsg.vue'
 import type { DetailColumnItem } from '@/types/common.type'
 import { upgradeStatusMap } from '@/types/common.type'
 import { getHiveTableDetail, getUpgradeStatus } from '@/services/table.service'
-import { canManageTable } from '@/utils/permission'
 
 export default defineComponent({
   name: 'Tables',
@@ -43,7 +42,6 @@ export default defineComponent({
     const isSecondaryNav = computed(() => {
       return !!(route.path.includes('upgrade'))
     })
-    const writable = computed(() => canManageTable())
 
     const state = reactive({
       loading: false,
@@ -134,16 +132,7 @@ export default defineComponent({
     }
 
     async function init() {
-      await getTableUpgradeStatus()
-    }
-
-    function upgradeTable() {
-      router.push({
-        path: '/hive-tables/upgrade',
-        query: {
-          ...route.query,
-        },
-      })
+      await getHiveTableDetails()
     }
     function refresh() {
       init()
@@ -170,11 +159,8 @@ export default defineComponent({
     return {
       ...toRefs(state),
       isSecondaryNav,
-      upgradeStatus,
-      upgradeTable,
       goBack,
       refresh,
-      writable,
     }
   },
 })
@@ -185,14 +171,6 @@ export default defineComponent({
     <div v-if="!isSecondaryNav" class="tables-content">
       <div class="g-flex-jsb table-top">
         <span :title="tableName" class="table-name g-text-nowrap">{{ tableName }}</span>
-        <div class="right-btn">
-          <a-button v-if="writable" type="primary" :disabled="status === upgradeStatus.upgrading" @click="upgradeTable">
-            {{ displayStatus }}
-          </a-button>
-          <p v-if="status === upgradeStatus.failed" class="fail-msg" @click="showErrorMsg = true">
-            {{ $t('lastUpgradingFailed') }}
-          </p>
-        </div>
       </div>
       <div class="content">
         <a-tabs v-model:activeKey="activeKey">

@@ -35,7 +35,7 @@ public class TestDefaultKeyedFile extends TableTestBase {
 
   public TestDefaultKeyedFile() {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true));
   }
 

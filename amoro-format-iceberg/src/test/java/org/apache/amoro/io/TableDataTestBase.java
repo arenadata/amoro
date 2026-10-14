@@ -51,7 +51,7 @@ public abstract class TableDataTestBase extends TableTestBase {
 
   public TableDataTestBase() {
     this(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true));
   }
 

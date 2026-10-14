@@ -37,8 +37,6 @@ import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.api.TableIdentifier;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.catalog.CatalogTestHelpers;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
-import org.apache.amoro.hive.catalog.HiveTableTestHelper;
 import org.apache.amoro.metrics.MetricRegistry;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.catalog.ExternalCatalog;
@@ -71,11 +69,7 @@ public class TestSyncTableOfExternalCatalog extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
-      {
-        new HiveCatalogTestHelper(TableFormat.ICEBERG, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, true)
-      }
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
     };
   }
 

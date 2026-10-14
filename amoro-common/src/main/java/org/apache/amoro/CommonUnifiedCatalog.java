@@ -116,12 +116,7 @@ public class CommonUnifiedCatalog implements UnifiedCatalog {
   @Override
   public AmoroTable<?> loadTable(String database, String table) {
     return formatCatalogAsOrder(
-            TableFormat.MIXED_HIVE,
-            TableFormat.MIXED_ICEBERG,
-            TableFormat.ICEBERG,
-            TableFormat.PAIMON,
-            TableFormat.HUDI,
-            TableFormat.LANCE)
+            TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE)
         .map(
             formatCatalog -> {
               try {
@@ -144,12 +139,7 @@ public class CommonUnifiedCatalog implements UnifiedCatalog {
   public List<TableIDWithFormat> listTables(String database) {
     TableFormat[] formats =
         new TableFormat[] {
-          TableFormat.MIXED_HIVE,
-          TableFormat.MIXED_ICEBERG,
-          TableFormat.ICEBERG,
-          TableFormat.PAIMON,
-          TableFormat.HUDI,
-          TableFormat.LANCE
+          TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE
         };
 
     Map<String, TableFormat> tableNameToFormat = Maps.newHashMap();
