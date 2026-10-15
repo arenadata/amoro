@@ -26,6 +26,7 @@ import org.apache.amoro.config.OptimizingConfig;
 import org.apache.amoro.hive.optimizing.plan.MixedHiveOptimizingEvaluator;
 import org.apache.amoro.hive.optimizing.plan.MixedHiveOptimizingPlanner;
 import org.apache.amoro.iceberg.Constants;
+import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.optimizing.plan.AbstractOptimizingEvaluator;
 import org.apache.amoro.optimizing.plan.AbstractOptimizingPlanner;
 import org.apache.amoro.optimizing.plan.IcebergOptimizerEvaluator;
@@ -102,6 +103,20 @@ public class IcebergTableUtil {
       table.refresh();
     }
     return table.currentSnapshot();
+  }
+
+  /**
+   * Reloads Iceberg metadata on the cached table instance. Manual compaction calls this so planning
+   * and the next details read are not stuck on a {@code CachingCatalog} snapshot. The periodic
+   * refresh loop does not.
+   */
+  public static void reloadIcebergMetadata(MixedTable table) {
+    if (table.isKeyedTable()) {
+      table.asKeyedTable().baseTable().refresh();
+      table.asKeyedTable().changeTable().refresh();
+    } else {
+      table.asUnkeyedTable().refresh();
+    }
   }
 
   public static Optional<Snapshot> findFirstMatchSnapshot(
@@ -291,6 +306,7 @@ public class IcebergTableUtil {
     long lastMajor = tableRuntime.getLastMajorOptimizingTime();
     TableSnapshot snapshot = IcebergTableUtil.getSnapshot(table, tableRuntime);
     if (TableFormat.ICEBERG.equals(table.format())) {
+      OptimizingType forcedType = tableRuntime.getManualOptimizingType();
       return new IcebergOptimizingPlanner(
           identifier,
           config,
@@ -302,7 +318,8 @@ public class IcebergTableUtil {
           maxInputSizePerThread,
           lastMinor,
           lastFull,
-          lastMajor);
+          lastMajor,
+          forcedType);
     } else if (TableFormat.MIXED_ICEBERG.equals(table.format())) {
       return new MixedIcebergOptimizingPlanner(
           identifier,
