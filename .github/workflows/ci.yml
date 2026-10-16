@@ -89,6 +89,10 @@ jobs:
             modules: amoro-format-mixed/amoro-mixed-spark/amoro-mixed-spark-3-common,amoro-format-mixed/amoro-mixed-spark/v3.5/amoro-mixed-spark-3.5
             timeout: 120
 
+          - name: Spark 4.2 Iceberg
+            modules: amoro-format-mixed/amoro-mixed-spark/amoro-mixed-spark-4-common,amoro-format-mixed/amoro-mixed-spark/v4.2/amoro-mixed-spark-4.2,amoro-optimizer/amoro-optimizer-spark-4.2
+            timeout: 120
+
           - name: Optimizer
             modules: amoro-optimizer/amoro-optimizer-common,amoro-optimizer/amoro-optimizer-standalone,amoro-optimizer/amoro-optimizer-flink,amoro-optimizer/amoro-optimizer-spark
             timeout: 60

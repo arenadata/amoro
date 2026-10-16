@@ -46,6 +46,14 @@
         </file>
         <file>
             <source>
+                ../amoro-optimizer/amoro-optimizer-spark-4.2/target/amoro-optimizer-spark-4.2_2.13-${project.version}-jar-with-dependencies.jar
+            </source>
+            <outputDirectory>plugin/optimizer/spark4</outputDirectory>
+            <destName>optimizer-job.jar</destName>
+            <fileMode>0644</fileMode>
+        </file>
+        <file>
+            <source>
                 ../amoro-metrics/amoro-metrics-prometheus/target/amoro-metrics-prometheus-${project.version}-jar-with-dependencies.jar
             </source>
             <outputDirectory>plugin/metric-reporters</outputDirectory>
