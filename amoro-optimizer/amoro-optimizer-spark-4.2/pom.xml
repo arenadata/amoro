@@ -34,6 +34,14 @@
         <spark42.version>4.2.0.2-4.4.0-1</spark42.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <!-- Match the ADH Spark distribution; versions live in the parent POM. -->
+        <jackson-annotations.version>${spark.jackson-annotations.version}</jackson-annotations.version>
+        <jackson-core.version>${spark.jackson-core.version}</jackson-core.version>
+        <jackson-databind.version>${spark.jackson-databind.version}</jackson-databind.version>
+        <guava.version>${spark.guava.version}</guava.version>
+        <commons-codec.version>${spark.commons-codec.version}</commons-codec.version>
+        <commons-compress.version>${spark.commons-compress.version}</commons-compress.version>
+        <commons-pool2.version>${spark.commons-pool2.version}</commons-pool2.version>
     </properties>
 
     <dependencies>
@@ -87,57 +95,46 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>1.12.1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.21</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.21.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.6.0-jre</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>failureaccess</artifactId>
-            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.13.2</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.22.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.28.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.22.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-            <version>2.13.1</version>
         </dependency>
     </dependencies>
 

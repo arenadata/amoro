@@ -31,20 +31,6 @@
     <name>Amoro Project Mixed Format Spark 4.2 Runtime</name>
     <url>https://amoro.apache.org</url>
 
-    <repositories>
-        <repository>
-            <id>maven-arenadata-io</id>
-            <name>Arenadata Maven</name>
-            <url>https://maven.arenadata.io/arenadata</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.amoro</groupId>
@@ -52,6 +38,20 @@
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>maven-arenadata-io</id>
+            <name>Arenadata Maven</name>
+            <url>https://maven.arenadata.io/arenadata</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
