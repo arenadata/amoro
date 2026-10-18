@@ -62,12 +62,12 @@ public class TestTriggerCleanup {
   }
 
   @Test
-  public void testRejectDanglingDeleteOnMixedTable() {
+  public void testRejectDanglingDeleteOnNonIceberg() {
     DefaultTableRuntime runtime = Mockito.mock(DefaultTableRuntime.class);
-    TableController controller = controller(TableFormat.ICEBERG, runtime, null);
+    TableController controller = controller(TableFormat.PAIMON, runtime, null);
     try {
       controller.triggerCleanup(context("clean-dangling-delete-files"));
-      Assert.fail("dangling delete on a mixed table should be rejected");
+      Assert.fail("dangling delete on a non-Iceberg table should be rejected");
     } catch (BadRequestException expected) {
       Assert.assertTrue(expected.getMessage().contains("Iceberg"));
     }
