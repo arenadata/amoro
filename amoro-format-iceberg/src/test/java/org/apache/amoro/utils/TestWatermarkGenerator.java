@@ -43,9 +43,7 @@ import java.util.Map;
 public class TestWatermarkGenerator extends TableTestBase {
 
   public TestWatermarkGenerator() {
-    super(
-        new BasicCatalogTestHelper(TableFormat.ICEBERG),
-        new BasicTableTestHelper(false, false));
+    super(new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, false));
   }
 
   @Test

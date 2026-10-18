@@ -59,16 +59,9 @@ public class TestOrphanFileClean extends ExecutorTestBase {
   public static Object[] parameters() {
     return new Object[][] {
       {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
-      {
-        new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, false)
-      },
-      {
-        new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)
-      },
-      {
-        new BasicCatalogTestHelper(TableFormat.ICEBERG),
-        new BasicTableTestHelper(false, false)
-      }
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, false)},
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)},
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, false)}
     };
   }
 

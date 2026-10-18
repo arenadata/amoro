@@ -184,8 +184,7 @@ public class MixedTables {
 
     Map<String, String> baseProperties = Maps.newHashMap(properties);
     baseProperties.putAll(
-        TablePropertyUtil.baseStoreProperties(
-            keySpec, changeIdentifier, TableFormat.ICEBERG));
+        TablePropertyUtil.baseStoreProperties(keySpec, changeIdentifier, TableFormat.ICEBERG));
     Catalog.TableBuilder baseBuilder =
         icebergCatalog
             .buildTable(baseIdentifier, schema)
@@ -213,8 +212,7 @@ public class MixedTables {
       PrimaryKeySpec keySpec,
       Map<String, String> properties) {
     Map<String, String> changeProperties = Maps.newHashMap(properties);
-    changeProperties.putAll(
-        TablePropertyUtil.changeStoreProperties(keySpec, TableFormat.ICEBERG));
+    changeProperties.putAll(TablePropertyUtil.changeStoreProperties(keySpec, TableFormat.ICEBERG));
     Catalog.TableBuilder changeBuilder =
         icebergCatalog
             .buildTable(changeIdentifier, schema)

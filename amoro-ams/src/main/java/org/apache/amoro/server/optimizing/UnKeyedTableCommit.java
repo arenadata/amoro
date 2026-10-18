@@ -19,13 +19,10 @@
 package org.apache.amoro.server.optimizing;
 
 import org.apache.amoro.api.CommitMetaProducer;
-import org.apache.amoro.data.FileNameRules;
 import org.apache.amoro.exception.OptimizingCommitException;
 import org.apache.amoro.iceberg.Constants;
 import org.apache.amoro.op.SnapshotSummary;
-import org.apache.amoro.optimizing.RewriteFilesOutput;
 import org.apache.amoro.optimizing.RewriteStageTask;
-import org.apache.amoro.optimizing.TaskProperties;
 import org.apache.amoro.server.optimizing.TaskRuntime.Status;
 import org.apache.amoro.server.utils.IcebergTableUtil;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
@@ -34,9 +31,7 @@ import org.apache.amoro.table.UnkeyedTable;
 import org.apache.amoro.utils.ContentFiles;
 import org.apache.amoro.utils.IcebergThreadPools;
 import org.apache.amoro.utils.MixedTableUtil;
-import org.apache.amoro.utils.PropertyUtil;
 import org.apache.amoro.utils.TableFileUtil;
-import org.apache.amoro.utils.TablePropertyUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.iceberg.ContentFile;
 import org.apache.iceberg.DataFile;
@@ -46,20 +41,15 @@ import org.apache.iceberg.RowDelta;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.StructLike;
 import org.apache.iceberg.Transaction;
-import org.apache.iceberg.types.Types;
 import org.apache.iceberg.util.SnapshotUtil;
-import org.apache.iceberg.util.StructLikeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 

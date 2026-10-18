@@ -48,9 +48,7 @@ public class TestCatalogService extends AMSServiceTestBase {
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[][] {
-      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG)}
-    };
+    return new Object[][] {{TestedCatalogs.internalCatalog(TableFormat.ICEBERG)}};
   }
 
   public TestCatalogService(CatalogTestHelper catalogTestHelper) {

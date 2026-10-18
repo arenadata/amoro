@@ -41,9 +41,7 @@ public class TestRecoverableAuthenticatedFileIO extends TableTestBase {
   private String file3;
 
   public TestRecoverableAuthenticatedFileIO() {
-    super(
-        new BasicCatalogTestHelper(TableFormat.ICEBERG),
-        new BasicTableTestHelper(true, true));
+    super(new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true));
   }
 
   @Before

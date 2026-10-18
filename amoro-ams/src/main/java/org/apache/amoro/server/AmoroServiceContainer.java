@@ -387,8 +387,7 @@ public class AmoroServiceContainer {
 
   private void initHttpService() {
     DashboardServer dashboardServer =
-        new DashboardServer(
-            serviceConfig, catalogManager, tableManager, optimizerManager, this);
+        new DashboardServer(serviceConfig, catalogManager, tableManager, optimizerManager, this);
 
     httpServer =
         Javalin.create(
@@ -418,10 +417,8 @@ public class AmoroServiceContainer {
           }
         });
     httpServer.exception(Exception.class, dashboardServer::handleException);
-    httpServer.error(
-        404, ctx -> ctx.json(new ErrorResponse(404, "page not found!", "")));
-    httpServer.error(
-        500, ctx -> ctx.json(new ErrorResponse(500, "internal error!", "")));
+    httpServer.error(404, ctx -> ctx.json(new ErrorResponse(404, "page not found!", "")));
+    httpServer.error(500, ctx -> ctx.json(new ErrorResponse(500, "internal error!", "")));
   }
 
   private void startHttpService() {

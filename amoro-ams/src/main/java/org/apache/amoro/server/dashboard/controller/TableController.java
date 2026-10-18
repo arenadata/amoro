@@ -37,7 +37,6 @@ import org.apache.amoro.hive.CachedHiveClientPool;
 import org.apache.amoro.hive.HMSClientPool;
 import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.process.ProcessStatus;
-import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.properties.HiveTableProperties;
 import org.apache.amoro.server.catalog.CatalogManager;
 import org.apache.amoro.server.catalog.ServerCatalog;
@@ -46,7 +45,6 @@ import org.apache.amoro.server.dashboard.ServerTableProperties;
 import org.apache.amoro.server.dashboard.model.HiveTableInfo;
 import org.apache.amoro.server.dashboard.model.TableMeta;
 import org.apache.amoro.server.dashboard.model.TableOperation;
-import org.apache.amoro.server.dashboard.model.UpgradeHiveMeta;
 import org.apache.amoro.server.dashboard.model.UpgradeRunningInfo;
 import org.apache.amoro.server.dashboard.model.UpgradeStatus;
 import org.apache.amoro.server.dashboard.response.OkResponse;
@@ -106,7 +104,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -256,8 +253,7 @@ public class TableController {
 
   /** Hive table upgrade is no longer supported. */
   public void upgradeHiveTable(Context ctx) {
-    throw new UnsupportedOperationException(
-        "Upgrading Hive tables is no longer supported");
+    throw new UnsupportedOperationException("Upgrading Hive tables is no longer supported");
   }
 
   public void getUpgradeStatus(Context ctx) {

@@ -78,14 +78,9 @@ public class TestUnkeyedExpressionUtil extends TableTestBase {
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).day("op_time").build()},
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).hour("op_time").build()},
       {TableFormat.ICEBERG, PartitionSpec.unpartitioned()},
-      {
-        TableFormat.ICEBERG,
-        PartitionSpec.builderFor(TABLE_SCHEMA).identity("op_time").build()
-      },
+      {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).identity("op_time").build()},
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).bucket("name", 2).build()},
-      {
-        TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).truncate("ts", 10).build()
-      },
+      {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).truncate("ts", 10).build()},
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).year("op_time").build()},
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).month("op_time").build()},
       {TableFormat.ICEBERG, PartitionSpec.builderFor(TABLE_SCHEMA).day("op_time").build()},

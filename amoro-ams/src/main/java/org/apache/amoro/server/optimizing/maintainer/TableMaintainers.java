@@ -21,10 +21,8 @@ package org.apache.amoro.server.optimizing.maintainer;
 import org.apache.amoro.AmoroTable;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TableRuntime;
-import org.apache.amoro.formats.iceberg.maintainer.MixedTableMaintainer;
 import org.apache.amoro.maintainer.TableMaintainer;
 import org.apache.amoro.server.table.DefaultTableRuntime;
-import org.apache.amoro.table.MixedTable;
 import org.apache.iceberg.Table;
 
 /** Factory for creating {@link TableMaintainer}. */

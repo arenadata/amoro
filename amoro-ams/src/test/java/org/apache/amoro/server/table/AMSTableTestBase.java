@@ -29,7 +29,6 @@ import org.apache.amoro.api.TableMeta;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.catalog.MixedTables;
 import org.apache.amoro.hive.TestHMS;
-import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AMSServiceTestBase;
 import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;

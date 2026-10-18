@@ -38,7 +38,6 @@ import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_GLU
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_HADOOP;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_HIVE;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_REST;
-import static org.apache.amoro.properties.CatalogMetaProperties.KEY_WAREHOUSE;
 import static org.apache.amoro.properties.CatalogMetaProperties.STORAGE_CONFIGS_KEY_CORE_SITE;
 import static org.apache.amoro.properties.CatalogMetaProperties.STORAGE_CONFIGS_KEY_HDFS_SITE;
 import static org.apache.amoro.properties.CatalogMetaProperties.STORAGE_CONFIGS_KEY_HIVE_SITE;

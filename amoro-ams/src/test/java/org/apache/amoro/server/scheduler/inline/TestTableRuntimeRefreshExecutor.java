@@ -37,22 +37,10 @@ public class TestTableRuntimeRefreshExecutor extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {
-        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
-        new BasicTableTestHelper(true, true)
-      },
-      {
-        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
-        new BasicTableTestHelper(false, true)
-      },
-      {
-        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
-        new BasicTableTestHelper(false, false)
-      },
-      {
-        TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG),
-        new BasicTableTestHelper(true, false)
-      },
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)},
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(false, false)},
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, false)},
     };
   }
 

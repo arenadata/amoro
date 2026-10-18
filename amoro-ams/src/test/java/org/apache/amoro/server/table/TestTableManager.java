@@ -55,10 +55,7 @@ public class TestTableManager extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {
-        TestedCatalogs.internalCatalog(TableFormat.ICEBERG),
-        new BasicTableTestHelper(true, true)
-      }
+      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
     };
   }
 

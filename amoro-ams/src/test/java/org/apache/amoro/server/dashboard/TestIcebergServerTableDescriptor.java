@@ -64,9 +64,7 @@ public class TestIcebergServerTableDescriptor extends TestServerTableDescriptor 
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[] {
-      IcebergHadoopCatalogTestHelper.defaultHelper()
-    };
+    return new Object[] {IcebergHadoopCatalogTestHelper.defaultHelper()};
   }
 
   @Override
