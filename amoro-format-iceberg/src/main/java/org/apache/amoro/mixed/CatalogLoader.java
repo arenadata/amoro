@@ -23,7 +23,6 @@ import static org.apache.iceberg.CatalogUtil.ICEBERG_CATALOG_TYPE;
 import org.apache.amoro.AmsClient;
 import org.apache.amoro.Constants;
 import org.apache.amoro.PooledAmsClient;
-import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.api.NoSuchObjectException;
 import org.apache.amoro.client.AmsThriftUrl;
@@ -36,7 +35,6 @@ import org.apache.amoro.utils.MixedFormatCatalogUtil;
 import org.apache.iceberg.common.DynConstructors;
 
 import java.util.Map;
-import java.util.Set;
 
 /** Catalogs, create mixed-format catalog from metastore thrift uri. */
 public class CatalogLoader {
@@ -89,12 +87,7 @@ public class CatalogLoader {
         catalogImpl = MIXED_ICEBERG_CATALOG_IMP;
         break;
       case CatalogMetaProperties.CATALOG_TYPE_HIVE:
-        Set<TableFormat> tableFormats = CatalogUtil.tableFormats(metastoreType, catalogProperties);
-        if (tableFormats.contains(TableFormat.MIXED_HIVE)) {
-          catalogImpl = HIVE_CATALOG_IMPL;
-        } else {
-          catalogImpl = MIXED_ICEBERG_CATALOG_IMP;
-        }
+        catalogImpl = MIXED_ICEBERG_CATALOG_IMP;
         break;
       case CatalogMetaProperties.CATALOG_TYPE_AMS:
         catalogImpl = INTERNAL_CATALOG_IMPL;

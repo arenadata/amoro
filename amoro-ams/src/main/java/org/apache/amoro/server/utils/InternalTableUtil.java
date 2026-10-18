@@ -20,13 +20,11 @@ package org.apache.amoro.server.utils;
 
 import static org.apache.amoro.server.table.internal.InternalTableConstants.HADOOP_FILE_IO_IMPL;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.METADATA_FOLDER_NAME;
-import static org.apache.amoro.server.table.internal.InternalTableConstants.MIXED_ICEBERG_BASED_REST;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.OSS_FILE_IO_IMPL;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.OSS_PROTOCOL_PREFIX;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.S3_FILE_IO_IMPL;
 import static org.apache.amoro.server.table.internal.InternalTableConstants.S3_PROTOCOL_PREFIX;
 
-import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.io.AuthenticatedFileIO;
 import org.apache.amoro.io.AuthenticatedFileIOs;
@@ -59,9 +57,7 @@ public class InternalTableUtil {
    */
   public static boolean isLegacyMixedIceberg(
       org.apache.amoro.server.table.TableMetadata internalTableMetadata) {
-    return TableFormat.MIXED_ICEBERG.equals(internalTableMetadata.getFormat())
-        && !Boolean.parseBoolean(
-            internalTableMetadata.getProperties().get(MIXED_ICEBERG_BASED_REST));
+    return false;
   }
 
   /**

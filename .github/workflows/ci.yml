@@ -77,20 +77,12 @@ jobs:
             modules: amoro-format-iceberg
             timeout: 60
 
-          - name: Format Mixed Hive
-            modules: amoro-format-mixed/amoro-mixed-hive
-            timeout: 60
-
           - name: Formats Other
             modules: amoro-format-paimon,amoro-format-hudi,amoro-format-lance,amoro-metrics/amoro-metrics-prometheus
             timeout: 60
 
-          - name: Mixed Spark
-            modules: amoro-format-mixed/amoro-mixed-spark/amoro-mixed-spark-3-common,amoro-format-mixed/amoro-mixed-spark/v3.5/amoro-mixed-spark-3.5
-            timeout: 120
-
-          - name: Spark 4.2 Iceberg
-            modules: amoro-format-mixed/amoro-mixed-spark/amoro-mixed-spark-4-common,amoro-format-mixed/amoro-mixed-spark/v4.2/amoro-mixed-spark-4.2,amoro-optimizer/amoro-optimizer-spark-4.2
+          - name: Spark 4.2 Optimizer
+            modules: amoro-optimizer/amoro-optimizer-spark-4.2
             timeout: 120
 
           - name: Optimizer
@@ -115,20 +107,6 @@ jobs:
       with:
         path: ~/.m2/repository
         key: m2-${{ github.sha }}
-    # The amoro-mixed-spark aggregator keeps ${scala.binary.version} in its
-    # artifactId, which Maven cannot interpolate when the parent is resolved
-    # from the repository instead of the reactor. Provide the parent pom under
-    # its literal name so `-pl` builds of dependent modules can resolve it.
-    - name: Work around non-interpolated spark parent artifactId
-      run: |
-        base=~/.m2/repository/org/apache/amoro
-        for pom in "$base"/amoro-mixed-spark_2.*/*/amoro-mixed-spark_*.pom; do
-          [ -f "$pom" ] || continue
-          version=$(basename "$(dirname "$pom")")
-          literal="$base/amoro-mixed-spark_\${scala.binary.version}/$version"
-          mkdir -p "$literal"
-          cp "$pom" "$literal/amoro-mixed-spark_\${scala.binary.version}-$version.pom"
-        done
     - name: Run tests
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

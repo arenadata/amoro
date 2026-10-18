@@ -38,7 +38,7 @@ import java.util.List;
 public class TestBlockerExpiringExecutor extends AMSServiceTestBase {
   private final ServerTableIdentifier tableIdentifier =
       ServerTableIdentifier.of(
-          0L, "test_catalog", "test_db", "test_table_blocker", TableFormat.MIXED_ICEBERG);
+          0L, "test_catalog", "test_db", "test_table_blocker", TableFormat.ICEBERG);
 
   private final Persistency persistency = new Persistency();
   private DefaultTableRuntime tableRuntime;

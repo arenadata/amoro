@@ -20,8 +20,7 @@ package org.apache.amoro;
 
 public class IcebergActions {
 
-  private static final TableFormat[] DEFAULT_FORMATS =
-      new TableFormat[] {TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG, TableFormat.MIXED_HIVE};
+  private static final TableFormat[] DEFAULT_FORMATS = new TableFormat[] {TableFormat.ICEBERG};
 
   public static final Action SYSTEM = Action.register("system");
   public static final Action REWRITE = Action.register("rewrite");

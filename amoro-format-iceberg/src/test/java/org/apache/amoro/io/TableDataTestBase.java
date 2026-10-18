@@ -50,9 +50,7 @@ public abstract class TableDataTestBase extends TableTestBase {
   }
 
   public TableDataTestBase() {
-    this(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true));
+    this(new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true));
   }
 
   protected List<Record> baseRecords(List<Record> records) {

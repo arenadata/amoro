@@ -146,7 +146,7 @@ public class TablePropertyUtil {
    * Check if the given table properties is the base store of mixed-format,
    *
    * @param properties properties of the table.
-   * @param format - {@link TableFormat#MIXED_ICEBERG} or {@link TableFormat#MIXED_HIVE}
+   * @param format table format stored on the base or change store properties
    * @return true if this is a base store of mixed-format.
    */
   public static boolean isBaseStore(Map<String, String> properties, TableFormat format) {

@@ -34,8 +34,6 @@ import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.exception.AlreadyExistsException;
 import org.apache.amoro.exception.BlockerConflictException;
 import org.apache.amoro.exception.ObjectNotExistsException;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
-import org.apache.amoro.hive.catalog.HiveTableTestHelper;
 import org.apache.amoro.server.AmoroManagementConf;
 import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.server.catalog.ServerCatalog;
@@ -57,14 +55,7 @@ public class TestTableManager extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {
-        TestedCatalogs.internalCatalog(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true)
-      },
-      {
-        new HiveCatalogTestHelper(TableFormat.MIXED_HIVE, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, true)
-      }
+      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
     };
   }
 
@@ -145,7 +136,7 @@ public class TestTableManager extends AMSTableTestBase {
           tableManager().createTable("unknown", copyMetadata);
         });
 
-    if (catalogTestHelper().tableFormat().equals(TableFormat.MIXED_ICEBERG)) {
+    if (catalogTestHelper().tableFormat().equals(TableFormat.ICEBERG)) {
       // test create table in not existed database
       Assert.assertThrows(
           ObjectNotExistsException.class,

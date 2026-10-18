@@ -18,7 +18,6 @@
 
 package org.apache.amoro.server.catalog;
 
-import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_AMS;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_CUSTOM;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_FILESYSTEM;
 import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_GLUE;
@@ -29,6 +28,7 @@ import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_RES
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.shade.guava32.com.google.common.base.Preconditions;
 import org.apache.amoro.shade.guava32.com.google.common.collect.ImmutableMap;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
@@ -44,36 +44,55 @@ public class CatalogBuilder {
       ImmutableMap.of(
           CATALOG_TYPE_HADOOP,
           Sets.newHashSet(
-              TableFormat.ICEBERG,
-              TableFormat.MIXED_ICEBERG,
-              TableFormat.PAIMON,
-              TableFormat.HUDI,
-              TableFormat.LANCE),
+              TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE),
           CATALOG_TYPE_FILESYSTEM,
           Sets.newHashSet(
-              TableFormat.ICEBERG,
-              TableFormat.MIXED_ICEBERG,
-              TableFormat.PAIMON,
-              TableFormat.HUDI,
-              TableFormat.LANCE),
+              TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE),
           CATALOG_TYPE_GLUE,
-          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG),
+          Sets.newHashSet(TableFormat.ICEBERG),
           CATALOG_TYPE_REST,
-          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG),
+          Sets.newHashSet(TableFormat.ICEBERG),
           CATALOG_TYPE_CUSTOM,
-          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG),
+          Sets.newHashSet(TableFormat.ICEBERG),
           CATALOG_TYPE_HIVE,
-          Sets.newHashSet(
-              TableFormat.ICEBERG,
-              TableFormat.MIXED_ICEBERG,
-              TableFormat.MIXED_HIVE,
-              TableFormat.PAIMON,
-              TableFormat.HUDI),
-          CATALOG_TYPE_AMS,
-          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG));
+          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI));
+
+  /**
+   * Reject catalogs that use AMS as a metastore or a mixed table format. The catalog name is
+   * included so operators can find the row to remove.
+   */
+  public static void ensureSupported(CatalogMeta catalogMeta) {
+    String name = catalogMeta.getCatalogName();
+    if (CatalogMetaProperties.CATALOG_TYPE_AMS.equalsIgnoreCase(catalogMeta.getCatalogType())) {
+      throw new UnsupportedCatalogException(
+          "Catalog " + name + " uses metastore type ams, which is no longer supported");
+    }
+    Map<String, String> properties = catalogMeta.getCatalogProperties();
+    if (properties == null) {
+      return;
+    }
+    String formats = properties.get(CatalogMetaProperties.TABLE_FORMATS);
+    if (formats == null) {
+      return;
+    }
+    for (String format : formats.split(",")) {
+      String normalized = format.trim();
+      if (normalized.equalsIgnoreCase("MIXED_ICEBERG")
+          || normalized.equalsIgnoreCase("MIXED_HIVE")) {
+        throw new UnsupportedCatalogException(
+            "Catalog "
+                + name
+                + " uses table format "
+                + normalized
+                + ", which is no longer supported");
+      }
+    }
+  }
 
   public static ServerCatalog buildServerCatalog(
       CatalogMeta catalogMeta, Configurations serverConfiguration) {
+    ensureSupported(catalogMeta);
+    Preconditions.checkNotNull(serverConfiguration, "server configuration is null");
     String type = catalogMeta.getCatalogType();
     Set<TableFormat> tableFormats = CatalogUtil.tableFormats(catalogMeta);
 
@@ -95,8 +114,6 @@ public class CatalogBuilder {
       case CATALOG_TYPE_CUSTOM:
       case CATALOG_TYPE_HIVE:
         return new ExternalCatalog(catalogMeta);
-      case CATALOG_TYPE_AMS:
-        return new InternalCatalogImpl(catalogMeta, serverConfiguration);
       default:
         throw new IllegalStateException("unsupported catalog type:" + type);
     }

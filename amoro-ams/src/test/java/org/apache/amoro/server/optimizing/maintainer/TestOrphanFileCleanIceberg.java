@@ -24,7 +24,7 @@ import org.apache.amoro.TableTestHelper;
 import org.apache.amoro.catalog.BasicCatalogTestHelper;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.formats.iceberg.maintainer.IcebergTableMaintainer;
-import org.apache.amoro.hive.io.writer.AdaptHiveGenericTaskWriterBuilder;
+import org.apache.amoro.io.writer.GenericTaskWriters;
 import org.apache.amoro.io.writer.SortedPosDeleteWriter;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Lists;
 import org.apache.amoro.table.UnkeyedTable;
@@ -84,7 +84,7 @@ public class TestOrphanFileCleanIceberg extends TestOrphanFileClean {
     appendFiles.commit();
     assertDanglingDeleteFiles(testTable, 0);
     SortedPosDeleteWriter<Record> posDeleteWriter =
-        AdaptHiveGenericTaskWriterBuilder.builderFor(testTable)
+        GenericTaskWriters.builderFor(testTable)
             .buildBasePosDeleteWriter(0, 0, dataFiles1.get(0).partition());
     posDeleteWriter.delete(dataFiles1.get(0).path(), 0);
     List<DeleteFile> posDelete = posDeleteWriter.complete();

@@ -43,10 +43,7 @@ public class TestDatabaseService extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {
-        TestedCatalogs.internalCatalog(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true)
-      }
+      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
     };
   }
 
@@ -76,7 +73,7 @@ public class TestDatabaseService extends AMSTableTestBase {
 
   @Test
   public void testDropDatabaseWithTable() {
-    Assume.assumeTrue(catalogTestHelper().tableFormat().equals(TableFormat.MIXED_ICEBERG));
+    Assume.assumeTrue(catalogTestHelper().tableFormat().equals(TableFormat.ICEBERG));
     Assume.assumeTrue(catalogTestHelper().isInternalCatalog());
     InternalCatalog catalog = CATALOG_MANAGER.getInternalCatalog(TEST_CATALOG_NAME);
     catalog.createDatabase(TEST_DB_NAME);

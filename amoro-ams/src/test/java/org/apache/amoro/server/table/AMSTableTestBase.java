@@ -29,15 +29,10 @@ import org.apache.amoro.api.TableMeta;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.catalog.MixedTables;
 import org.apache.amoro.hive.TestHMS;
-import org.apache.amoro.hive.catalog.MixedHiveCatalog;
-import org.apache.amoro.mixed.CatalogLoader;
-import org.apache.amoro.mixed.MixedFormatCatalog;
-import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AMSServiceTestBase;
 import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
 import org.apache.amoro.table.MixedTable;
-import org.apache.amoro.utils.CatalogUtil;
 import org.apache.amoro.utils.ConvertStructUtil;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -85,17 +80,8 @@ public class AMSTableTestBase extends AMSServiceTestBase {
     try {
       catalogWarehouse = temp.newFolder().getPath();
       catalogMeta = catalogTestHelper.buildCatalogMeta(catalogWarehouse);
-      // mixed-hive format only exists in external catalog
-      if (catalogTestHelper.isInternalCatalog()) {
-        if (TableFormat.MIXED_ICEBERG.equals(catalogTestHelper.tableFormat())) {
-          mixedTables = catalogTestHelper.buildMixedTables(catalogMeta);
-          tableMeta = buildTableMeta();
-        }
-      } else {
+      if (!catalogTestHelper.isInternalCatalog()) {
         externalCatalog = new CommonUnifiedCatalog(() -> catalogMeta, Maps.newHashMap());
-        if (TableFormat.MIXED_HIVE.equals(catalogTestHelper.tableFormat())) {
-          tableMeta = buildTableMeta();
-        }
       }
 
       CATALOG_MANAGER.createCatalog(catalogMeta);
@@ -182,10 +168,6 @@ public class AMSTableTestBase extends AMSServiceTestBase {
     } else {
       if (catalogTestHelper.tableFormat().equals(TableFormat.ICEBERG)) {
         createIcebergTable();
-      } else if (catalogTestHelper.tableFormat().equals(TableFormat.MIXED_ICEBERG)) {
-        createMixedIcebergTable();
-      } else if (catalogTestHelper.tableFormat().equals(TableFormat.MIXED_HIVE)) {
-        createMixedHiveTable();
       } else {
         throw new IllegalStateException("un-support format");
       }
@@ -193,40 +175,6 @@ public class AMSTableTestBase extends AMSServiceTestBase {
     tableService().exploreTableRuntimes();
 
     serverTableIdentifier = tableManager().listManagedTables().get(0);
-  }
-
-  private void createMixedHiveTable() {
-    // only create mixed hive table here !
-    catalogMeta.putToCatalogProperties(
-        CatalogMetaProperties.TABLE_FORMATS, TableFormat.MIXED_HIVE.name());
-    MixedHiveCatalog catalog =
-        (MixedHiveCatalog)
-            CatalogLoader.createCatalog(
-                catalogMeta.getCatalogName(),
-                catalogMeta.getCatalogType(),
-                catalogMeta.getCatalogProperties(),
-                CatalogUtil.buildMetaStore(catalogMeta));
-    catalog
-        .newTableBuilder(tableTestHelper.id(), tableTestHelper.tableSchema())
-        .withPartitionSpec(tableTestHelper.partitionSpec())
-        .withProperties(tableTestHelper.tableProperties())
-        .withPrimaryKeySpec(tableTestHelper.primaryKeySpec())
-        .create();
-  }
-
-  private void createMixedIcebergTable() {
-    MixedFormatCatalog catalog =
-        CatalogLoader.createCatalog(
-            catalogMeta.getCatalogName(),
-            catalogMeta.getCatalogType(),
-            catalogMeta.getCatalogProperties(),
-            CatalogUtil.buildMetaStore(catalogMeta));
-    catalog
-        .newTableBuilder(tableTestHelper.id(), tableTestHelper.tableSchema())
-        .withPartitionSpec(tableTestHelper.partitionSpec())
-        .withProperties(tableTestHelper.tableProperties())
-        .withPrimaryKeySpec(tableTestHelper.primaryKeySpec())
-        .create();
   }
 
   private void createIcebergTable() {

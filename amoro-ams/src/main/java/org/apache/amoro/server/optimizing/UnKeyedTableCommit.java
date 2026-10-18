@@ -18,23 +18,11 @@
 
 package org.apache.amoro.server.optimizing;
 
-import static org.apache.amoro.hive.op.UpdateHiveFiles.DELETE_UNTRACKED_HIVE_FILE;
-import static org.apache.amoro.hive.op.UpdateHiveFiles.SYNC_DATA_TO_HIVE;
-
 import org.apache.amoro.api.CommitMetaProducer;
-import org.apache.amoro.data.FileNameRules;
 import org.apache.amoro.exception.OptimizingCommitException;
-import org.apache.amoro.hive.HMSClientPool;
-import org.apache.amoro.hive.table.SupportHive;
-import org.apache.amoro.hive.utils.HivePartitionUtil;
-import org.apache.amoro.hive.utils.HiveTableUtil;
-import org.apache.amoro.hive.utils.TableTypeUtil;
 import org.apache.amoro.iceberg.Constants;
 import org.apache.amoro.op.SnapshotSummary;
-import org.apache.amoro.optimizing.RewriteFilesOutput;
 import org.apache.amoro.optimizing.RewriteStageTask;
-import org.apache.amoro.optimizing.TaskProperties;
-import org.apache.amoro.properties.HiveTableProperties;
 import org.apache.amoro.server.optimizing.TaskRuntime.Status;
 import org.apache.amoro.server.utils.IcebergTableUtil;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Sets;
@@ -43,12 +31,8 @@ import org.apache.amoro.table.UnkeyedTable;
 import org.apache.amoro.utils.ContentFiles;
 import org.apache.amoro.utils.IcebergThreadPools;
 import org.apache.amoro.utils.MixedTableUtil;
-import org.apache.amoro.utils.PropertyUtil;
 import org.apache.amoro.utils.TableFileUtil;
-import org.apache.amoro.utils.TablePropertyUtil;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.iceberg.ContentFile;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DeleteFile;
@@ -57,20 +41,15 @@ import org.apache.iceberg.RowDelta;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.StructLike;
 import org.apache.iceberg.Transaction;
-import org.apache.iceberg.types.Types;
 import org.apache.iceberg.util.SnapshotUtil;
-import org.apache.iceberg.util.StructLikeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -108,102 +87,7 @@ public class UnKeyedTableCommit {
   }
 
   protected List<DataFile> moveFile2HiveIfNeed() {
-    if (!needMoveFile2Hive()) {
-      return null;
-    }
-
-    HMSClientPool hiveClient = ((SupportHive) table).getHMSClient();
-    Map<String, String> partitionPathMap = new HashMap<>();
-    Types.StructType partitionSchema =
-        table.isUnkeyedTable()
-            ? table.asUnkeyedTable().spec().partitionType()
-            : table.asKeyedTable().baseTable().spec().partitionType();
-
-    List<DataFile> newTargetFiles = new ArrayList<>();
-    for (TaskRuntime<RewriteStageTask> taskRuntime : tasks) {
-      RewriteFilesOutput output = taskRuntime.getTaskDescriptor().getOutput();
-      DataFile[] dataFiles = output.getDataFiles();
-      if (dataFiles == null) {
-        continue;
-      }
-
-      List<DataFile> targetFiles =
-          Arrays.stream(output.getDataFiles()).collect(Collectors.toList());
-
-      long maxTransactionId =
-          targetFiles.stream()
-              .mapToLong(dataFile -> FileNameRules.parseTransactionId(dataFile.path().toString()))
-              .max()
-              .orElse(0L);
-
-      for (DataFile targetFile : targetFiles) {
-        String partitionPath =
-            partitionPathMap.computeIfAbsent(
-                taskRuntime.getTaskDescriptor().getPartition(),
-                key -> getPartitionPath(hiveClient, maxTransactionId, targetFile, partitionSchema));
-
-        DataFile finalDataFile = moveTargetFiles(targetFile, partitionPath);
-        newTargetFiles.add(finalDataFile);
-      }
-    }
-    return newTargetFiles;
-  }
-
-  private String getPartitionPath(
-      HMSClientPool hiveClient,
-      long maxTransactionId,
-      DataFile targetFile,
-      Types.StructType partitionSchema) {
-    // get iceberg partition path
-    String icebergPartitionLocation = getIcebergPartitionLocation(targetFile.partition());
-    if (icebergPartitionLocation != null) {
-      return icebergPartitionLocation;
-    }
-    // get hive partition path
-    if (table.spec().isUnpartitioned()) {
-      try {
-        Table hiveTable =
-            ((SupportHive) table)
-                .getHMSClient()
-                .run(
-                    client -> client.getTable(table.id().getDatabase(), table.id().getTableName()));
-        return hiveTable.getSd().getLocation();
-      } catch (Exception e) {
-        LOG.error("Get hive table failed", e);
-        throw new RuntimeException("Get hive table failed", e);
-      }
-    } else {
-      List<String> partitionValues =
-          HivePartitionUtil.partitionValuesAsList(targetFile.partition(), partitionSchema);
-      String hiveSubdirectory =
-          table.isKeyedTable()
-              ? HiveTableUtil.newHiveSubdirectory(maxTransactionId)
-              : HiveTableUtil.newHiveSubdirectory();
-
-      Partition p = HivePartitionUtil.getPartition(hiveClient, table, partitionValues);
-      if (p == null) {
-        return HiveTableUtil.newHiveDataLocation(
-            ((SupportHive) table).hiveLocation(),
-            table.spec(),
-            targetFile.partition(),
-            hiveSubdirectory);
-      } else {
-        return p.getSd().getLocation();
-      }
-    }
-  }
-
-  private String getIcebergPartitionLocation(StructLike partitionData) {
-    UnkeyedTable baseTable =
-        table.isKeyedTable() ? table.asKeyedTable().baseTable() : table.asUnkeyedTable();
-    StructLikeMap<Map<String, String>> partitionProperty = baseTable.partitionProperty();
-    Map<String, String> property =
-        partitionProperty.get(
-            table.spec().isUnpartitioned() ? TablePropertyUtil.EMPTY_STRUCT : partitionData);
-    if (property == null) {
-      return null;
-    }
-    return property.get(HiveTableProperties.PARTITION_PROPERTIES_KEY_HIVE_LOCATION);
+    return null;
   }
 
   public void commit() throws OptimizingCommitException {
@@ -311,12 +195,6 @@ public class UnKeyedTableCommit {
     removedDeleteFiles.forEach(rewriteFiles::deleteFile);
     addedDeleteFiles.forEach(rewriteFiles::addFile);
     rewriteFiles.set(SnapshotSummary.SNAPSHOT_PRODUCER, CommitMetaProducer.OPTIMIZE.name());
-    if (TableTypeUtil.isHive(table)) {
-      if (!needMoveFile2Hive()) {
-        rewriteFiles.set(DELETE_UNTRACKED_HIVE_FILE, "true");
-      }
-      rewriteFiles.set(SYNC_DATA_TO_HIVE, "true");
-    }
     rewriteFiles.commit();
   }
 
@@ -329,13 +207,7 @@ public class UnKeyedTableCommit {
   }
 
   protected boolean needMoveFile2Hive() {
-    return PropertyUtil.propertyAsBoolean(
-        tasks.stream()
-            .findAny()
-            .orElseThrow(() -> new RuntimeException("The tasks is empty"))
-            .getProperties(),
-        TaskProperties.MOVE_FILE_TO_HIVE_LOCATION,
-        false);
+    return false;
   }
 
   protected void correctHiveData(Set<DataFile> addedDataFiles, Set<DeleteFile> addedDeleteFiles)

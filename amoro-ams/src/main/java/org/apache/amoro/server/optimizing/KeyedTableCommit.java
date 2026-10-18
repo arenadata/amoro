@@ -18,14 +18,10 @@
 
 package org.apache.amoro.server.optimizing;
 
-import static org.apache.amoro.hive.op.UpdateHiveFiles.DELETE_UNTRACKED_HIVE_FILE;
-import static org.apache.amoro.hive.op.UpdateHiveFiles.SYNC_DATA_TO_HIVE;
-
 import org.apache.amoro.api.CommitMetaProducer;
 import org.apache.amoro.data.DataFileType;
 import org.apache.amoro.data.PrimaryKeyedFile;
 import org.apache.amoro.exception.OptimizingCommitException;
-import org.apache.amoro.hive.utils.TableTypeUtil;
 import org.apache.amoro.iceberg.Constants;
 import org.apache.amoro.op.OverwriteBaseFiles;
 import org.apache.amoro.op.SnapshotSummary;
@@ -174,10 +170,6 @@ public class KeyedTableCommit extends UnKeyedTableCommit {
     addedDataFiles.forEach(overwriteBaseFiles::addFile);
     addedDeleteFiles.forEach(overwriteBaseFiles::addFile);
     removedDataFiles.forEach(overwriteBaseFiles::deleteFile);
-    if (TableTypeUtil.isHive(table) && !needMoveFile2Hive()) {
-      overwriteBaseFiles.set(DELETE_UNTRACKED_HIVE_FILE, "true");
-      overwriteBaseFiles.set(SYNC_DATA_TO_HIVE, "true");
-    }
     overwriteBaseFiles.skipEmptyCommit().commit();
 
     // remove delete files

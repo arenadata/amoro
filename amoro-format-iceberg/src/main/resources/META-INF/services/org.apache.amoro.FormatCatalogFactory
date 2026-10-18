@@ -17,5 +17,3 @@
 #
 
 org.apache.amoro.formats.iceberg.IcebergCatalogFactory
-org.apache.amoro.formats.mixed.MixedIcebergCatalogFactory
-org.apache.amoro.formats.mixed.MixedHiveCatalogFactory

@@ -68,7 +68,7 @@ public class TestTableTracer extends TableTestBase {
 
   public TestTableTracer(boolean keyedTable, boolean onBaseTable, boolean partitionedTable) {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(keyedTable, partitionedTable));
     this.onBaseTable = onBaseTable;
   }

@@ -46,7 +46,7 @@ public abstract class TableTestBase extends CatalogTestBase {
 
     getUnifiedCatalog().createDatabase(TableTestHelper.TEST_DB_NAME);
     TableFormat format = getTestFormat();
-    if (format.in(TableFormat.MIXED_HIVE, TableFormat.MIXED_ICEBERG)) {
+    if (createAsMixedTable()) {
       createMixedFormatTable();
     } else if (TableFormat.ICEBERG.equals(format)) {
       createIcebergFormatTable();
@@ -103,6 +103,11 @@ public abstract class TableTestBase extends CatalogTestBase {
 
   protected TableMetaStore getTableMetaStore() {
     return this.tableMetaStore;
+  }
+
+  /** Keyed helpers use the mixed layout. Override to force a mixed table for an unkeyed helper. */
+  protected boolean createAsMixedTable() {
+    return isKeyedTable() || TableFormat.MIXED_ICEBERG.equals(getTestFormat());
   }
 
   protected boolean isKeyedTable() {

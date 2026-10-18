@@ -34,9 +34,7 @@ import java.util.List;
 public class TestDefaultKeyedFile extends TableTestBase {
 
   public TestDefaultKeyedFile() {
-    super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true));
+    super(new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true));
   }
 
   @Test

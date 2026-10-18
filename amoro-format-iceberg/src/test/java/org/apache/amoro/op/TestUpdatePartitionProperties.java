@@ -34,9 +34,7 @@ import java.util.Map;
 public class TestUpdatePartitionProperties extends TableTestBase {
 
   public TestUpdatePartitionProperties() {
-    super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(false, true));
+    super(new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true));
   }
 
   @Test

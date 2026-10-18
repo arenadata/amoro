@@ -34,7 +34,6 @@ import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.server.catalog.ServerCatalog;
 import org.apache.amoro.server.table.TableManager;
 import org.apache.amoro.server.table.TableMetadata;
-import org.apache.amoro.server.utils.InternalTableUtil;
 import org.apache.amoro.shade.thrift.org.apache.thrift.TException;
 
 import java.util.List;
@@ -114,14 +113,6 @@ public class TableManagementService implements AmoroTableMetastore.Iface {
     TableMetadata tableMetadata =
         serverCatalog.loadTableMetadata(
             tableIdentifier.getDatabase(), tableIdentifier.getTableName());
-    if (tableMetadata.getFormat() == TableFormat.MIXED_ICEBERG
-        && !InternalTableUtil.isLegacyMixedIceberg(tableMetadata)) {
-      throw new IllegalArgumentException(
-          "The table "
-              + tableIdentifier.toString()
-              + " is based"
-              + " on rest-catalog, please upgrade your connector");
-    }
     return tableMetadata.buildTableMeta();
   }
 

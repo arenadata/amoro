@@ -143,7 +143,7 @@ public class MixedAndIcebergTableDescriptor extends PersistentBase
 
   @Override
   public List<TableFormat> supportFormat() {
-    return Arrays.asList(TableFormat.ICEBERG, TableFormat.MIXED_ICEBERG, TableFormat.MIXED_HIVE);
+    return Arrays.asList(TableFormat.ICEBERG);
   }
 
   @Override

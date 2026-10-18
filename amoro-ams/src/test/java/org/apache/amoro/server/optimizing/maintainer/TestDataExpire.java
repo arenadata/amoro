@@ -86,38 +86,38 @@ public class TestDataExpire extends ExecutorTestBase {
     return new Object[][] {
       // Mixed format partitioned by timestamp
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, false, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, true, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(false, false, getDefaultProp())
       },
       // Mixed format partitioned by timestampz
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA1, PRIMARY_KEY_SPEC, SPEC, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA1, PRIMARY_KEY_SPEC, PartitionSpec.unpartitioned(), getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA1, PrimaryKeySpec.noPrimaryKey(), SPEC, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA1,
             PrimaryKeySpec.noPrimaryKey(),
@@ -126,21 +126,21 @@ public class TestDataExpire extends ExecutorTestBase {
       },
       // Mixed format partitioned by date string
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA2, PRIMARY_KEY_SPEC, SPEC2, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA2, PRIMARY_KEY_SPEC, PartitionSpec.unpartitioned(), getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA2, PrimaryKeySpec.noPrimaryKey(), SPEC2, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA2,
             PrimaryKeySpec.noPrimaryKey(),
@@ -149,30 +149,30 @@ public class TestDataExpire extends ExecutorTestBase {
       },
       // Mixed format partitioned by date type
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA3, PRIMARY_KEY_SPEC, SPEC3, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(TABLE_SCHEMA3, PRIMARY_KEY_SPEC, SPEC4, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA3, PRIMARY_KEY_SPEC, PartitionSpec.unpartitioned(), getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA3, PrimaryKeySpec.noPrimaryKey(), SPEC3, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA3, PrimaryKeySpec.noPrimaryKey(), SPEC4, getDefaultProp())
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(
             TABLE_SCHEMA3,
             PrimaryKeySpec.noPrimaryKey(),
@@ -542,7 +542,7 @@ public class TestDataExpire extends ExecutorTestBase {
 
   @Test
   public void testExpireByPartitionWhenMetricsModeIsNone() {
-    assumeTrue(getTestFormat().in(TableFormat.MIXED_ICEBERG, TableFormat.ICEBERG));
+    assumeTrue(getTestFormat().in(TableFormat.ICEBERG, TableFormat.ICEBERG));
 
     getMixedTable()
         .updateProperties()

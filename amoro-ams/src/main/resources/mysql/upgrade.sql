@@ -172,6 +172,7 @@ CREATE TABLE IF NOT EXISTS bucket_assignments (
     PRIMARY KEY (cluster_name, node_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Bucket ID assignments per AMS node for master-slave mode';
 
--- ADD node_heartbeat_ts to table bucket_assignments
-ALTER TABLE `bucket_assignments` ADD COLUMN `node_heartbeat_ts` BIGINT NOT NULL DEFAULT 0 COMMENT 'Per-node heartbeat timestamp updated only by the owning node (ms since epoch)';
+-- AMS is no longer a metastore. Namespace and table metadata live in the external catalog.
+DROP TABLE IF EXISTS table_metadata;
+DROP TABLE IF EXISTS database_metadata;
 

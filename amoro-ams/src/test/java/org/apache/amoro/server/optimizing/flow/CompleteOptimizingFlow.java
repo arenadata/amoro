@@ -28,7 +28,6 @@ import org.apache.amoro.ServerTableIdentifier;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.config.OptimizingConfig;
 import org.apache.amoro.config.TableConfiguration;
-import org.apache.amoro.hive.optimizing.MixedHiveRewriteExecutor;
 import org.apache.amoro.iceberg.Constants;
 import org.apache.amoro.optimizing.IcebergRewriteExecutor;
 import org.apache.amoro.optimizing.OptimizingExecutor;
@@ -212,10 +211,8 @@ public class CompleteOptimizingFlow {
     if (table.format() == TableFormat.ICEBERG) {
       return new IcebergRewriteExecutor(
           taskRuntime.getTaskDescriptor().getInput(), table, taskRuntime.getProperties());
-    } else {
-      return new MixedHiveRewriteExecutor(
-          taskRuntime.getTaskDescriptor().getInput(), table, taskRuntime.getProperties());
     }
+    throw new UnsupportedOperationException("Unsupported table format " + table.format());
   }
 
   private UnKeyedTableCommit committer(

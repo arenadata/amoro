@@ -71,16 +71,13 @@ public class CatalogUtil {
 
     // Generate table format from catalog type for compatibility with older versions
     switch (metastoreType) {
-      case CatalogMetaProperties.CATALOG_TYPE_AMS:
-        return Sets.newHashSet(TableFormat.MIXED_ICEBERG);
       case CatalogMetaProperties.CATALOG_TYPE_CUSTOM:
       case CatalogMetaProperties.CATALOG_TYPE_REST:
       case CatalogMetaProperties.CATALOG_TYPE_HADOOP:
       case CatalogMetaProperties.CATALOG_TYPE_FILESYSTEM:
       case CatalogMetaProperties.CATALOG_TYPE_GLUE:
-        return Sets.newHashSet(TableFormat.ICEBERG);
       case CatalogMetaProperties.CATALOG_TYPE_HIVE:
-        return Sets.newHashSet(TableFormat.MIXED_HIVE);
+        return Sets.newHashSet(TableFormat.ICEBERG);
       default:
         throw new IllegalArgumentException("Unsupported catalog type:" + metastoreType);
     }

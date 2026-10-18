@@ -35,13 +35,8 @@ import org.apache.amoro.config.Configurations;
 import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.hive.CachedHiveClientPool;
 import org.apache.amoro.hive.HMSClientPool;
-import org.apache.amoro.hive.catalog.MixedHiveCatalog;
-import org.apache.amoro.hive.utils.HiveTableUtil;
-import org.apache.amoro.hive.utils.UpgradeHiveTableUtil;
-import org.apache.amoro.mixed.CatalogLoader;
 import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.process.ProcessStatus;
-import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.properties.HiveTableProperties;
 import org.apache.amoro.server.catalog.CatalogManager;
 import org.apache.amoro.server.catalog.ServerCatalog;
@@ -50,7 +45,6 @@ import org.apache.amoro.server.dashboard.ServerTableProperties;
 import org.apache.amoro.server.dashboard.model.HiveTableInfo;
 import org.apache.amoro.server.dashboard.model.TableMeta;
 import org.apache.amoro.server.dashboard.model.TableOperation;
-import org.apache.amoro.server.dashboard.model.UpgradeHiveMeta;
 import org.apache.amoro.server.dashboard.model.UpgradeRunningInfo;
 import org.apache.amoro.server.dashboard.model.UpgradeStatus;
 import org.apache.amoro.server.dashboard.response.OkResponse;
@@ -110,7 +104,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -238,12 +231,16 @@ public class TableController {
         new CachedHiveClientPool(tableMetaStore, catalogMeta.getCatalogProperties());
 
     TableIdentifier tableIdentifier = TableIdentifier.of(catalog, db, table);
-    HiveTableInfo hiveTableInfo;
-    Table hiveTable = HiveTableUtil.loadHmsTable(hmsClientPool, tableIdentifier);
+    Table hiveTable;
+    try {
+      hiveTable = hmsClientPool.run(client -> client.getTable(db, table));
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to load Hive table " + tableIdentifier, e);
+    }
     List<AMSColumnInfo> schema = transformHiveSchemaToAMSColumnInfo(hiveTable.getSd().getCols());
     List<AMSColumnInfo> partitionColumnInfos =
         transformHiveSchemaToAMSColumnInfo(hiveTable.getPartitionKeys());
-    hiveTableInfo =
+    HiveTableInfo hiveTableInfo =
         new HiveTableInfo(
             tableIdentifier,
             TableMeta.TableType.HIVE,
@@ -254,69 +251,9 @@ public class TableController {
     ctx.json(OkResponse.of(hiveTableInfo));
   }
 
-  /**
-   * upgrade a hive table to mixed-hive table.
-   *
-   * @param ctx - context for handling the request and response
-   */
+  /** Hive table upgrade is no longer supported. */
   public void upgradeHiveTable(Context ctx) {
-    String catalog = ctx.pathParam("catalog");
-    String db = ctx.pathParam("db");
-    String table = ctx.pathParam("table");
-    Preconditions.checkArgument(
-        StringUtils.isNotBlank(catalog)
-            && StringUtils.isNotBlank(db)
-            && StringUtils.isNotBlank(table),
-        "catalog.database.tableName can not be empty in any element");
-    UpgradeHiveMeta upgradeHiveMeta = ctx.bodyAsClass(UpgradeHiveMeta.class);
-
-    ServerCatalog serverCatalog = catalogManager.getServerCatalog(catalog);
-    CatalogMeta catalogMeta = serverCatalog.getMetadata();
-    String amsUri = AmsUtil.getAMSThriftAddress(serviceConfig, Constants.THRIFT_TABLE_SERVICE_NAME);
-    catalogMeta.putToCatalogProperties(CatalogMetaProperties.AMS_URI, amsUri);
-    TableMetaStore tableMetaStore = CatalogUtil.buildMetaStore(catalogMeta);
-    // check whether catalog support MIXED_HIVE format.
-    Set<TableFormat> tableFormats = CatalogUtil.tableFormats(catalogMeta);
-    Preconditions.checkState(
-        tableFormats.contains(TableFormat.MIXED_HIVE),
-        "Catalog %s does not support MIXED_HIVE format",
-        catalog);
-    // we should only keep MIXED_HIVE format，
-    // so `CatalogLoader.createCatalog` can get right CatalogImpl through calling catalogImpl.
-    Map<String, String> originCatalogProperties = catalogMeta.getCatalogProperties();
-    Map<String, String> catalogProperties = new HashMap<>(originCatalogProperties);
-    catalogProperties.put(CatalogMetaProperties.TABLE_FORMATS, TableFormat.MIXED_HIVE.name());
-
-    MixedHiveCatalog mixedHiveCatalog =
-        (MixedHiveCatalog)
-            CatalogLoader.createCatalog(
-                catalog, catalogMeta.getCatalogType(), catalogProperties, tableMetaStore);
-
-    tableUpgradeExecutor.execute(
-        () -> {
-          TableIdentifier tableIdentifier = TableIdentifier.of(catalog, db, table);
-          upgradeRunningInfo.put(tableIdentifier, new UpgradeRunningInfo());
-          try {
-            UpgradeHiveTableUtil.upgradeHiveTable(
-                mixedHiveCatalog,
-                TableIdentifier.of(catalog, db, table),
-                upgradeHiveMeta.getPkList().stream()
-                    .map(UpgradeHiveMeta.PrimaryKeyField::getFieldName)
-                    .collect(Collectors.toList()),
-                upgradeHiveMeta.getProperties());
-            upgradeRunningInfo.get(tableIdentifier).setStatus(UpgradeStatus.SUCCESS.toString());
-          } catch (Throwable t) {
-            LOG.error("Failed to upgrade hive table to mixed-hive table ", t);
-            upgradeRunningInfo.get(tableIdentifier).setErrorMessage(AmsUtil.getStackTrace(t));
-            upgradeRunningInfo.get(tableIdentifier).setStatus(UpgradeStatus.FAILED.toString());
-          } finally {
-            tableUpgradeExecutor.schedule(
-                () -> upgradeRunningInfo.remove(tableIdentifier),
-                UPGRADE_INFO_EXPIRE_INTERVAL,
-                TimeUnit.MILLISECONDS);
-          }
-        });
-    ctx.json(OkResponse.ok());
+    throw new UnsupportedOperationException("Upgrading Hive tables is no longer supported");
   }
 
   public void getUpgradeStatus(Context ctx) {
@@ -646,9 +583,7 @@ public class TableController {
     ServerCatalog serverCatalog = catalogManager.getServerCatalog(catalog);
     Function<TableFormat, String> formatToType =
         format -> {
-          if (format.equals(TableFormat.MIXED_HIVE) || format.equals(TableFormat.MIXED_ICEBERG)) {
-            return TableMeta.TableType.ARCTIC.toString();
-          } else if (format.equals(TableFormat.PAIMON)) {
+          if (format.equals(TableFormat.PAIMON)) {
             return TableMeta.TableType.PAIMON.toString();
           } else if (format.equals(TableFormat.ICEBERG)) {
             return TableMeta.TableType.ICEBERG.toString();
@@ -683,11 +618,15 @@ public class TableController {
       HMSClientPool hmsClientPool =
           new CachedHiveClientPool(tableMetaStore, catalogMeta.getCatalogProperties());
 
-      List<String> hiveTables = HiveTableUtil.getAllHiveTables(hmsClientPool, db);
-      Set<String> mixedHiveTables =
-          tables.stream().map(TableMeta::getName).collect(Collectors.toSet());
+      List<String> hiveTables;
+      try {
+        hiveTables = hmsClientPool.run(client -> client.getAllTables(db));
+      } catch (Exception e) {
+        throw new IllegalStateException("Failed to list Hive tables in " + db, e);
+      }
+      Set<String> knownTables = tables.stream().map(TableMeta::getName).collect(Collectors.toSet());
       hiveTables.stream()
-          .filter(e -> !mixedHiveTables.contains(e))
+          .filter(e -> !knownTables.contains(e))
           .sorted(String::compareTo)
           .forEach(e -> tables.add(new TableMeta(e, TableMeta.TableType.HIVE.toString())));
     }
@@ -872,11 +811,8 @@ public class TableController {
       throw new BadRequestException("Table not found");
     }
     TableFormat format = serverTableIdentifier.getFormat();
-    if (format != TableFormat.ICEBERG
-        && format != TableFormat.MIXED_ICEBERG
-        && format != TableFormat.MIXED_HIVE) {
-      throw new BadRequestException(
-          "Manual cleanup is only supported for Iceberg and Mixed tables");
+    if (format != TableFormat.ICEBERG) {
+      throw new BadRequestException("Manual cleanup is only supported for Iceberg tables");
     }
     TableRuntime runtime = tableManager.getTableRuntime(serverTableIdentifier.getId());
     if (!(runtime instanceof DefaultTableRuntime)) {

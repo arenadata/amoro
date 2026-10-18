@@ -21,12 +21,9 @@ package org.apache.amoro.server;
 import static org.apache.amoro.server.AmoroManagementConf.HA_USE_MASTER_SLAVE_MODE;
 
 import io.javalin.Javalin;
-import io.javalin.http.Context;
-import io.javalin.http.HttpCode;
 import io.javalin.http.staticfiles.Location;
 import org.apache.amoro.Constants;
 import org.apache.amoro.OptimizerProperties;
-import org.apache.amoro.api.AmoroTableMetastore;
 import org.apache.amoro.api.OptimizingService;
 import org.apache.amoro.config.ConfigHelpers;
 import org.apache.amoro.config.ConfigurationException;
@@ -65,7 +62,6 @@ import org.apache.amoro.server.table.DefaultTableService;
 import org.apache.amoro.server.table.RuntimeHandlerChain;
 import org.apache.amoro.server.table.TableManager;
 import org.apache.amoro.server.table.TableService;
-import org.apache.amoro.server.terminal.TerminalManager;
 import org.apache.amoro.server.utils.HttpsServerFactory;
 import org.apache.amoro.server.utils.KerberosProcessLogin;
 import org.apache.amoro.server.utils.ThriftServiceProxy;
@@ -102,11 +98,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Function;
 
 public class AmoroServiceContainer {
 
@@ -123,7 +117,6 @@ public class AmoroServiceContainer {
   private TableService tableService;
   private DefaultOptimizingService optimizingService;
   private ProcessService processService;
-  private TerminalManager terminalManager;
   private Configurations serviceConfig;
   private TServer tableManagementServer;
   private TServer optimizingServiceServer;
@@ -218,7 +211,6 @@ public class AmoroServiceContainer {
     catalogManager = new DefaultCatalogManager(serviceConfig);
     tableManager = new DefaultTableManager(serviceConfig, catalogManager);
     optimizerManager = new DefaultOptimizerManager(serviceConfig, catalogManager);
-    terminalManager = new TerminalManager(serviceConfig, catalogManager);
 
     new CatalogInitializer(catalogManager, Environments.getConfigPath()).initialize();
 
@@ -353,11 +345,6 @@ public class AmoroServiceContainer {
         LOG.error("Error stopping http server", e);
       }
     }
-    if (terminalManager != null) {
-      LOG.info("Stopping terminal manager...");
-      terminalManager.dispose();
-      terminalManager = null;
-    }
     if (amsServiceMetrics != null) {
       amsServiceMetrics.unregister();
     }
@@ -388,7 +375,6 @@ public class AmoroServiceContainer {
   }
 
   private void startThriftService() {
-    startThriftServer(tableManagementServer, "thrift-table-management-server-thread");
     startThriftServer(optimizingServiceServer, "thrift-optimizing-server-thread");
   }
 
@@ -401,14 +387,7 @@ public class AmoroServiceContainer {
 
   private void initHttpService() {
     DashboardServer dashboardServer =
-        new DashboardServer(
-            serviceConfig, catalogManager, tableManager, optimizerManager, terminalManager, this);
-    RestExtensionManager restExtensionManager = new RestExtensionManager();
-    restExtensionManager.initialize();
-    List<RestExtension> restExtensions =
-        restExtensionManager.loadExtensions(serviceConfig, catalogManager, tableManager);
-    Function<Context, Optional<RestExtension>> handleExceptionByExtension =
-        ctx -> restExtensions.stream().filter(ext -> ext.needHandleException(ctx)).findFirst();
+        new DashboardServer(serviceConfig, catalogManager, tableManager, optimizerManager, this);
 
     httpServer =
         Javalin.create(
@@ -426,13 +405,7 @@ public class AmoroServiceContainer {
               }
             });
 
-    httpServer.routes(
-        () -> {
-          dashboardServer.endpoints().addEndpoints();
-          for (RestExtension restExtension : restExtensions) {
-            restExtension.endpoints().addEndpoints();
-          }
-        });
+    httpServer.routes(() -> dashboardServer.endpoints().addEndpoints());
 
     httpServer.before(
         ctx -> {
@@ -443,34 +416,9 @@ public class AmoroServiceContainer {
             dashboardServer.preHandleRequest(ctx);
           }
         });
-    httpServer.exception(
-        Exception.class,
-        (e, ctx) -> {
-          Optional<RestExtension> extension = handleExceptionByExtension.apply(ctx);
-          if (extension.isPresent()) {
-            extension.get().handleException(e, ctx);
-          } else {
-            dashboardServer.handleException(e, ctx);
-          }
-        });
-    // default response handle
-    httpServer.error(
-        HttpCode.NOT_FOUND.getStatus(),
-        ctx -> {
-          Optional<RestExtension> extension = handleExceptionByExtension.apply(ctx);
-          if (!extension.isPresent()) {
-            ctx.json(new ErrorResponse(HttpCode.NOT_FOUND, "page not found!", ""));
-          }
-        });
-
-    httpServer.error(
-        HttpCode.INTERNAL_SERVER_ERROR.getStatus(),
-        ctx -> {
-          Optional<RestExtension> extension = handleExceptionByExtension.apply(ctx);
-          if (!extension.isPresent()) {
-            ctx.json(new ErrorResponse(HttpCode.INTERNAL_SERVER_ERROR, "internal error!", ""));
-          }
-        });
+    httpServer.exception(Exception.class, dashboardServer::handleException);
+    httpServer.error(404, ctx -> ctx.json(new ErrorResponse(404, "page not found!", "")));
+    httpServer.error(500, ctx -> ctx.json(new ErrorResponse(500, "internal error!", "")));
   }
 
   private void startHttpService() {
@@ -510,24 +458,6 @@ public class AmoroServiceContainer {
     int queueSizePerSelector =
         serviceConfig.getInteger(AmoroManagementConf.THRIFT_QUEUE_SIZE_PER_THREAD);
     String bindHost = serviceConfig.getString(AmoroManagementConf.SERVER_BIND_HOST);
-
-    AmoroTableMetastore.Processor<AmoroTableMetastore.Iface> tableManagementProcessor =
-        new AmoroTableMetastore.Processor<>(
-            ThriftServiceProxy.createProxy(
-                AmoroTableMetastore.Iface.class,
-                new TableManagementService(catalogManager, tableManager),
-                AmoroRuntimeException::normalizeCompatibly));
-    tableManagementServer =
-        createThriftServer(
-            tableManagementProcessor,
-            Constants.THRIFT_TABLE_SERVICE_NAME,
-            bindHost,
-            serviceConfig.getInteger(AmoroManagementConf.TABLE_SERVICE_THRIFT_BIND_PORT),
-            Executors.newFixedThreadPool(
-                workerThreads, getThriftThreadFactory(Constants.THRIFT_TABLE_SERVICE_NAME)),
-            selectorThreads,
-            queueSizePerSelector,
-            maxMessageSize);
 
     OptimizingService.Processor<OptimizingService.Iface> optimizingProcessor =
         new OptimizingService.Processor<>(

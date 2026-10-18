@@ -51,7 +51,7 @@ public class TestTableWatermark extends TableTestBase {
 
   public TestTableWatermark(boolean keyedTable, boolean onBaseTable) {
     super(
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(keyedTable, true));
     this.onBaseTable = onBaseTable;
   }

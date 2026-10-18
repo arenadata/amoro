@@ -59,22 +59,16 @@ public class TestTaskReader extends TableDataTestBase {
   public static Object[] parameters() {
     return new Object[][] {
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true),
-        false
+        new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true), false
       },
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true), true},
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
-        new BasicTableTestHelper(true, true),
-        true
-      },
-      {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true, FILE_FORMAT_ORC),
         false
       },
       {
-        new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG),
+        new BasicCatalogTestHelper(TableFormat.ICEBERG),
         new BasicTableTestHelper(true, true, FILE_FORMAT_ORC),
         true
       }

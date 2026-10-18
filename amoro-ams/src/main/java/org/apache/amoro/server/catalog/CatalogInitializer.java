@@ -74,7 +74,6 @@ public class CatalogInitializer {
 
   private static final Set<String> SUPPORTED_TYPES =
       Set.of(
-          CatalogMetaProperties.CATALOG_TYPE_AMS,
           CatalogMetaProperties.CATALOG_TYPE_HIVE,
           CatalogMetaProperties.CATALOG_TYPE_HADOOP,
           CatalogMetaProperties.CATALOG_TYPE_FILESYSTEM,

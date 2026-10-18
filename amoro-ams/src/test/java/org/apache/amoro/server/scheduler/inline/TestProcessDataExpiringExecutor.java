@@ -42,7 +42,7 @@ public class TestProcessDataExpiringExecutor extends AMSServiceTestBase {
   private static final long TABLE_ID = 1L;
   private static final ServerTableIdentifier TABLE_IDENTIFIER =
       ServerTableIdentifier.of(
-          TABLE_ID, "test_catalog", "test_db", "test_table_expiring", TableFormat.MIXED_ICEBERG);
+          TABLE_ID, "test_catalog", "test_db", "test_table_expiring", TableFormat.ICEBERG);
 
   private final Persistency persistency = new Persistency();
   private DefaultTableRuntime tableRuntime;

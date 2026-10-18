@@ -121,10 +121,6 @@ public class AmsEnvironment {
         new File(rootPath + "/conf/plugins/table-runtime-factories.yaml"),
         getTableRuntimeFactoriesConfig(),
         Charset.defaultCharset());
-    FileUtils.writeStringToFile(
-        new File(rootPath + "/conf/plugins/rest-extensions.yaml"),
-        getRestExtensionsConfig(),
-        Charset.defaultCharset());
     System.setProperty(Environments.AMORO_HOME, rootPath);
     System.setProperty("derby.init.sql.dir", path + "../classes/sql/derby/");
     serviceContainer = new AmoroServiceContainer();
@@ -238,7 +234,7 @@ public class AmsEnvironment {
             INTERNAL_MIXED_ICEBERG_CATALOG,
             CatalogMetaProperties.CATALOG_TYPE_AMS,
             properties,
-            TableFormat.MIXED_ICEBERG);
+            TableFormat.ICEBERG);
     catalogManager.createCatalog(catalogMeta);
     catalogs.put(
         INTERNAL_MIXED_ICEBERG_CATALOG,
@@ -249,7 +245,7 @@ public class AmsEnvironment {
     Map<String, String> properties = Maps.newHashMap();
     CatalogMeta catalogMeta =
         CatalogTestHelpers.buildHiveCatalogMeta(
-            MIXED_HIVE_CATALOG, properties, testHMS.hiveConf(), TableFormat.MIXED_HIVE);
+            MIXED_HIVE_CATALOG, properties, testHMS.hiveConf(), TableFormat.ICEBERG);
     catalogManager.createCatalog(catalogMeta);
     catalogs.put(
         MIXED_HIVE_CATALOG, CatalogLoader.load(getTableServiceUrl() + "/" + MIXED_HIVE_CATALOG));
@@ -427,9 +423,5 @@ public class AmsEnvironment {
         + "  - name: default\n"
         + "    enabled: true\n"
         + "    priority: 100\n";
-  }
-
-  private String getRestExtensionsConfig() {
-    return "rest-extensions:\n" + "  - name: iceberg-rest-catalog\n" + "    enabled: true\n";
   }
 }

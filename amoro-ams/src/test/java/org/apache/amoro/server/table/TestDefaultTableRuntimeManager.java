@@ -25,8 +25,6 @@ import org.apache.amoro.TableTestHelper;
 import org.apache.amoro.catalog.BasicCatalogTestHelper;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.exception.ObjectNotExistsException;
-import org.apache.amoro.hive.catalog.HiveCatalogTestHelper;
-import org.apache.amoro.hive.catalog.HiveTableTestHelper;
 import org.apache.amoro.table.MixedTable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,12 +37,8 @@ public class TestDefaultTableRuntimeManager extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {new BasicCatalogTestHelper(TableFormat.MIXED_ICEBERG), new BasicTableTestHelper(true, true)},
-      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)},
-      {
-        new HiveCatalogTestHelper(TableFormat.MIXED_HIVE, TEST_HMS.getHiveConf()),
-        new HiveTableTestHelper(true, true)
-      }
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)},
+      {new BasicCatalogTestHelper(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)}
     };
   }
 

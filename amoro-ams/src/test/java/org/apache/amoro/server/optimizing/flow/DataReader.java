@@ -18,8 +18,8 @@
 
 package org.apache.amoro.server.optimizing.flow;
 
-import org.apache.amoro.hive.io.reader.AdaptHiveGenericKeyedDataReader;
-import org.apache.amoro.hive.io.reader.AdaptHiveGenericUnkeyedDataReader;
+import org.apache.amoro.io.reader.GenericKeyedDataReader;
+import org.apache.amoro.io.reader.GenericUnkeyedDataReader;
 import org.apache.amoro.scan.CombinedScanTask;
 import org.apache.amoro.scan.KeyedTableScanTask;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Iterables;
@@ -57,17 +57,15 @@ public class DataReader {
   private List<Record> readKeyed(KeyedTable table)
       throws IOException, ExecutionException, InterruptedException {
     CloseableIterable<CombinedScanTask> combinedScanTasks = table.newScan().planTasks();
-    AdaptHiveGenericKeyedDataReader dataReader =
-        new AdaptHiveGenericKeyedDataReader(
+    GenericKeyedDataReader dataReader =
+        new GenericKeyedDataReader(
             table.io(),
             table.schema(),
             table.schema(),
             table.primaryKeySpec(),
             null,
             false,
-            IdentityPartitionConverters::convertConstant,
-            null,
-            false);
+            IdentityPartitionConverters::convertConstant);
     List<CompletableFuture<List<Record>>> completableFutures = new ArrayList<>();
     for (CombinedScanTask combinedScanTask : combinedScanTasks) {
       for (KeyedTableScanTask scanTask : combinedScanTask.tasks()) {
@@ -102,8 +100,8 @@ public class DataReader {
 
   private List<Record> readIceberg(UnkeyedTable table)
       throws ExecutionException, InterruptedException {
-    AdaptHiveGenericUnkeyedDataReader dataReader =
-        new AdaptHiveGenericUnkeyedDataReader(
+    GenericUnkeyedDataReader dataReader =
+        new GenericUnkeyedDataReader(
             table.io(),
             table.schema(),
             table.schema(),

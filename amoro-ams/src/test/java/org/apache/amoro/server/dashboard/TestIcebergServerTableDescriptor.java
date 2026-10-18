@@ -29,7 +29,6 @@ import org.apache.amoro.TableFormat;
 import org.apache.amoro.formats.AmoroCatalogTestHelper;
 import org.apache.amoro.formats.IcebergHadoopCatalogTestHelper;
 import org.apache.amoro.formats.iceberg.IcebergTable;
-import org.apache.amoro.hive.formats.IcebergHiveCatalogTestHelper;
 import org.apache.amoro.optimizing.MetricsSummary;
 import org.apache.amoro.optimizing.OptimizingType;
 import org.apache.amoro.process.ProcessStatus;
@@ -65,9 +64,7 @@ public class TestIcebergServerTableDescriptor extends TestServerTableDescriptor 
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[] {
-      IcebergHadoopCatalogTestHelper.defaultHelper(), IcebergHiveCatalogTestHelper.defaultHelper()
-    };
+    return new Object[] {IcebergHadoopCatalogTestHelper.defaultHelper()};
   }
 
   @Override

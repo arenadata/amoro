@@ -51,7 +51,6 @@
         <module>amoro-optimizer</module>
         <module>amoro-metrics</module>
         <module>amoro-format-iceberg</module>
-        <module>amoro-format-mixed</module>
         <module>amoro-format-hudi</module>
         <module>amoro-format-paimon</module>
         <module>amoro-format-lance</module>
@@ -261,12 +260,6 @@
             <dependency>
                 <groupId>org.apache.amoro</groupId>
                 <artifactId>amoro-format-lance</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.amoro</groupId>
-                <artifactId>amoro-mixed-hive</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
