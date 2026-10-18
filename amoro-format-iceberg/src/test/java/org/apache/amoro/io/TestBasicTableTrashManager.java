@@ -51,6 +51,11 @@ public class TestBasicTableTrashManager extends TableTestBase {
         new BasicTableTestHelper(keyedTable, partitionedTable));
   }
 
+  @Override
+  protected boolean createAsMixedTable() {
+    return true;
+  }
+
   @Parameterized.Parameters(name = "keyedTable = {0}, partitionedTable = {1}")
   public static Object[][] parameters() {
     return new Object[][] {

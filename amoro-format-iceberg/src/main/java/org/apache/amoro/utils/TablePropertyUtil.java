@@ -139,7 +139,7 @@ public class TablePropertyUtil {
     boolean baseStore = TableProperties.MIXED_FORMAT_TABLE_STORE_BASE.equalsIgnoreCase(tableStore);
     boolean changeStore =
         TableProperties.MIXED_FORMAT_TABLE_STORE_CHANGE.equalsIgnoreCase(tableStore);
-    return "MIXED_ICEBERG".equalsIgnoreCase(format) && (baseStore || changeStore);
+    return TableFormat.MIXED_ICEBERG.name().equalsIgnoreCase(format) && (baseStore || changeStore);
   }
 
   /**

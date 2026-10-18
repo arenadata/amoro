@@ -88,7 +88,7 @@ public class BasicKeyedTable implements KeyedTable {
 
   @Override
   public TableFormat format() {
-    return TableFormat.ICEBERG;
+    return TableFormat.MIXED_ICEBERG;
   }
 
   @Override

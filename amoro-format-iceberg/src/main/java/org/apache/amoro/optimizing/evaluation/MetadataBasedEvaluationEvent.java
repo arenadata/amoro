@@ -19,6 +19,7 @@
 package org.apache.amoro.optimizing.evaluation;
 
 import static org.apache.amoro.TableFormat.ICEBERG;
+import static org.apache.amoro.TableFormat.MIXED_ICEBERG;
 
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.config.OptimizingConfig;
@@ -77,7 +78,7 @@ public class MetadataBasedEvaluationEvent {
 
   private static TableStatsProvider.BasicFileStats getTableStats(MixedTable table) {
     TableFormat format = table.format();
-    if (format.equals(ICEBERG)) {
+    if (format.equals(ICEBERG) || format.equals(MIXED_ICEBERG)) {
       TableStatsProvider provider = MixedAndIcebergTableStatsProvider.INSTANCE;
       return provider.collect(table);
     } else {

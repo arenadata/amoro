@@ -42,6 +42,12 @@ public final class TableFormat implements Serializable {
   /** Open-source table formats */
   public static final TableFormat ICEBERG = register("ICEBERG");
 
+  /**
+   * Keyed and unkeyed mixed-iceberg layout. AMS no longer accepts this as a catalog format; the
+   * iceberg module still uses it to tell mixed tables from native Iceberg tables.
+   */
+  public static final TableFormat MIXED_ICEBERG = register("MIXED_ICEBERG");
+
   public static final TableFormat LANCE = register("LANCE");
   public static final TableFormat PAIMON = register("PAIMON");
   public static final TableFormat HUDI = register("HUDI");
