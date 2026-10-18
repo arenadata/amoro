@@ -29,9 +29,7 @@ github:
     - hudi
     - management-system
     - self-optimizing
-    - flink
     - spark
-    - trino
   enabled_merge_buttons:
     squash: true
     merge: false

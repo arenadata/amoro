@@ -32,9 +32,9 @@ import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.dashboard.PlatformFileManager;
 import org.apache.amoro.server.dashboard.controller.CatalogController;
 import org.apache.amoro.server.dashboard.model.CatalogRegisterInfo;
+import org.apache.amoro.shade.jackson2.com.fasterxml.jackson.core.StreamReadFeature;
+import org.apache.amoro.shade.jackson2.com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.StreamReadFeature;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

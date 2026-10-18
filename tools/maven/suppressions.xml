@@ -27,27 +27,7 @@ under the License.
     enables it to be compatible with both Linux and Windows systems. -->
 
     <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]iceberg[/\\]BaseConnectorTest\.java"
-            checks="FileLength"/>
-    <suppress
             files="org[/\\]apache[/\\]hadoop[/\\]util[/\\]VersionInfo\.java"
             checks="MethodName"/>
-
-    <!-- Limited by the Trino framework, it is not possible to use shade classes. -->
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]keyed[/\\]KeyedConnectorSplit\.java"
-            checks="Regexp"/>
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]keyed[/\\]KeyedTableHandle\.java"
-            checks="Regexp"/>
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]delete[/\\]TrinoDeleteFile\.java"
-            checks="Regexp"/>
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]unkeyed[/\\]IcebergSplit\.java"
-            checks="Regexp"/>
-    <suppress
-            files="org[/\\]apache[/\\]amoro[/\\]trino[/\\]unkeyed[/\\]AdaptHiveIcebergTableHandle\.java"
-            checks="Regexp"/>
 
 </suppressions>

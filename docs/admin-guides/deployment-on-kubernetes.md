@@ -45,13 +45,9 @@ The following are images that can be used in a production environment.
 
 This is an image built based on the Amoro binary distribution package for deploying AMS.
 
-**apache/amoro-flink-optimizer**
-
-This is an image built based on the official version of Flink for deploying the Flink optimizer.
-
 **apache/amoro-spark-optimizer**
 
-This is an image built based on the official version of Spark for deploying the Spark optimizer.
+This is an image built based on Spark 3.5 for deploying the Spark optimizer.
 
 ## Build AMS Docker Image
 
@@ -59,12 +55,6 @@ If you want to build images locally, you can find the `build.sh` script in the d
 
 ```shell
 ./docker/build.sh amoro
-```
-
-or build the `amoro-flink-optimizer` image by:
-
-```shell
-./docker/build.sh amoro-flink-optimizer --flink-version <flink-version>
 ```
 
 or build the `amoro-spark-optimizer` image by:
@@ -171,31 +161,6 @@ image:
 imagePullSecrets: [ ]
 ```
 
-### Configure the Flink Optimizer Container
-
-By default, the Flink Optimizer Container is enabled. 
-You can modify the container configuration by changing the `optimizer.flink` section.
-
-```yaml
-optimizer: 
-  flink: 
-    enabled: true
-    ## container name, default is flink
-    name: ~ 
-    image:
-      ## the image repository
-      repository: apache/amoro-flink-optimizer
-      ## the image tag, if not set, the default value is the same with amoro image tag.
-      tag: ~
-      pullPolicy: IfNotPresent
-      ## the location of flink optimizer jar in image.
-      jobUri: "local:///opt/flink/usrlib/optimizer-job.jar"
-    properties: {
-      "flink-conf.taskmanager.memory.managed.size": "32mb",
-      "flink-conf.taskmanager.memory.network.max": "32mb",
-      "flink-conf.taskmanager.memory.network.min": "32mb"
-    }
-```
 ### Configure the Kubernetes Optimizer Container
 
 By default, the Kubernetes Optimizer Container is enabled.
@@ -278,6 +243,6 @@ Notes:
 - If `serviceAccount.rbac.create` is false, the role and role-bind will not be created automatically.
 - You can set `serviceAccount.rbac.cluster` to true, which will create a `cluster-role` and `cluster-role-bind` instead of a `role` and `role-bind`.
 
-By default, the `serviceAccount` will be used to create the flink-optimizer. 
-Therefore, if you need to schedule the flink-optimizer across namespaces, 
+By default, the `serviceAccount` will be used to create the spark optimizer.
+Therefore, if you need to schedule the spark optimizer across namespaces,
 please create a `cluster-role` or use your own created `serviceAccount`.

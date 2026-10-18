@@ -29,7 +29,7 @@ Apache Amoro is a **Lakehouse management system** (Java 11, Maven, Vue 3 fronten
 - **`amoro-ams`** — The AMS server. Entry point: `AmoroServiceContainer.main()`. Exposes Thrift services (table metastore on port 1260, optimizer service on port 1261) and an HTTP/REST API via Javalin (port 1630). Routes are registered in `DashboardServer.java`.
 - **`amoro-web`** — Vue 3 + TypeScript dashboard (Vite, Ant Design Vue, pnpm). API calls in `src/services/`. Built into AMS static resources during Maven build.
 - **`amoro-format-{iceberg,mixed,paimon,hudi}`** — Table format integrations loaded via **Java SPI** (`ServiceLoader<FormatCatalogFactory>`). See `CommonUnifiedCatalog.initializeFormatCatalogs()`.
-- **`amoro-optimizer`** — Self-optimizing executor with standalone/Flink/Spark implementations. Communicates with AMS via Thrift (`OptimizingService`).
+- **`amoro-optimizer`** — Self-optimizing executor with standalone and Spark 3.5 / Spark 4.2 implementations. Communicates with AMS via Thrift (`OptimizingService`).
 - **`amoro-metrics`** — Metrics subsystem with pluggable reporters (e.g., Prometheus).
 - **Plugin system** — AMS plugins are configured via YAML in `dist/src/main/amoro-bin/conf/plugins/` and managed by `AbstractPluginManager`. Categories: `event-listeners`, `metric-reporters`, `rest-extensions`, `table-runtime-factories`.
 
@@ -58,7 +58,7 @@ UPDATE=1 ./mvnw test -pl amoro-ams -am -Dtest=ConfigurationsTest
 pnpm install && pnpm dev:mock
 ```
 
-Key Maven profiles: `-Phadoop2` (Hadoop 2.x), `-Pspark-3.3`/`-Pspark-3.5`, `-Psupport-all-formats`, `-Pbuild-mixed-format-trino` (requires JDK 17).
+Key Maven profiles: `-Phadoop2` (Hadoop 2.x), `-Pspark-3.5`. Spark 4.2 is the `amoro-optimizer-spark-4.2` module. `-Psupport-all-formats` enables optional table formats.
 
 ## Conventions & Patterns
 

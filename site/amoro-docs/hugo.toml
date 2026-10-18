@@ -57,7 +57,6 @@ home = [ "HTML", "RSS", "SearchIndex" ]
     { name = "Admin Guides", weight = 200},
     { name = "User Guides", weight = 300},
     { name = "Formats", weight = 400 },
-    { name = "Flink", weight = 500},
     { name = "Spark", weight = 600},
   ]
 

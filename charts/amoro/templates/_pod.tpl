@@ -15,15 +15,6 @@
   limitations under the License.
 */}}
 
-{{- define "amoro.pod.initContainer.flink" -}}
-- name: install-flink
-  image: {{ include "amoro.optimizer.container.flink.image" .}}
-  command: ["cp", "/opt/flink/.", "/opt/flink_install/", "-R"]
-  volumeMounts:
-    - name: flink-install
-      mountPath: /opt/flink_install
-{{- end -}}
-
 {{- define "amoro.pod.initContainer.spark" -}}
 - name: install-spark
   image: {{ include "amoro.optimizer.container.spark.image" .}}
@@ -35,10 +26,6 @@
 
 
 {{- define "amoro.pod.initContainers" -}}
-{{- if .Values.optimizer.flink.enabled -}}
-{{- include "amoro.pod.initContainer.flink" . }}
-{{/* initialized flink env */}}
-{{- end -}}
 {{- if .Values.optimizer.spark.enabled -}}
 {{- include "amoro.pod.initContainer.spark" . }}
 {{/* initialized spark env */}}
@@ -80,12 +67,6 @@
   readOnly: true
   subPath: "table-runtime-factories.yaml"
 {{- end -}}
-{{- /* flink install dir. if flink optimizer container enabled.
-flink distribution package will be installed to here*/ -}}
-{{- if .Values.optimizer.flink.enabled }}
-- name: flink-install
-  mountPath: /opt/flink
-{{- end -}}
 {{- /* spark install dir. if spark optimizer container enabled.
 spark distribution package will be installed to here*/ -}}
 {{- if .Values.optimizer.spark.enabled }}
@@ -107,11 +88,6 @@ spark distribution package will be installed to here*/ -}}
     name: {{ include "common.names.fullname" . }}
 - name: logs
   emptyDir: {}
-{{- /* volume for flink distribution package install from init container. */ -}}
-{{- if .Values.optimizer.flink.enabled }}
-- name: flink-install
-  emptyDir: {}
-{{- end -}}
 {{- /* volume for spark distribution package install from init container. */ -}}
 {{- if .Values.optimizer.spark.enabled }}
 - name: spark-install

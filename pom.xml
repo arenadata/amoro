@@ -87,7 +87,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.outputTimestamp>2024-06-27T08:00:00Z</project.build.outputTimestamp>
         <root.dir>${project.basedir}</root.dir>
-        <jacoco.flink.skip>false</jacoco.flink.skip>
 
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <maven-jar-plugin-version>3.0.2</maven-jar-plugin-version>
@@ -158,12 +157,9 @@
         <kyuubi-hive-jdbc-shaded.version>1.11.1.1-4.3.0-4</kyuubi-hive-jdbc-shaded.version>
         <rocksdb.version>7.10.2</rocksdb.version>
         <kryo.version>4.0.3</kryo.version>
-        <trino.version>406</trino.version>
         <lucene.version>8.11.4.3-4.3.0-1</lucene.version>
         <bitmap.version>1.0.1</bitmap.version>
         <prometheus.version>0.16.0</prometheus.version>
-        <flink.version>1.20.4.1-4.3.0-0</flink.version>
-        <flink.scala.binary.version>2.12</flink.scala.binary.version>
         <fabric8-kubernetes-client.version.version>7.4.0</fabric8-kubernetes-client.version.version>
         <amoro-shade.version>0.7.0-incubating</amoro-shade.version>
         <amoro-shade-guava.version>32.1.1-jre</amoro-shade-guava.version>
@@ -398,12 +394,6 @@
             <dependency>
                 <groupId>org.apache.iceberg</groupId>
                 <artifactId>iceberg-parquet</artifactId>
-                <version>${iceberg.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.iceberg</groupId>
-                <artifactId>iceberg-flink</artifactId>
                 <version>${iceberg.version}</version>
             </dependency>
 
@@ -1313,68 +1303,6 @@
             </dependency>
 
             <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-memory-context</artifactId>
-                <version>${trino.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-plugin-toolkit</artifactId>
-                <version>${trino.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-hive</artifactId>
-                <version>${trino.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.trino.hive</groupId>
-                        <artifactId>hive-apache</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-parquet</artifactId>
-                <version>${trino.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.parquet</groupId>
-                        <artifactId>parquet-format</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>io.trino.hive</groupId>
-                        <artifactId>hive-apache</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-iceberg</artifactId>
-                <version>${trino.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.iceberg</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>io.trino.hive</groupId>
-                        <artifactId>hive-apache</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>io.trino</groupId>
-                <artifactId>trino-spi</artifactId>
-                <version>${trino.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
                 <version>${lucene.version}</version>
@@ -1385,19 +1313,6 @@
                 <groupId>com.github.jsqlparser</groupId>
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
-            </dependency>
-
-            <!-- flink dependencies -->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-clients</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-runtime-web</artifactId>
-                <version>${flink.version}</version>
             </dependency>
 
             <dependency>
@@ -2019,8 +1934,6 @@
                 <!-- Do not use Hive 2.3.9 for Hive 4 Metastore support due to incompatible API changes. -->
                 <hive.version>2.3.8</hive.version>
                 <hadoop.version>2.10.2</hadoop.version>
-                <spark.version>3.3.4</spark.version>
-                <spark.major.version>3.3</spark.major.version>
                 <hadoop-client-api.artifact>hadoop-client</hadoop-client-api.artifact>
                 <hadoop-client-runtime.artifact>hadoop-auth</hadoop-client-runtime.artifact>
             </properties>
@@ -2127,20 +2040,6 @@
                     </plugins>
                 </pluginManagement>
             </build>
-        </profile>
-        <profile>
-            <id>spark-3.3</id>
-            <properties>
-                <spark.version>3.3.4</spark.version>
-                <spark.major.version>3.3</spark.major.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark-3.4</id>
-            <properties>
-                <spark.version>3.4.4</spark.version>
-                <spark.major.version>3.4</spark.major.version>
-            </properties>
         </profile>
         <profile>
             <id>spark-3.5</id>
