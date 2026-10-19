@@ -18,9 +18,7 @@
 
 package org.apache.amoro.server.dashboard.controller;
 
-import static org.apache.amoro.TableFormat.HUDI;
 import static org.apache.amoro.TableFormat.ICEBERG;
-import static org.apache.amoro.TableFormat.LANCE;
 import static org.apache.amoro.TableFormat.PAIMON;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY_ACCESS_KEY;
 import static org.apache.amoro.properties.CatalogMetaProperties.AUTH_CONFIGS_KEY_HADOOP_USERNAME;
@@ -119,8 +117,6 @@ public class CatalogController {
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, PAIMON));
     VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HIVE, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, HUDI));
-    VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, ICEBERG));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, PAIMON));
@@ -134,18 +130,6 @@ public class CatalogController {
         CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_HADOOP, PAIMON));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_S3, PAIMON));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_S3, LANCE));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_OSS, LANCE));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_FILESYSTEM, STORAGE_CONFIGS_VALUE_TYPE_LOCAL, LANCE));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_LOCAL, LANCE));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_S3, LANCE));
-    VALIDATE_CATALOGS.add(
-        CatalogDescriptor.of(CATALOG_TYPE_HADOOP, STORAGE_CONFIGS_VALUE_TYPE_OSS, LANCE));
     VALIDATE_CATALOGS.add(
         CatalogDescriptor.of(CATALOG_TYPE_GLUE, STORAGE_CONFIGS_VALUE_TYPE_S3, ICEBERG));
     VALIDATE_CATALOGS.add(
@@ -398,7 +382,7 @@ public class CatalogController {
           S3FileIOProperties.ENDPOINT,
           STORAGE_CONFIGS_KEY_S3_ENDPOINT);
     } else if (STORAGE_CONFIGS_VALUE_TYPE_OSS.equals(storageType)) {
-      if (tableFormats.contains(ICEBERG.name()) || tableFormats.contains(LANCE.name())) {
+      if (tableFormats.contains(ICEBERG.name())) {
         CatalogUtil.copyProperty(
             catalogMeta.getCatalogProperties(),
             storageConfig,
@@ -493,8 +477,7 @@ public class CatalogController {
           STORAGE_CONFIGS_KEY_S3_ENDPOINT,
           S3FileIOProperties.ENDPOINT);
     } else if (storageType.equals(STORAGE_CONFIGS_VALUE_TYPE_OSS)) {
-      if (info.getTableFormatList().contains(ICEBERG.name())
-          || info.getTableFormatList().contains(LANCE.name())) {
+      if (info.getTableFormatList().contains(ICEBERG.name())) {
         CatalogUtil.copyProperty(
             info.getStorageConfig(),
             catalogMeta.getCatalogProperties(),

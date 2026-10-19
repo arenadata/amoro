@@ -98,8 +98,7 @@ Amoro contains modules as below:
 - `amoro-ams` is amoro management service module
 - `amoro-web` is the dashboard frontend for ams
 - `amoro-optimizer` provides the Spark 3.5 and Spark 4.2 optimizer implementations, plus local and Kubernetes containers
-- `amoro-format-iceberg` contains integration of Apache Iceberg format
-- `amoro-format-hudi` contains integration of Apache Hudi format
+- `amoro-format-iceberg` contains integration of Apache Iceberg format, including Mixed-Iceberg
 - `amoro-format-paimon` contains integration of Apache Paimon format
 
 
@@ -114,9 +113,8 @@ Amoro is built using Maven with JDK 21. Supported Spark versions are 3.5 and 4.2
 * Build and enable aliyun-oss-sdk: `./mvnw clean package -DskipTests -Paliyun-oss-sdk`
 * Build with hadoop 2.x(the default is 3.x) dependencies: `./mvnw clean package -DskipTests -Phadoop2`
 * The default Spark optimizer is Spark 3.5. Use `-Pspark-3.5` to select the Spark 3.5 profile explicitly. Spark 4.2 is the separate `amoro-optimizer-spark-4.2` module.
-* Build a distribution package with all formats integrated: `./mvnw clean package -Psupport-all-formats`
-  * Build a distribution package with Apache Paimon format: `./mvnw clean package -Psupport-paimon-format`
-  * Build a distribution package with Apache Hudi format: `./mvnw clean package -Psupport-hudi-format`
+* Build a distribution package with Paimon integrated: `./mvnw clean package -Psupport-paimon-format`
+  * `-Psupport-all-formats` enables the same Paimon integration.
 
 ## Quickstart
 

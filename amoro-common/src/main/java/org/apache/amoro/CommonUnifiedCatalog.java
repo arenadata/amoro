@@ -115,8 +115,7 @@ public class CommonUnifiedCatalog implements UnifiedCatalog {
 
   @Override
   public AmoroTable<?> loadTable(String database, String table) {
-    return formatCatalogAsOrder(
-            TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE)
+    return formatCatalogAsOrder(TableFormat.ICEBERG, TableFormat.PAIMON)
         .map(
             formatCatalog -> {
               try {
@@ -137,10 +136,7 @@ public class CommonUnifiedCatalog implements UnifiedCatalog {
 
   @Override
   public List<TableIDWithFormat> listTables(String database) {
-    TableFormat[] formats =
-        new TableFormat[] {
-          TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE
-        };
+    TableFormat[] formats = new TableFormat[] {TableFormat.ICEBERG, TableFormat.PAIMON};
 
     Map<String, TableFormat> tableNameToFormat = Maps.newHashMap();
     for (TableFormat format : formats) {

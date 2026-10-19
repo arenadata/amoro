@@ -28,7 +28,7 @@ Apache Amoro is a **Lakehouse management system** (Java 11, Maven, Vue 3 fronten
 - **`amoro-common`** — Core abstractions (`FormatCatalog`, `AmoroTable`, `TableFormat`), Thrift IDL definitions (`src/main/thrift/*.thrift`), and shared client code. All other modules depend on this.
 - **`amoro-ams`** — The AMS server. Entry point: `AmoroServiceContainer.main()`. Exposes Thrift services (table metastore on port 1260, optimizer service on port 1261) and an HTTP/REST API via Javalin (port 1630). Routes are registered in `DashboardServer.java`.
 - **`amoro-web`** — Vue 3 + TypeScript dashboard (Vite, Ant Design Vue, pnpm). API calls in `src/services/`. Built into AMS static resources during Maven build.
-- **`amoro-format-{iceberg,mixed,paimon,hudi}`** — Table format integrations loaded via **Java SPI** (`ServiceLoader<FormatCatalogFactory>`). See `CommonUnifiedCatalog.initializeFormatCatalogs()`.
+- **`amoro-format-{iceberg,paimon}`** — Table format integrations loaded via **Java SPI** (`ServiceLoader<FormatCatalogFactory>`). See `CommonUnifiedCatalog.initializeFormatCatalogs()`. Paimon is optional (`-Psupport-paimon-format`).
 - **`amoro-optimizer`** — Self-optimizing executor with standalone and Spark 3.5 / Spark 4.2 implementations. Communicates with AMS via Thrift (`OptimizingService`).
 - **`amoro-metrics`** — Metrics subsystem with pluggable reporters (e.g., Prometheus).
 - **Plugin system** — AMS plugins are configured via YAML in `dist/src/main/amoro-bin/conf/plugins/` and managed by `AbstractPluginManager`. Categories: `event-listeners`, `metric-reporters`, `rest-extensions`, `table-runtime-factories`.
