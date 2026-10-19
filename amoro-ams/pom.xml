@@ -412,13 +412,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.amoro</groupId>
-            <artifactId>amoro-format-lance</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-test</artifactId>
             <version>${curator.version}</version>
@@ -614,53 +607,11 @@
             </dependencies>
         </profile>
         <profile>
-            <id>support-hudi-format</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.amoro</groupId>
-                    <artifactId>amoro-format-hudi</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>support-lance-format</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.amoro</groupId>
-                    <artifactId>amoro-format-lance</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.arrow</groupId>
-                    <artifactId>arrow-vector</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.arrow</groupId>
-                    <artifactId>arrow-memory-netty</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.arrow</groupId>
-                    <artifactId>arrow-c-data</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.arrow</groupId>
-                    <artifactId>arrow-dataset</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>support-all-formats</id>
             <dependencies>
                 <dependency>
                     <groupId>org.apache.amoro</groupId>
                     <artifactId>amoro-format-paimon</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.amoro</groupId>
-                    <artifactId>amoro-format-hudi</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.amoro</groupId>
-                    <artifactId>amoro-format-lance</artifactId>
                 </dependency>
             </dependencies>
         </profile>

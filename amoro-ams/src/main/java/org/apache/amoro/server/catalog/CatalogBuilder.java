@@ -43,11 +43,9 @@ public class CatalogBuilder {
   private static final Map<String, Set<TableFormat>> formatSupportedMatrix =
       ImmutableMap.of(
           CATALOG_TYPE_HADOOP,
-          Sets.newHashSet(
-              TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE),
+          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.PAIMON),
           CATALOG_TYPE_FILESYSTEM,
-          Sets.newHashSet(
-              TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI, TableFormat.LANCE),
+          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.PAIMON),
           CATALOG_TYPE_GLUE,
           Sets.newHashSet(TableFormat.ICEBERG),
           CATALOG_TYPE_REST,
@@ -55,7 +53,7 @@ public class CatalogBuilder {
           CATALOG_TYPE_CUSTOM,
           Sets.newHashSet(TableFormat.ICEBERG),
           CATALOG_TYPE_HIVE,
-          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.PAIMON, TableFormat.HUDI));
+          Sets.newHashSet(TableFormat.ICEBERG, TableFormat.PAIMON));
 
   /**
    * Reject catalogs that use AMS as a metastore or a mixed table format. The catalog name is
