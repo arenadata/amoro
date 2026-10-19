@@ -86,7 +86,7 @@ jobs:
             timeout: 120
 
           - name: Optimizer
-            modules: amoro-optimizer/amoro-optimizer-common,amoro-optimizer/amoro-optimizer-standalone,amoro-optimizer/amoro-optimizer-flink,amoro-optimizer/amoro-optimizer-spark
+            modules: amoro-optimizer/amoro-optimizer-common,amoro-optimizer/amoro-optimizer-standalone,amoro-optimizer/amoro-optimizer-spark
             timeout: 60
 
           - name: AMS

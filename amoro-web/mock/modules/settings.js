@@ -37,30 +37,15 @@ export default [
       msg: 'success',
       result: [
         {
-          name: 'flinkcontainer',
-          type: 'flink',
+          name: 'sparkcontainer',
+          type: 'spark',
           properties: {
-            'properties.FLINK_HOME': '/home/arctic/flink-1.12.7/'
+            'properties.SPARK_HOME': '/opt/spark/'
           },
           optimizeGroup: [{
-            name: 'flinkOp',
+            name: 'sparkOp',
             properties: {
-              tmMemory: '1024',
-              jmMemory: '1024'
-            }
-          }]
-        },
-        {
-          name: 'flinkcontainer2',
-          type: 'flink',
-          properties: {
-            'properties.FLINK_HOME': '/home/arctic/flink-1.12.7/'
-          },
-          optimizeGroup: [{
-            name: 'flinkOp',
-            properties: {
-              tmMemory: '1024',
-              jmMemory: '1024'
+              'spark-conf.spark.executor.memory': '2g'
             }
           }]
         }

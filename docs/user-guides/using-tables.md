@@ -27,7 +27,7 @@ menu:
 # Using Tables
 
 The SQL execution tool `Terminal` is provided in AMS dashboard to help users quickly create, modify and delete tables.
-It is also available in [Spark](../spark-ddl/) and [Flink](../flink-ddl/) and other engines to manage tables using SQL.
+It is also available in [Spark](../spark-ddl/) to manage tables using SQL. Spark 3.5 and Spark 4.2 are supported.
 
 ## Create table
 After logging into AMS dashboard, go to `Terminal`, enter the table creation statement and execute it to complete the table creation.

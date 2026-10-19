@@ -208,32 +208,6 @@ amoroConf:
 ## Configure the container of optimizer that allows you to submit optimizer by AMS
 ##
 optimizer:
-  ## flink optimizer
-  ##
-  flink:
-    ## @param optimizer.flink.enabled Enable the flink optimizer
-    ##
-    enabled: true
-    ## @param optimizer.flink.name container name, default value is flink
-    ##
-    name: ~
-    ## image information of flink optimizer
-    ##
-    image:
-      ## @param optimizer.flink.image.repository the image repository
-      ##
-      repository: apache/amoro-flink-optimizer
-      ## @param optimizer.flink.image.tag the image tag, if not set, the default value is the same with amoro image tag
-      ##
-      tag: ~
-      pullPolicy: IfNotPresent
-      jobUri: "local:///opt/flink/usrlib/optimizer-job.jar"
-    properties: {
-      "flink-conf.taskmanager.memory.managed.size": "32mb",
-      "flink-conf.taskmanager.memory.network.max": "32mb",
-      "flink-conf.taskmanager.memory.network.min": "32mb"
-    }
-  ##
   ## spark optimizer
   ##
   spark:

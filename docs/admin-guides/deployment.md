@@ -42,25 +42,18 @@ Unzip it to create the amoro-x.y.z directory in the same directory, and then go 
 
 ## Source code compilation
 
-You can build based on the master branch without compiling Trino. The compilation method and the directory of results are described below:
+You can build from source. The compilation method and the directory of results are described below. Supported Spark versions are 3.5 and 4.2.
 
 ```shell
 $ git clone https://github.com/apache/amoro.git
 $ cd amoro
-$ base_dir=$(pwd) 
 $ ./mvnw clean package -DskipTests
 $ cd dist/target/
 $ ls
-amoro-x.y.z-bin.zip # AMS release package
-
-$ cd ${base_dir}/amoro-format-mixed/amoro-mixed-flink/v1.18/amoro-mixed-flink-runtime-1.18/target
-$ ls
-amoro-format-mixed-flink-runtime-1.18-x.y.z.jar # Flink 1.18 runtime package
-
-$ cd ${base_dir}/amoro-format-mixed/amoro-mixed-spark/v3.3/amoro-mixed-spark-runtime-3.3/target
-$ ls
-amoro-format-mixed-spark-runtime-3.3-x.y.z.jar # Spark v3.3 runtime package
+amoro-x.y.z-bin.tar.gz # AMS release package
 ```
+
+The distribution includes the Spark 3.5 optimizer jar at `plugin/optimizer/spark/optimizer-job.jar` and the Spark 4.2 optimizer jar at `plugin/optimizer/spark4/optimizer-job.jar`.
 
 More build guide can be found in the project's [README](https://github.com/apache/amoro?tab=readme-ov-file#building).
 
@@ -149,7 +142,7 @@ ams:
 
 To scale out the optimizer through AMS, container configuration is required.
 If you choose to manually start an external optimizer, no additional container configuration is required. AMS will initialize a container named `external` by default to store all externally started optimizers.
-AMS provides implementations of `LocalContainer` and `FlinkContainer` by default. Configuration for both container types can be found below:
+AMS provides implementations of `LocalContainer` and `SparkContainer` by default. Spark 3.5 and Spark 4.2 are supported. Configuration for both container types can be found below:
 
 ```yaml
 containers:
@@ -157,15 +150,6 @@ containers:
     container-impl: org.apache.amoro.server.manager.LocalOptimizerContainer
     properties:
       export.JAVA_HOME: "/opt/java"   # JDK environment
-  
-  - name: flinkContainer
-    container-impl: org.apache.amoro.server.manager.FlinkOptimizerContainer
-    properties:
-      flink-home: "/opt/flink/"                                     # The installation directory of Flink
-      export.JVM_ARGS: "-Djava.security.krb5.conf=/opt/krb5.conf"   # Submitting Flink jobs with Java parameters, such as Kerberos parameters.
-      export.HADOOP_CONF_DIR: "/etc/hadoop/conf/"                   # Hadoop configuration file directory
-      export.HADOOP_USER_NAME: "hadoop"                             # Hadoop user
-      export.FLINK_CONF_DIR: "/etc/hadoop/conf/"                    # Flink configuration file directory
 
   - name: sparkContainer
     container-impl: org.apache.amoro.server.manager.SparkOptimizerContainer

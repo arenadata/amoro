@@ -29,7 +29,7 @@ menu:
 ## Introduce multi-catalog
 
 A catalog is a metadata namespace that stores information about databases, tables, views, indexes, users, and UDFs. It provides a higher-level
-namespace for `table` and `database`. Typically, a catalog is associated with a specific type of data source or cluster. In Flink, Spark and Trino,
+namespace for `table` and `database`. Typically, a catalog is associated with a specific type of data source or cluster. In Spark 3.5 and Spark 4.2,
 the multi-catalog feature can be used to support SQL across data sources, such as:
 
 ```SQL
@@ -45,8 +45,8 @@ moving from a single Hive-centric approach to a landscape of competing formats s
 cloud-friendly and will facilitate the migration of data lakes to the cloud. In this context, a management system that supports multi-catalog is
 needed to help users govern data lakes with different environments and formats.
 
-Users can create catalogs in Amoro for different environments, clusters, and table formats, and leverage the multi-catalog feature in Flink, Spark
-and Trino to enable federated computation across multiple clusters and formats. Additionally, properties configured in catalogs can be shared by all
+Users can create catalogs in Amoro for different environments, clusters, and table formats, and leverage the multi-catalog feature in Spark
+to enable federated computation across multiple clusters and formats. Additionally, properties configured in catalogs can be shared by all
 tables and users, avoiding duplication. By leveraging the multi-catalog design, Amoro provides support for a metadata center in data platforms.
 
 When AMS and HMS are used together, HMS serves as the storage foundation for AMS. With the [Iceberg Format](../iceberg-format/), users can leverage the
@@ -65,6 +65,6 @@ AMS will focus on two goals to enhance the value of the metadata center in the f
 - Expand data sources: In addition to data lakes, message queues, databases, and data warehouses can all be managed as objects in the catalog.
 Through metadata center and SQL-based federated computing of the computing engine, AMS will provide infrastructure solutions for data platforms
 such as DataOps and DataFabric
-- Automatic catalog detection: In compute engines like Spark and Flink, it is possible to automatically detect the creation and changes of a
+- Automatic catalog detection: In Spark, it is possible to automatically detect the creation and changes of a
 catalog, enabling a one-time configuration for permanent scalability.
   

@@ -57,12 +57,3 @@
 
 "module:mixed-spark":
   - "amoro-format-mixed/amoro-mixed-spark/**/*"
-
-"module:mixed-flink":
-  - "amoro-format-mixed/amoro-mixed-flink/**/*"
-
-"module:mixed-hive":
-  - "amoro-format-mixed/amoro-mixed-hive/**/*"
-
-"module:mixed-trino":
-  - "amoro-format-mixed/amoro-mixed-trino/**/*"

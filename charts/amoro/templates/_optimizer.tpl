@@ -15,18 +15,6 @@
   limitations under the License.
 */}}
 
-{{/*Flink Optimizer Image Pull Secrets*/}}
-{{- define "amoro.optimizer.container.flink.pull.secrets" -}}
-  {{- if .Values.imagePullSecrets -}}
-    {{- $secrets := .Values.imagePullSecrets -}}
-    {{- $secretNames := list -}}
-    {{- range $secrets }}
-      {{- $secretNames = append $secretNames .name -}}
-    {{- end }}
-    {{- join ";" $secretNames -}}
-  {{- end -}}
-{{- end -}}
-
 {{/*Spark Optimizer Image Pull Secrets*/}}
 {{- define "amoro.optimizer.container.spark.pull.secrets" -}}
   {{- if .Values.imagePullSecrets -}}
@@ -51,15 +39,6 @@
   {{- end -}}
 {{- end -}}
 
-{{/*Flink Optimizer Image Tag*/}}
-{{- define "amoro.optimizer.container.flink.tag" -}}
-{{- if .Values.optimizer.flink.image.tag -}}
-  {{ .Values.optimizer.flink.image.tag }}
-{{- else -}}
-  {{ include "amoro.image.tag" . }}
-{{- end -}}
-{{- end -}}
-
 {{/*Spark Optimizer Image Tag*/}}
 {{- define "amoro.optimizer.container.spark.tag" -}}
 {{- if .Values.optimizer.spark.image.tag -}}
@@ -69,36 +48,12 @@
 {{- end -}}
 {{- end -}}
 
-{{/*Flink Optimizer Image repo*/}}
-{{- define "amoro.optimizer.container.flink.image" }}
-{{- .Values.optimizer.flink.image.repository }}:{{ include "amoro.optimizer.container.flink.tag" . }}
-{{- end -}}
-
 {{/*Spark Optimizer Image repo*/}}
 {{- define "amoro.optimizer.container.spark.image" }}
 {{- .Values.optimizer.spark.image.repository }}:{{ include "amoro.optimizer.container.spark.tag" . }}
 {{- end -}}
 
 
-
-{{- define "amoro.optimizer.container.flink" -}}
-container-impl: org.apache.amoro.server.manager.FlinkOptimizerContainer
-properties:
-  target: kubernetes-application
-  job-uri: {{ .Values.optimizer.flink.image.jobUri | quote }}
-  ams-optimizing-uri: {{include "amoro.svc.optimizing.uri" . | quote}}
-  flink-home: /opt/flink
-  export.FLINK_HOME: /opt/flink
-  flink-conf.kubernetes.container.image: {{ include "amoro.optimizer.container.flink.image" .  | quote }}
-  flink-conf.kubernetes.container.image.pull-policy: {{ .Values.optimizer.flink.image.pullPolicy | quote }}
-  flink-conf.kubernetes.service-account: {{ include "amoro.sa.name" . | quote }}
-  {{- if .Values.imagePullSecrets }}
-  flink-conf.kubernetes.container.image.pull-secrets: {{ include "amoro.optimizer.container.flink.pull.secrets" . }}
-  {{- end }}
-  {{- with .Values.optimizer.flink.properties -}}
-    {{- toYaml . | nindent 2 }}
-  {{- end -}}
-{{- end -}}
 
 {{- define "amoro.optimizer.container.spark" -}}
 container-impl: org.apache.amoro.server.manager.SparkOptimizerContainer

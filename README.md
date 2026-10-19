@@ -29,16 +29,13 @@
   <a href="https://github.com/apache/amoro/actions/workflows/core-hadoop2-ci.yml">
     <img src="https://github.com/apache/amoro/actions/workflows/core-hadoop2-ci.yml/badge.svg" />
   </a>
-  <a href="https://github.com/apache/amoro/actions/workflows/trino-ci.yml">
-    <img src="https://github.com/apache/amoro/actions/workflows/trino-ci.yml/badge.svg" />
-  </a>
   <a href="https://deepwiki.com/apache/amoro">
     <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
   </a>
 </p>
 
 Apache Amoro (incubating) is a Lakehouse management system built on open data lake formats.
-Working with compute engines including Flink, Spark, and Trino, Amoro brings pluggable and self-managed features for Lakehouse to provide out-of-the-box data warehouse experience,
+Working with Spark 3.5 and Spark 4.2, Amoro brings pluggable and self-managed features for Lakehouse to provide out-of-the-box data warehouse experience,
 and helps data platforms or products easily build infra-decoupled, stream-and-batch-fused and lake-native architecture.
 
 Learn more about Amoro at https://amoro.apache.org/, contact the developers and community on the [mailing list](https://amoro.apache.org/join-community/#mailing-lists) if you need any help.
@@ -78,21 +75,18 @@ For details, please refer to: [Iceberg Docs](https://iceberg.apache.org/docs/lat
 
 ### Mixed format
 
-Amoro support multiple processing engines for Mixed format as below:
+Amoro supports Spark for Mixed format as below:
 
-| Processing Engine | Version                | Batch Read  | Batch Write | Batch Overwrite | Streaming Read | Streaming Write | Create Table | Alter Table |
-|-------------------|------------------------|-------------|-------------|-----------------|----------------|-----------------|--------------|-------------|
-| Flink             | 1.18.x, 1.19.x          |  &#x2714;   |   &#x2714;   |       &#x2716;   |      &#x2714;   |       &#x2714;   |    &#x2714;   |   &#x2716;   |
-| Spark             | 3.3, 3.4, 3.5          |  &#x2714;   |   &#x2714;   |       &#x2714;   |      &#x2716;   |       &#x2716;   |    &#x2714;   |   &#x2714;   |
-| Hive              | 2.x, 3.x               |  &#x2714;  |   &#x2716;  |       &#x2714;  |      &#x2716;  |       &#x2716;  |    &#x2716;  |   &#x2714;  |
-| Trino             | 406                    |  &#x2714;  |   &#x2716;  |       &#x2714;  |      &#x2716;  |       &#x2716;  |    &#x2716;  |   &#x2714;  |
+| Processing Engine | Version  | Batch Read  | Batch Write | Batch Overwrite | Streaming Read | Streaming Write | Create Table | Alter Table |
+|-------------------|----------|-------------|-------------|-----------------|----------------|-----------------|--------------|-------------|
+| Spark             | 3.5, 4.2 |  &#x2714;   |   &#x2714;   |       &#x2714;   |      &#x2716;   |       &#x2716;   |    &#x2714;   |   &#x2714;   |
 
 ## Features
 
 - Self-optimizing - Continuously optimizing tables, including compacting small files, change files, regularly delete expired files to keep high query performance and reducing storage costs.
 - Multiple Formats - Support different table formats such as Iceberg, Mixed-Iceberg and Mixed-Hive to meet different scenario requirements and provide them with unified management capabilities.
 - Catalog Service - Provide a unified catalog service for all compute engines, which can also used with existing metadata store service such as Hive Metastore and AWS Glue.
-- Rich Plugins - Provide various plugins to integrate with other systems, like continuously optimizing with Flink and data analysis with Spark and Kyuubi.
+- Rich Plugins - Provide various plugins to integrate with other systems, like continuously optimizing with Spark and data analysis with Spark.
 - Management Tools - Provide a variety of management tools, including WEB UI and standard SQL command line, to help you get started faster and integrate with other systems more easily.
 - Infrastructure Independent - Can be easily deployed and used in private environments, cloud environments, hybrid cloud environments, and multi-cloud environments.
 
@@ -103,51 +97,26 @@ Amoro contains modules as below:
 - `amoro-common` contains core abstractions and common implementation for other modules
 - `amoro-ams` is amoro management service module
 - `amoro-web` is the dashboard frontend for ams
-- `amoro-optimizer` provides default optimizer implementation
+- `amoro-optimizer` provides the Spark 3.5 and Spark 4.2 optimizer implementations, plus local and Kubernetes containers
 - `amoro-format-iceberg` contains integration of Apache Iceberg format
 - `amoro-format-hudi` contains integration of Apache Hudi format
 - `amoro-format-paimon` contains integration of Apache Paimon format
-- `amoro-format-mixed` provides Mixed format implementation
-    - `amoro-mixed-hive` integrates with Apache Hive and implements Mixed Hive format
-    - `amoro-mixed-flink` provides Flink connectors for Mixed format tables (use amoro-flink-runtime for a shaded version)
-    - `amoro-mixed-spark` provides Spark connectors for Mixed format tables (use amoro-spark-runtime for a shaded version)
-    - `amoro-mixed-trino` provides Trino connectors for Mixed format tables
 
 
 ## Building
 
-Amoro is built using Maven with JDK 11 and 17(required for `amoro-format-mixed/amoro-mixed-trino` module, experimental for other modules).
+Amoro is built using Maven with JDK 21. Supported Spark versions are 3.5 and 4.2.
 
-* Build all modules without `amoro-mixed-trino`: `./mvnw clean package`
+* Build all modules: `./mvnw clean package`
 * Build and skip tests: `./mvnw clean package -DskipTests`
 * Build and skip dashboard: `./mvnw clean package -Pskip-dashboard-build`
 * Build and disable disk storage, RocksDB will NOT be introduced to avoid memory overflow: `./mvnw clean package -DskipTests -Pno-extented-disk-storage`
 * Build and enable aliyun-oss-sdk: `./mvnw clean package -DskipTests -Paliyun-oss-sdk`
 * Build with hadoop 2.x(the default is 3.x) dependencies: `./mvnw clean package -DskipTests -Phadoop2`
-* Specify Flink version for Flink optimizer(the default is 1.20.0): `./mvnw clean package -DskipTests -Dflink-optimizer.flink-version=1.20.0`
-  * If the version of Flink is below 1.15.0, you also need to add the `-Pflink-optimizer-pre-1.15` parameter: `./mvnw clean package -DskipTests -Pflink-optimizer-pre-1.15 -Dflink-optimizer.flink-version=1.14.6`
-* Specify Spark version for Spark optimizer(the default is 3.5.7): `./mvnw clean package -DskipTests -Dspark.version=3.5.7`
-* Build `amoro-mixed-trino` module under JDK 17: `./mvnw clean package -DskipTests -Pformat-mixed-format-trino,build-mixed-format-trino -pl 'amoro-format-mixed/amoro-mixed-trino' -am`.
-* Build all modules: `./mvnw clean package -DskipTests -Ptoolchain,build-mixed-format-trino`, besides you need config `toolchains.xml` in `${user.home}/.m2/` dir with content below.
+* The default Spark optimizer is Spark 3.5. Use `-Pspark-3.5` to select the Spark 3.5 profile explicitly. Spark 4.2 is the separate `amoro-optimizer-spark-4.2` module.
 * Build a distribution package with all formats integrated: `./mvnw clean package -Psupport-all-formats`
   * Build a distribution package with Apache Paimon format: `./mvnw clean package -Psupport-paimon-format`
   * Build a distribution package with Apache Hudi format: `./mvnw clean package -Psupport-hudi-format`
-
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<toolchains>
-    <toolchain>
-        <type>jdk</type>
-        <provides>
-            <version>17</version>
-            <vendor>sun</vendor>
-        </provides>
-        <configuration>
-            <jdkHome>${YourJDK17Home}</jdkHome>
-        </configuration>
-    </toolchain>
-</toolchains>
-```
 
 ## Quickstart
 
