@@ -23,7 +23,7 @@ import org.apache.amoro.api.OptimizingTaskResult;
 import org.apache.amoro.optimizer.common.OptimizerConfig;
 import org.apache.amoro.optimizer.common.OptimizerExecutor;
 import org.apache.amoro.optimizing.RewriteFilesInput;
-import org.apache.amoro.optimizing.TableOptimizing;
+import org.apache.amoro.paimon.PaimonCompactInput;
 import org.apache.amoro.shade.guava32.com.google.common.collect.ImmutableList;
 import org.apache.amoro.utils.ExceptionUtil;
 import org.apache.amoro.utils.SerializationUtil;
@@ -81,13 +81,17 @@ public class SparkOptimizerExecutor extends OptimizerExecutor {
 
   private String jobDescription(OptimizingTask task) {
     String description;
-    TableOptimizing.OptimizingInput input =
-        SerializationUtil.simpleDeserialize(task.getTaskInput());
+    Object input = SerializationUtil.simpleDeserialize(task.getTaskInput());
     if (input instanceof RewriteFilesInput) {
       description =
           String.format(
               "Amoro rewrite files task, table name:%s, task id:%s",
               ((RewriteFilesInput) input).getTable().name(), task.getTaskId());
+    } else if (input instanceof PaimonCompactInput) {
+      description =
+          String.format(
+              "Amoro paimon compact task, table name:%s, task id:%s",
+              ((PaimonCompactInput) input).tableLabel(), task.getTaskId());
     } else {
       throw new IllegalArgumentException("Unsupported task:" + input.getClass());
     }

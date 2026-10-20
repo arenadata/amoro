@@ -33,6 +33,7 @@ import org.apache.amoro.exception.ForbiddenException;
 import org.apache.amoro.exception.IllegalTaskStateException;
 import org.apache.amoro.exception.ObjectNotExistsException;
 import org.apache.amoro.exception.PluginRetryAuthException;
+import org.apache.amoro.paimon.PaimonCompactSubmitters;
 import org.apache.amoro.resource.Resource;
 import org.apache.amoro.resource.ResourceContainer;
 import org.apache.amoro.resource.ResourceGroup;
@@ -44,12 +45,15 @@ import org.apache.amoro.server.manager.AbstractOptimizerContainer;
 import org.apache.amoro.server.optimizing.OptimizingProcess;
 import org.apache.amoro.server.optimizing.OptimizingQueue;
 import org.apache.amoro.server.optimizing.OptimizingStatus;
+import org.apache.amoro.server.optimizing.OptimizingTaskPoller;
+import org.apache.amoro.server.optimizing.PaimonCompactQueue;
 import org.apache.amoro.server.optimizing.TaskRuntime;
 import org.apache.amoro.server.optimizing.dra.DynamicAllocationConfig;
 import org.apache.amoro.server.persistence.StatedPersistentBase;
 import org.apache.amoro.server.persistence.mapper.OptimizerMapper;
 import org.apache.amoro.server.persistence.mapper.ResourceMapper;
 import org.apache.amoro.server.persistence.mapper.TableProcessMapper;
+import org.apache.amoro.server.process.ProcessService;
 import org.apache.amoro.server.process.TableProcessMeta;
 import org.apache.amoro.server.resource.Containers;
 import org.apache.amoro.server.resource.OptimizerInstance;
@@ -108,6 +112,8 @@ public class DefaultOptimizingService extends StatedPersistentBase
   private final long taskExecuteTimeout;
   private final int maxPlanningParallelism;
   private final long pollingTimeout;
+  private final PaimonCompactQueue paimonCompactQueue = new PaimonCompactQueue();
+  private volatile ProcessService processService;
   private final boolean breakQuotaLimit;
   private final long refreshGroupInterval;
   private final Map<String, OptimizingQueue> optimizingQueueByGroup = new ConcurrentHashMap<>();
@@ -167,6 +173,11 @@ public class DefaultOptimizingService extends StatedPersistentBase
                 .setNameFormat("plan-executor-thread-%d")
                 .setDaemon(true)
                 .build());
+    PaimonCompactSubmitters.register(paimonCompactQueue);
+  }
+
+  public void setProcessService(ProcessService processService) {
+    this.processService = processService;
   }
 
   public RuntimeHandlerChain getTableRuntimeHandler() {
@@ -263,21 +274,51 @@ public class DefaultOptimizingService extends StatedPersistentBase
   @Override
   public OptimizingTask pollTask(String authToken, int threadId) {
     LOG.debug("Optimizer {} (threadId {}) try polling task", authToken, threadId);
-    OptimizerThread optimizerThread = getAuthenticatedOptimizer(authToken).getThread(threadId);
+    OptimizerInstance optimizer = getAuthenticatedOptimizer(authToken);
+    OptimizerThread optimizerThread = optimizer.getThread(threadId);
     OptimizingQueue queue = getQueueByToken(authToken);
-    TaskRuntime<?> task = queue.pollTask(optimizerThread, pollingTimeout, breakQuotaLimit);
-    if (task != null) {
-      LOG.info("OptimizerThread {} polled task {}", optimizerThread, task.getTaskId());
-      return task.extractProtocolTask();
-    }
-    return null;
+    String group = optimizer.getGroupName();
+    OptimizingTask task =
+        OptimizingTaskPoller.poll(
+            new OptimizingTaskPoller.Sources() {
+              @Override
+              public OptimizingTask pollIceberg(long waitMs) {
+                TaskRuntime<?> runtime = queue.pollTask(optimizerThread, waitMs, breakQuotaLimit);
+                if (runtime == null) {
+                  return null;
+                }
+                LOG.info("OptimizerThread {} polled task {}", optimizerThread, runtime.getTaskId());
+                return runtime.extractProtocolTask();
+              }
+
+              @Override
+              public OptimizingTask pollPaimon() {
+                OptimizingTask paimonTask =
+                    paimonCompactQueue.poll(
+                        group, optimizer.getToken(), threadId, getTotalQuota(group));
+                if (paimonTask != null) {
+                  LOG.info(
+                      "OptimizerThread {} polled paimon compact task {}",
+                      optimizerThread,
+                      paimonTask.getTaskId());
+                }
+                return paimonTask;
+              }
+            },
+            pollingTimeout,
+            true);
+    return task;
   }
 
   @Override
   public void ackTask(String authToken, int threadId, OptimizingTaskId taskId) {
     LOG.info("Ack task {} by optimizer {} (threadId {})", taskId, authToken, threadId);
+    OptimizerInstance optimizer = getAuthenticatedOptimizer(authToken);
+    if (paimonCompactQueue.ack(taskId, optimizer.getToken(), threadId)) {
+      return;
+    }
     OptimizingQueue queue = getQueueByToken(authToken);
-    queue.ackTask(taskId, getAuthenticatedOptimizer(authToken).getThread(threadId));
+    queue.ackTask(taskId, optimizer.getThread(threadId));
   }
 
   @Override
@@ -288,6 +329,9 @@ public class DefaultOptimizingService extends StatedPersistentBase
         taskResult.getThreadId(),
         taskResult.getTaskId(),
         taskResult.getErrorMessage() == null ? "SUCCESS" : "FAIL");
+    if (paimonCompactQueue.complete(taskResult)) {
+      return;
+    }
     OptimizingQueue queue = getQueueByToken(authToken);
     OptimizerThread thread =
         getAuthenticatedOptimizer(authToken).getThread(taskResult.getThreadId());
@@ -320,6 +364,9 @@ public class DefaultOptimizingService extends StatedPersistentBase
 
   @Override
   public boolean cancelProcess(long processId) {
+    if (processService != null && processService.cancelByProcessId(processId)) {
+      return true;
+    }
     TableProcessMeta processMeta =
         getAs(TableProcessMapper.class, m -> m.getProcessMeta(processId));
     if (processMeta == null) {
@@ -419,6 +466,7 @@ public class DefaultOptimizingService extends StatedPersistentBase
   }
 
   public void dispose() {
+    PaimonCompactSubmitters.unregister(paimonCompactQueue);
     planExecutor.shutdown();
     // shutdown sync group first, stop syncing group
     optimizingConfigWatcher.dispose();

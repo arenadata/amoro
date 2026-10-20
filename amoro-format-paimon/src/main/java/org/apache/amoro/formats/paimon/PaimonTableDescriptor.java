@@ -21,20 +21,18 @@ package org.apache.amoro.formats.paimon;
 import static org.apache.paimon.operation.FileStoreScan.Plan.groupByPartFiles;
 
 import org.apache.amoro.AmoroTable;
+import org.apache.amoro.PaimonActions;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.api.CommitMetaProducer;
 import org.apache.amoro.process.ProcessStatus;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Lists;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
-import org.apache.amoro.shade.guava32.com.google.common.collect.Streams;
-import org.apache.amoro.table.TableIdentifier;
 import org.apache.amoro.table.descriptor.AMSColumnInfo;
 import org.apache.amoro.table.descriptor.AMSPartitionField;
 import org.apache.amoro.table.descriptor.AmoroSnapshotsOfTable;
 import org.apache.amoro.table.descriptor.ConsumerInfo;
 import org.apache.amoro.table.descriptor.DDLInfo;
 import org.apache.amoro.table.descriptor.DDLReverser;
-import org.apache.amoro.table.descriptor.FilesStatisticsBuilder;
 import org.apache.amoro.table.descriptor.FormatTableDescriptor;
 import org.apache.amoro.table.descriptor.OperationType;
 import org.apache.amoro.table.descriptor.OptimizingProcessInfo;
@@ -46,9 +44,7 @@ import org.apache.amoro.table.descriptor.ServerTableMeta;
 import org.apache.amoro.table.descriptor.TableSummary;
 import org.apache.amoro.table.descriptor.TagOrBranchInfo;
 import org.apache.amoro.utils.CommonUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.paimon.CoreOptions;
 import org.apache.paimon.FileStore;
 import org.apache.paimon.Snapshot;
 import org.apache.paimon.consumer.ConsumerManager;
@@ -70,7 +66,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -90,9 +85,13 @@ import java.util.stream.Collectors;
 public class PaimonTableDescriptor implements FormatTableDescriptor {
 
   public static final String PAIMON_MAIN_BRANCH_NAME = "main";
-  private static final String FULL_TYPE = "FULL";
-  private static final String MINOR_TYPE = "MINOR";
-  private static final List<String> OPTIMIZING_TYPES = Arrays.asList(FULL_TYPE, MINOR_TYPE);
+  private static final List<String> OPTIMIZING_TYPES =
+      Arrays.asList(PaimonActions.PARTIAL_COMPACT.getName(), PaimonActions.FULL_COMPACT.getName());
+  private static final List<String> CLEANUP_TYPES =
+      Arrays.asList(
+          PaimonActions.EXPIRE_SNAPSHOTS.getName(),
+          PaimonActions.CLEAN_ORPHAN.getName(),
+          PaimonActions.EXPIRE_PARTITIONS.getName());
 
   private ExecutorService executor;
 
@@ -382,101 +381,19 @@ public class PaimonTableDescriptor implements FormatTableDescriptor {
       ProcessStatus status,
       int limit,
       int offset) {
-    // Temporary solution for Paimon. TODO: Get compaction info from Paimon compaction task
-    List<OptimizingProcessInfo> processInfoList;
-    TableIdentifier tableIdentifier = amoroTable.id();
-    FileStoreTable fileStoreTable = (FileStoreTable) amoroTable.originalTable();
-    FileStore<?> store = fileStoreTable.store();
-    boolean isPrimaryTable = !fileStoreTable.primaryKeys().isEmpty();
-    int maxLevel = CoreOptions.fromMap(fileStoreTable.options()).numLevels() - 1;
-    try {
-      List<Snapshot> compactSnapshots =
-          Streams.stream(store.snapshotManager().snapshots())
-              .filter(s -> s.commitKind() == Snapshot.CommitKind.COMPACT)
-              .collect(Collectors.toList());
-      processInfoList =
-          compactSnapshots.stream()
-              .sorted(Comparator.comparing(Snapshot::id).reversed())
-              .map(
-                  s -> {
-                    OptimizingProcessInfo optimizingProcessInfo = new OptimizingProcessInfo();
-                    optimizingProcessInfo.setProcessId(String.valueOf(s.id()));
-                    optimizingProcessInfo.setCatalogName(tableIdentifier.getCatalog());
-                    optimizingProcessInfo.setDbName(tableIdentifier.getDatabase());
-                    optimizingProcessInfo.setTableName(tableIdentifier.getTableName());
-                    optimizingProcessInfo.setStatus(ProcessStatus.SUCCESS);
-                    optimizingProcessInfo.setFinishTime(s.timeMillis());
-                    FilesStatisticsBuilder inputBuilder = new FilesStatisticsBuilder();
-                    FilesStatisticsBuilder outputBuilder = new FilesStatisticsBuilder();
-                    ManifestFile manifestFile = store.manifestFileFactory().create();
-                    ManifestList manifestList = store.manifestListFactory().create();
-                    List<ManifestFileMeta> manifestFileMetas = manifestList.readDeltaManifests(s);
-                    boolean hasMaxLevels = false;
-                    long minCreateTime = Long.MAX_VALUE;
-                    long maxCreateTime = Long.MIN_VALUE;
-                    Set<Integer> buckets = new HashSet<>();
-                    for (ManifestFileMeta manifestFileMeta : manifestFileMetas) {
-                      List<ManifestEntry> compactManifestEntries =
-                          manifestFile.read(manifestFileMeta.fileName());
-                      for (ManifestEntry compactManifestEntry : compactManifestEntries) {
-                        if (compactManifestEntry.file().level() == maxLevel) {
-                          hasMaxLevels = true;
-                        }
-                        buckets.add(compactManifestEntry.bucket());
-                        if (compactManifestEntry.kind() == FileKind.DELETE) {
-                          inputBuilder.addFile(compactManifestEntry.file().fileSize());
-                        } else {
-                          minCreateTime =
-                              Math.min(
-                                  minCreateTime, getFileCreationTimeMillis(compactManifestEntry));
-                          maxCreateTime =
-                              Math.max(
-                                  maxCreateTime, getFileCreationTimeMillis(compactManifestEntry));
-                          outputBuilder.addFile(compactManifestEntry.file().fileSize());
-                        }
-                      }
-                    }
-                    if (isPrimaryTable && hasMaxLevels) {
-                      optimizingProcessInfo.setOptimizingType(FULL_TYPE);
-                    } else {
-                      optimizingProcessInfo.setOptimizingType(MINOR_TYPE);
-                    }
-                    optimizingProcessInfo.setSuccessTasks(buckets.size());
-                    optimizingProcessInfo.setTotalTasks(buckets.size());
-                    optimizingProcessInfo.setStartTime(minCreateTime);
-                    optimizingProcessInfo.setDuration(s.timeMillis() - minCreateTime);
-                    optimizingProcessInfo.setInputFiles(inputBuilder.build());
-                    optimizingProcessInfo.setOutputFiles(outputBuilder.build());
-                    optimizingProcessInfo.setSummary(Collections.emptyMap());
-                    return optimizingProcessInfo;
-                  })
-              .collect(Collectors.toList());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    List<String> categoryTypes = getProcessTypesByCategory(processCategory);
-    processInfoList =
-        processInfoList.stream()
-            .filter(p -> StringUtils.isBlank(type) || type.equalsIgnoreCase(p.getOptimizingType()))
-            .filter(p -> status == null || status == p.getStatus())
-            .filter(
-                p ->
-                    p.getOptimizingType() != null
-                        && categoryTypes.stream()
-                            .anyMatch(t -> t.equalsIgnoreCase(p.getOptimizingType())))
-            .collect(Collectors.toList());
-    int total = processInfoList.size();
-    processInfoList =
-        processInfoList.stream().skip(offset).limit(limit).collect(Collectors.toList());
-    return Pair.of(processInfoList, total);
+    // AMS lists Paimon maintenance from table_process. COMPACT commits stay on the Snapshots tab.
+    return Pair.of(Collections.emptyList(), 0);
   }
 
   @Override
   public Map<String, String> getTableOptimizingTypes(AmoroTable<?> amoroTable) {
-    Map<String, String> types = Maps.newHashMap();
-    types.put(FULL_TYPE, "full");
-    types.put(MINOR_TYPE, "MINOR");
-    return types;
+    return processTypeLabels(ProcessCategory.OPTIMIZING.getName());
+  }
+
+  @Override
+  public Map<String, String> getTableProcessTypes(
+      AmoroTable<?> amoroTable, String processCategory) {
+    return processTypeLabels(processCategory);
   }
 
   @Override
@@ -484,14 +401,29 @@ public class PaimonTableDescriptor implements FormatTableDescriptor {
     if (ProcessCategory.OPTIMIZING.getName().equalsIgnoreCase(processCategory)) {
       return OPTIMIZING_TYPES;
     }
-
+    if (ProcessCategory.CLEANUP.getName().equalsIgnoreCase(processCategory)) {
+      return CLEANUP_TYPES;
+    }
     return Collections.emptyList();
+  }
+
+  private Map<String, String> processTypeLabels(String processCategory) {
+    Map<String, String> types = Maps.newHashMap();
+    if (ProcessCategory.OPTIMIZING.getName().equalsIgnoreCase(processCategory)) {
+      types.put(PaimonActions.PARTIAL_COMPACT.getName(), "Partial compaction");
+      types.put(PaimonActions.FULL_COMPACT.getName(), "Full compaction");
+    } else if (ProcessCategory.CLEANUP.getName().equalsIgnoreCase(processCategory)) {
+      types.put(PaimonActions.EXPIRE_SNAPSHOTS.getName(), "Expire Snapshots");
+      types.put(PaimonActions.CLEAN_ORPHAN.getName(), "Clean Orphan Files");
+      types.put(PaimonActions.EXPIRE_PARTITIONS.getName(), "Expire Partitions");
+    }
+    return types;
   }
 
   @Override
   public List<OptimizingTaskInfo> getOptimizingTaskInfos(
       AmoroTable<?> amoroTable, String processId) {
-    throw new UnsupportedOperationException();
+    return Collections.emptyList();
   }
 
   @NotNull

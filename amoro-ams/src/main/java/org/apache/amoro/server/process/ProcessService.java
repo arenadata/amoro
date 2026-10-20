@@ -20,14 +20,18 @@ package org.apache.amoro.server.process;
 
 import org.apache.amoro.Action;
 import org.apache.amoro.AmoroTable;
+import org.apache.amoro.PaimonActions;
 import org.apache.amoro.ServerTableIdentifier;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TableRuntime;
 import org.apache.amoro.config.TableConfiguration;
 import org.apache.amoro.exception.BadRequestException;
+import org.apache.amoro.paimon.PaimonCompactSubmitter;
+import org.apache.amoro.paimon.PaimonCompactSubmitters;
 import org.apache.amoro.process.ActionCoordinator;
 import org.apache.amoro.process.ExecuteEngine;
 import org.apache.amoro.process.ProcessEvent;
+import org.apache.amoro.process.ProcessIdentityAware;
 import org.apache.amoro.process.ProcessStatus;
 import org.apache.amoro.process.TableProcess;
 import org.apache.amoro.process.TableProcessStore;
@@ -248,6 +252,9 @@ public class ProcessService extends PersistentBase {
       return;
     }
 
+    if (process instanceof ProcessIdentityAware) {
+      ((ProcessIdentityAware) process).bindProcessId(store.getProcessId());
+    }
     TableProcessExecutor executor = new TableProcessExecutor(process, store, executeEngine);
     executor.onProcessFinished(
         () -> {
@@ -297,6 +304,12 @@ public class ProcessService extends PersistentBase {
     untrackTableProcessInstance(
         process.getTableRuntime().getTableIdentifier(), store.getProcessId());
 
+    if (PaimonActions.isCompact(process.getAction())) {
+      PaimonCompactSubmitter submitter = PaimonCompactSubmitters.get();
+      if (submitter != null) {
+        submitter.cancel(store.getProcessId());
+      }
+    }
     ExecuteEngine executeEngine = executeEngines.get(store.getExecutionEngine());
 
     if (executeEngine != null) {
@@ -338,6 +351,23 @@ public class ProcessService extends PersistentBase {
    * @param tableRuntime table runtime
    * @param action cleanup action
    */
+  /**
+   * Cancel an active maintenance process. Iceberg self-optimizing processes are not tracked here.
+   *
+   * @param processId persisted process id
+   * @return true if this service owned the process
+   */
+  public boolean cancelByProcessId(long processId) {
+    for (Map<Long, TableProcessHolder> processes : activeTableProcess.values()) {
+      TableProcessHolder holder = processes.get(processId);
+      if (holder != null) {
+        cancelProcess(holder.getStore(), holder.getProcess());
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void triggerNow(TableRuntime tableRuntime, Action action) {
     ActionCoordinatorScheduler scheduler =
         action == null ? null : actionCoordinators.get(action.getName());

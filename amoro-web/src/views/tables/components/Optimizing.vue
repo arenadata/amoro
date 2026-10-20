@@ -109,8 +109,15 @@ const cleanupAvailability = reactive({
   cleanOrphanFiles: false,
   cleanDanglingDeleteFiles: false,
   expireData: false,
+  expirePartitions: false,
 })
-type CleanupType = 'expire-snapshots' | 'clean-orphan-files' | 'clean-dangling-delete-files' | 'expire-data'
+const paimonCompaction = reactive({
+  partial: false,
+  full: false,
+})
+const paimonTable = ref(false)
+type CleanupType = 'expire-snapshots' | 'clean-orphan-files' | 'clean-dangling-delete-files' | 'expire-data' | 'expire-snapshots-paimon' | 'clean-orphan-files-paimon' | 'expire-partitions-paimon'
+type PaimonCompactionType = 'partial-compact' | 'full-compact'
 const idleOrPendingStatuses = ['idle', 'pending']
 const pagination = reactive(usePagination())
 const breadcrumbPagination = reactive(usePagination())
@@ -277,6 +284,16 @@ async function loadCompactionAvailability() {
   }
   try {
     const detail = await getTableDetail({ ...sourceData })
+    const properties = detail?.properties as Record<string, unknown> | undefined
+    if (detail?.tableType === 'PAIMON') {
+      paimonCompaction.partial = propertyEnabled(properties, 'maintenance.partial-compact.enabled', false)
+      paimonCompaction.full = propertyEnabled(properties, 'maintenance.full-compact.enabled', false)
+      showCompactionActions.value = paimonCompaction.partial || paimonCompaction.full
+      compactionDisabled.value = false
+      return
+    }
+    paimonCompaction.partial = false
+    paimonCompaction.full = false
     const enabledProp = detail?.properties?.['self-optimizing.enabled']
     const optimizingEnabled = enabledProp == null || String(enabledProp).toLowerCase() !== 'false'
     const status = String(detail?.tableSummary?.optimizingStatus || '').toLowerCase()
@@ -302,17 +319,30 @@ async function loadCleanupAvailability() {
   cleanupAvailability.cleanOrphanFiles = false
   cleanupAvailability.cleanDanglingDeleteFiles = false
   cleanupAvailability.expireData = false
+  cleanupAvailability.expirePartitions = false
+  paimonTable.value = false
   if (props.processCategory !== 'CLEANUP' || !writable.value) {
     return
   }
   try {
     const detail = await getTableDetail({ ...sourceData })
     const tableType = String(detail?.tableType || '')
+    const properties = detail?.properties as Record<string, unknown> | undefined
+    if (tableType === 'PAIMON') {
+      paimonTable.value = true
+      const gcEnabled = propertyEnabled(properties, 'gc.enabled', true)
+      cleanupAvailability.expireSnapshots = gcEnabled && propertyEnabled(properties, 'maintenance.expire-snapshots.enabled', false)
+      cleanupAvailability.cleanOrphanFiles = gcEnabled && propertyEnabled(properties, 'maintenance.clean-orphan-files.enabled', false)
+      cleanupAvailability.expirePartitions = gcEnabled && propertyEnabled(properties, 'maintenance.expire-partitions.enabled', false)
+      showCleanupActions.value = cleanupAvailability.expireSnapshots
+        || cleanupAvailability.cleanOrphanFiles
+        || cleanupAvailability.expirePartitions
+      return
+    }
     const supported = tableType === 'ICEBERG' || tableType === 'MIXED_ICEBERG' || tableType === 'MIXED_HIVE'
     if (!supported) {
       return
     }
-    const properties = detail?.properties as Record<string, unknown> | undefined
     const gcEnabled = propertyEnabled(properties, 'gc.enabled', true)
     cleanupAvailability.expireSnapshots = gcEnabled && propertyEnabled(properties, 'table-expire.enabled', true)
     cleanupAvailability.cleanOrphanFiles = gcEnabled && propertyEnabled(properties, 'clean-orphan-file.enabled', false)
@@ -371,6 +401,18 @@ function triggerCleanupAction(type: CleanupType) {
       title: 'triggerExpireDataTitle',
       content: 'triggerExpireDataContent',
     },
+    'expire-snapshots-paimon': {
+      title: 'triggerExpireSnapshotsTitle',
+      content: 'triggerExpireSnapshotsContent',
+    },
+    'clean-orphan-files-paimon': {
+      title: 'triggerCleanOrphanFilesTitle',
+      content: 'triggerCleanOrphanFilesContent',
+    },
+    'expire-partitions-paimon': {
+      title: 'triggerExpirePartitionsTitle',
+      content: 'triggerExpirePartitionsContent',
+    },
   }[type]
   Modal.confirm({
     title: t(copy.title),
@@ -401,6 +443,46 @@ async function submitCompaction(type: 'MINOR' | 'MAJOR' | 'FULL') {
     triggeringCompaction.value = false
     await loadCompactionAvailability()
   }
+}
+
+async function submitPaimonCompaction(type: PaimonCompactionType) {
+  try {
+    triggeringCompaction.value = true
+    compactionDisabled.value = true
+    await triggerOptimizing({
+      catalog: String(sourceData.catalog || ''),
+      db: String(sourceData.db || ''),
+      table: String(sourceData.table || ''),
+      type,
+    })
+    message.success(t('triggerCompactionAccepted'))
+    emit('table-detail-refresh')
+    await refreshOptimizingProcesses()
+  }
+  catch (error) {
+    const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+    message.error(responseMessage || (error as Error)?.message || t('fail'))
+  }
+  finally {
+    triggeringCompaction.value = false
+    await loadCompactionAvailability()
+  }
+}
+
+function triggerPaimonCompaction(type: PaimonCompactionType) {
+  if (type === 'full-compact') {
+    Modal.confirm({
+      title: t('triggerFullCompactionTitle'),
+      content: t('triggerFullCompactionContent'),
+      onOk: () => submitPaimonCompaction(type),
+    })
+    return
+  }
+  Modal.confirm({
+    title: t('triggerPartialCompactionTitle'),
+    content: t('triggerPartialCompactionContent'),
+    onOk: () => submitPaimonCompaction(type),
+  })
 }
 
 function triggerCompaction(type: 'MINOR' | 'MAJOR' | 'FULL') {
@@ -436,7 +518,23 @@ onMounted(() => {
           v-model:value="statusType" allow-clear :placeholder="t('status')" :options="statusTypeList"
           style="min-width: 150px;" @change="refresh"
         />
-        <template v-if="showCompactionActions">
+        <template v-if="showCompactionActions && (paimonCompaction.partial || paimonCompaction.full)">
+          <a-button
+            v-if="paimonCompaction.partial"
+            :disabled="compactionDisabled || triggeringCompaction"
+            @click="triggerPaimonCompaction('partial-compact')"
+          >
+            {{ t('partialCompaction') }}
+          </a-button>
+          <a-button
+            v-if="paimonCompaction.full"
+            :disabled="compactionDisabled || triggeringCompaction"
+            @click="triggerPaimonCompaction('full-compact')"
+          >
+            {{ t('fullCompaction') }}
+          </a-button>
+        </template>
+        <template v-else-if="showCompactionActions">
           <a-button :disabled="compactionDisabled || triggeringCompaction" @click="triggerCompaction('MINOR')">
             {{ t('minorCompaction') }}
           </a-button>
@@ -450,15 +548,15 @@ onMounted(() => {
         <template v-if="showCleanupActions">
           <a-button
             v-if="cleanupAvailability.expireSnapshots"
-            :disabled="triggeringCleanup === 'expire-snapshots'"
-            @click="triggerCleanupAction('expire-snapshots')"
+            :disabled="triggeringCleanup === (paimonTable ? 'expire-snapshots-paimon' : 'expire-snapshots')"
+            @click="triggerCleanupAction(paimonTable ? 'expire-snapshots-paimon' : 'expire-snapshots')"
           >
             {{ t('expireSnapshots') }}
           </a-button>
           <a-button
             v-if="cleanupAvailability.cleanOrphanFiles"
-            :disabled="triggeringCleanup === 'clean-orphan-files'"
-            @click="triggerCleanupAction('clean-orphan-files')"
+            :disabled="triggeringCleanup === (paimonTable ? 'clean-orphan-files-paimon' : 'clean-orphan-files')"
+            @click="triggerCleanupAction(paimonTable ? 'clean-orphan-files-paimon' : 'clean-orphan-files')"
           >
             {{ t('cleanOrphanFiles') }}
           </a-button>
@@ -475,6 +573,13 @@ onMounted(() => {
             @click="triggerCleanupAction('expire-data')"
           >
             {{ t('expireData') }}
+          </a-button>
+          <a-button
+            v-if="cleanupAvailability.expirePartitions"
+            :disabled="triggeringCleanup === 'expire-partitions-paimon'"
+            @click="triggerCleanupAction('expire-partitions-paimon')"
+          >
+            {{ t('expirePartitions') }}
           </a-button>
         </template>
       </a-space>

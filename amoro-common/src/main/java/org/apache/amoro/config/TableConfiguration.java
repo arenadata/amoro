@@ -36,6 +36,7 @@ public class TableConfiguration {
   private OptimizingConfig optimizingConfig;
   private DataExpirationConfig expiringDataConfig;
   private TagConfiguration tagConfiguration;
+  private PaimonMaintenanceConfig paimonMaintenanceConfig;
 
   public TableConfiguration() {}
 
@@ -139,6 +140,18 @@ public class TableConfiguration {
     return this;
   }
 
+  public PaimonMaintenanceConfig getPaimonMaintenanceConfig() {
+    return paimonMaintenanceConfig == null
+        ? PaimonMaintenanceConfig.defaults()
+        : paimonMaintenanceConfig;
+  }
+
+  public TableConfiguration setPaimonMaintenanceConfig(
+      PaimonMaintenanceConfig paimonMaintenanceConfig) {
+    this.paimonMaintenanceConfig = paimonMaintenanceConfig;
+    return this;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -158,7 +171,8 @@ public class TableConfiguration {
         && deleteDanglingDeleteFilesEnabled == that.deleteDanglingDeleteFilesEnabled
         && Objects.equal(optimizingConfig, that.optimizingConfig)
         && Objects.equal(expiringDataConfig, that.expiringDataConfig)
-        && Objects.equal(tagConfiguration, that.tagConfiguration);
+        && Objects.equal(tagConfiguration, that.tagConfiguration)
+        && Objects.equal(getPaimonMaintenanceConfig(), that.getPaimonMaintenanceConfig());
   }
 
   @Override
@@ -174,6 +188,7 @@ public class TableConfiguration {
         deleteDanglingDeleteFilesEnabled,
         optimizingConfig,
         expiringDataConfig,
-        tagConfiguration);
+        tagConfiguration,
+        getPaimonMaintenanceConfig());
   }
 }
