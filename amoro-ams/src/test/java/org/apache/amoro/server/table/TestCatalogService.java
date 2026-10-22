@@ -22,33 +22,31 @@ import static org.apache.amoro.properties.CatalogMetaProperties.CLIENT_POOL_SIZE
 
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TestedCatalogs;
+import org.apache.amoro.UnifiedCatalog;
 import org.apache.amoro.api.CatalogMeta;
 import org.apache.amoro.catalog.CatalogTestHelper;
 import org.apache.amoro.exception.AlreadyExistsException;
 import org.apache.amoro.exception.IllegalMetadataException;
 import org.apache.amoro.exception.ObjectNotExistsException;
-import org.apache.amoro.hive.TestHMS;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.server.AMSServiceTestBase;
-import org.apache.amoro.server.catalog.InternalCatalog;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 @RunWith(Parameterized.class)
 public class TestCatalogService extends AMSServiceTestBase {
-  @ClassRule public static TestHMS TEST_HMS = new TestHMS();
 
   private final CatalogTestHelper catalogTestHelper;
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[][] {{TestedCatalogs.internalCatalog(TableFormat.ICEBERG)}};
+    return new Object[][] {{TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG)}};
   }
 
   public TestCatalogService(CatalogTestHelper catalogTestHelper) {
@@ -121,17 +119,14 @@ public class TestCatalogService extends AMSServiceTestBase {
   }
 
   @Test
-  public void testDropCatalogWithDatabase() {
-    Assume.assumeTrue(catalogTestHelper.tableFormat().equals(TableFormat.ICEBERG));
-    CatalogMeta catalogMeta = catalogTestHelper.buildCatalogMeta("/tmp");
+  public void testDropCatalogWithDatabase() throws IOException {
+    CatalogMeta catalogMeta =
+        catalogTestHelper.buildCatalogMeta(Files.createTempDirectory("amoro-catalog").toString());
     CATALOG_MANAGER.createCatalog(catalogMeta);
-    InternalCatalog catalog = CATALOG_MANAGER.getInternalCatalog(catalogMeta.getCatalogName());
+    UnifiedCatalog catalog = catalogTestHelper.buildUnifiedCatalog(catalogMeta);
     catalog.createDatabase("test_db");
-    Assert.assertThrows(
-        IllegalMetadataException.class,
-        () -> CATALOG_MANAGER.dropCatalog(catalogMeta.getCatalogName()));
-    catalog.dropDatabase("test_db");
     CATALOG_MANAGER.dropCatalog(catalogMeta.getCatalogName());
+    Assert.assertFalse(CATALOG_MANAGER.catalogExist(catalogMeta.getCatalogName()));
   }
 
   @Test

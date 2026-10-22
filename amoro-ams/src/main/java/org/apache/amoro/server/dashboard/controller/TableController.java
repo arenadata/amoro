@@ -25,6 +25,7 @@ import org.apache.amoro.Action;
 import org.apache.amoro.AmoroTable;
 import org.apache.amoro.Constants;
 import org.apache.amoro.IcebergActions;
+import org.apache.amoro.PaimonActions;
 import org.apache.amoro.ServerTableIdentifier;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TableRuntime;
@@ -64,6 +65,7 @@ import org.apache.amoro.shade.guava32.com.google.common.collect.Range;
 import org.apache.amoro.shade.guava32.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.amoro.shade.thrift.org.apache.thrift.TException;
 import org.apache.amoro.table.MixedTable;
+import org.apache.amoro.table.PaimonMaintenance;
 import org.apache.amoro.table.TableIdentifier;
 import org.apache.amoro.table.TableMetaStore;
 import org.apache.amoro.table.TableProperties;
@@ -740,18 +742,35 @@ public class TableController {
     if (rawType == null || StringUtils.isBlank(rawType.toString())) {
       throw new BadRequestException("Optimizing type must be MINOR, MAJOR, or FULL");
     }
-    OptimizingType optimizingType;
-    try {
-      optimizingType = OptimizingType.valueOf(rawType.toString().trim().toUpperCase(Locale.ROOT));
-    } catch (IllegalArgumentException e) {
-      throw new BadRequestException("Optimizing type must be MINOR, MAJOR, or FULL");
-    }
-
+    String requestedType = rawType.toString().trim();
+    Action paimonCompact = Action.valueOf(requestedType);
     ServerTableIdentifier serverTableIdentifier =
         tableManager.getServerTableIdentifier(
             TableIdentifier.of(catalog, db, table).buildTableIdentifier());
     if (serverTableIdentifier == null) {
       throw new BadRequestException("Table not found");
+    }
+    if (serverTableIdentifier.getFormat() == TableFormat.PAIMON) {
+      if (!PaimonActions.isCompact(paimonCompact)) {
+        throw new BadRequestException(
+            "MINOR, MAJOR, and FULL compaction are only supported for Iceberg tables");
+      }
+      triggerPaimonMaintenance(serverTableIdentifier, paimonCompact);
+      Map<String, String> result = new HashMap<>();
+      result.put("type", paimonCompact.getName());
+      result.put("status", "accepted");
+      ctx.json(OkResponse.of(result));
+      return;
+    }
+    if (PaimonActions.isCompact(paimonCompact)) {
+      throw new BadRequestException(
+          "Partial and full compaction are only supported for Paimon tables");
+    }
+    OptimizingType optimizingType;
+    try {
+      optimizingType = OptimizingType.valueOf(requestedType.toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestException("Optimizing type must be MINOR, MAJOR, or FULL");
     }
     if (serverTableIdentifier.getFormat() != TableFormat.ICEBERG) {
       throw new BadRequestException("Manual compaction is only supported for Iceberg tables");
@@ -796,12 +815,6 @@ public class TableController {
               + "clean-dangling-delete-files, or expire-data");
     }
     Action action = Action.valueOf(rawType.toString());
-    if (!DefaultTableRuntime.isManualCleanupAction(action)) {
-      throw new BadRequestException(
-          "Cleanup type must be expire-snapshots, clean-orphan-files, "
-              + "clean-dangling-delete-files, or expire-data");
-    }
-
     ServerTableIdentifier serverTableIdentifier =
         tableManager.getServerTableIdentifier(
             TableIdentifier.of(catalog, db, table).buildTableIdentifier());
@@ -809,6 +822,28 @@ public class TableController {
       throw new BadRequestException("Table not found");
     }
     TableFormat format = serverTableIdentifier.getFormat();
+    if (format == TableFormat.PAIMON) {
+      if (IcebergActions.CLEAN_DANGLING_DELETE.equals(action)) {
+        throw new BadRequestException(
+            "Cleaning dangling delete files is only supported for Iceberg tables");
+      }
+      if (!PaimonActions.isCleanup(action)) {
+        throw new BadRequestException(
+            "Cleanup type must be expire-snapshots-paimon, clean-orphan-files-paimon, "
+                + "or expire-partitions-paimon");
+      }
+      triggerPaimonMaintenance(serverTableIdentifier, action);
+      Map<String, String> result = new HashMap<>();
+      result.put("type", action.getName());
+      result.put("status", "accepted");
+      ctx.json(OkResponse.of(result));
+      return;
+    }
+    if (!DefaultTableRuntime.isManualCleanupAction(action)) {
+      throw new BadRequestException(
+          "Cleanup type must be expire-snapshots, clean-orphan-files, "
+              + "clean-dangling-delete-files, or expire-data");
+    }
     if (format != TableFormat.ICEBERG) {
       throw new BadRequestException("Manual cleanup is only supported for Iceberg tables");
     }
@@ -842,6 +877,30 @@ public class TableController {
     result.put("type", action.getName());
     result.put("status", "accepted");
     ctx.json(OkResponse.of(result));
+  }
+
+  private void triggerPaimonMaintenance(
+      ServerTableIdentifier serverTableIdentifier, Action action) {
+    TableRuntime runtime = tableManager.getTableRuntime(serverTableIdentifier.getId());
+    if (!(runtime instanceof DefaultTableRuntime)) {
+      throw new BadRequestException("Table runtime is not loaded on this AMS node");
+    }
+    DefaultTableRuntime tableRuntime = (DefaultTableRuntime) runtime;
+    if (!tableRuntime.getTableConfiguration().getPaimonMaintenanceConfig().enabled(action)) {
+      throw new BadRequestException(
+          "Maintenance action is disabled for this table: " + action.getName());
+    }
+    ProcessService processService = processServiceSupplier.get();
+    if (processService == null || !processService.isActionScheduled(action)) {
+      throw new BadRequestException(
+          "Maintenance action is not enabled on this AMS: " + action.getName());
+    }
+    if (processService.hasAliveTableProcess(tableRuntime, action)) {
+      throw new BadRequestException(
+          "A maintenance process for " + action.getName() + " is already running");
+    }
+    PaimonMaintenance.requestManual(tableRuntime, action);
+    processService.triggerNow(tableRuntime, action);
   }
 
   private boolean isCleanupActionEnabled(DefaultTableRuntime tableRuntime, Action action) {

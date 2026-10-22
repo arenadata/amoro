@@ -80,6 +80,7 @@ public class AMSTableTestBase extends AMSServiceTestBase {
     try {
       catalogWarehouse = temp.newFolder().getPath();
       catalogMeta = catalogTestHelper.buildCatalogMeta(catalogWarehouse);
+      tableMeta = buildTableMeta();
       if (!catalogTestHelper.isInternalCatalog()) {
         externalCatalog = new CommonUnifiedCatalog(() -> catalogMeta, Maps.newHashMap());
       }

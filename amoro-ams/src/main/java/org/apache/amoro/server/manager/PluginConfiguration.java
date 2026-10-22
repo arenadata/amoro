@@ -32,17 +32,29 @@ import java.util.Map;
 public class PluginConfiguration {
   private static final String NAME = "name";
   private static final String ENABLED = "enabled";
+  private static final String OPTIONAL = "optional";
   private static final String PROPERTIES = "properties";
   private static final String PRIORITY = "priority";
   private final String name;
   private final boolean enabled;
+  private final boolean optional;
   private final int priority;
   private final Map<String, String> properties;
 
   public PluginConfiguration(
       String name, boolean enabled, int priority, Map<String, String> properties) {
+    this(name, enabled, false, priority, properties);
+  }
+
+  public PluginConfiguration(
+      String name,
+      boolean enabled,
+      boolean optional,
+      int priority,
+      Map<String, String> properties) {
     this.name = name;
     this.enabled = enabled;
+    this.optional = optional;
     this.properties = properties;
     this.priority = priority;
   }
@@ -53,6 +65,7 @@ public class PluginConfiguration {
     String name = nameNode.textValue();
 
     boolean enabled = JacksonUtil.getBoolean(configOptions, ENABLED, true);
+    boolean optional = JacksonUtil.getBoolean(configOptions, OPTIONAL, false);
     Integer priority = JacksonUtil.getInteger(configOptions, PRIORITY);
     if (priority == null) {
       priority = 0;
@@ -62,7 +75,7 @@ public class PluginConfiguration {
     if (props == null) {
       props = ImmutableMap.of();
     }
-    return new PluginConfiguration(name, enabled, priority, props);
+    return new PluginConfiguration(name, enabled, optional, priority, props);
   }
 
   public static PluginConfiguration emptyConfig(String name) {
@@ -81,6 +94,11 @@ public class PluginConfiguration {
    */
   public boolean isEnabled() {
     return enabled;
+  }
+
+  /** When true, a missing implementation is skipped instead of failing AMS startup. */
+  public boolean isOptional() {
+    return optional;
   }
 
   /**

@@ -25,6 +25,9 @@ import org.apache.amoro.optimizing.OptimizingExecutor;
 import org.apache.amoro.optimizing.OptimizingExecutorFactory;
 import org.apache.amoro.optimizing.TableOptimizing;
 import org.apache.amoro.optimizing.TaskProperties;
+import org.apache.amoro.paimon.PaimonCompactExecutor;
+import org.apache.amoro.paimon.PaimonCompactExecutorFactory;
+import org.apache.amoro.paimon.PaimonCompactInput;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
 import org.apache.amoro.shade.thrift.org.apache.thrift.TException;
 import org.apache.amoro.utils.ExceptionUtil;
@@ -296,7 +299,14 @@ public class OptimizerExecutor extends AbstractOptimizerOperator {
     TableOptimizing.OptimizingInput input;
     try {
       Map<String, String> taskProperties = fillTaskProperties(config, task);
-      input = SerializationUtil.simpleDeserialize(task.getTaskInput());
+      Object deserialized = SerializationUtil.simpleDeserialize(task.getTaskInput());
+      if (deserialized instanceof PaimonCompactInput) {
+        OptimizingTaskResult paimonResult =
+            executePaimonCompact(threadId, task, (PaimonCompactInput) deserialized, logger);
+        echoTaskAttemptId(task, paimonResult);
+        return paimonResult;
+      }
+      input = (TableOptimizing.OptimizingInput) deserialized;
       String executorFactoryImpl = taskProperties.get(TaskProperties.TASK_EXECUTOR_FACTORY_IMPL);
       DynConstructors.Ctor<OptimizingExecutorFactory> ctor =
           DynConstructors.builder(OptimizingExecutorFactory.class)
@@ -329,6 +339,54 @@ public class OptimizerExecutor extends AbstractOptimizerOperator {
       errorResult.setErrorMessage(ExceptionUtil.getErrorMessage(t, ERROR_MESSAGE_MAX_LENGTH));
       return errorResult;
     }
+  }
+
+  private static OptimizingTaskResult executePaimonCompact(
+      int threadId, OptimizingTask task, PaimonCompactInput input, Logger logger) {
+    long startTime = System.currentTimeMillis();
+    try {
+      Class<?> factoryClass = Class.forName(PaimonCompactInput.EXECUTOR_FACTORY);
+      PaimonCompactExecutorFactory factory =
+          (PaimonCompactExecutorFactory) factoryClass.getDeclaredConstructor().newInstance();
+      PaimonCompactExecutor executor = factory.create(input);
+      byte[] output = executor.execute(input);
+      OptimizingTaskResult result = new OptimizingTaskResult(task.getTaskId(), threadId);
+      if (output != null && output.length > 0) {
+        result.setTaskOutput(output);
+      }
+      result.setSummary(executor.summary());
+      logger.info(
+          "Optimizer executor[{}] executed paimon compact task[{}] and cost {} ms",
+          threadId,
+          task.getTaskId(),
+          System.currentTimeMillis() - startTime);
+      return result;
+    } catch (Throwable t) {
+      logger.error(
+          "Optimizer executor[{}] executed paimon compact task[{}] failed and cost {} ms",
+          threadId,
+          task.getTaskId(),
+          System.currentTimeMillis() - startTime,
+          t);
+      OptimizingTaskResult errorResult = new OptimizingTaskResult(task.getTaskId(), threadId);
+      if (isMissingPaimonExecutor(t)) {
+        errorResult.setErrorMessage("Paimon compact executor is not on the optimizer classpath");
+      } else {
+        errorResult.setErrorMessage(ExceptionUtil.getErrorMessage(t, ERROR_MESSAGE_MAX_LENGTH));
+      }
+      return errorResult;
+    }
+  }
+
+  private static boolean isMissingPaimonExecutor(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof ClassNotFoundException || current instanceof NoClassDefFoundError) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
   }
 
   /**

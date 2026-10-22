@@ -941,7 +941,9 @@ paths:
         Queue a one-shot cleanup action. The request skips the schedule interval and still
         applies snapshot retention, orphan-file minimum age, and data-expiration retention.
         Accepted type values are expire-snapshots, clean-orphan-files,
-        clean-dangling-delete-files, and expire-data. Matching is case-insensitive.
+        clean-dangling-delete-files, and expire-data for Iceberg tables.
+        Paimon tables accept expire-snapshots-paimon, clean-orphan-files-paimon,
+        and expire-partitions-paimon. Matching is case-insensitive.
         The response type is the canonical action name.
       parameters:
         - name: catalog

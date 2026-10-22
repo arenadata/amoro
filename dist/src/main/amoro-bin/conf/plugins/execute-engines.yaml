@@ -27,3 +27,8 @@ execute-engines:
       pool.expire-data.thread-count: 10
       pool.auto-create-tags.thread-count: 3
       pool.sync-hive-tables.thread-count: 10
+      pool.expire-snapshots-paimon.thread-count: 10
+      pool.clean-orphan-files-paimon.thread-count: 10
+      pool.expire-partitions-paimon.thread-count: 10
+      pool.partial-compact.thread-count: 5
+      pool.full-compact.thread-count: 5

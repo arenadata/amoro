@@ -221,4 +221,27 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>support-paimon-format</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.amoro</groupId>
+                    <artifactId>amoro-format-paimon</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>support-all-formats</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.amoro</groupId>
+                    <artifactId>amoro-format-paimon</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

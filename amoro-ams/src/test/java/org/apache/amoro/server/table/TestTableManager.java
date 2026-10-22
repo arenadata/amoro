@@ -55,7 +55,7 @@ public class TestTableManager extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)}
     };
   }
 
@@ -157,7 +157,10 @@ public class TestTableManager extends AMSTableTestBase {
       assert internalCatalog != null;
       Assert.assertEquals(0, internalCatalog.listTableMetadataInDatabase(TEST_DB_NAME).size());
     }
-    Assert.assertFalse(serverCatalog.tableExists(TEST_DB_NAME, TEST_TABLE_NAME));
+    Assert.assertFalse(
+        catalogTestHelper()
+            .buildUnifiedCatalog(catalogMeta())
+            .tableExists(TEST_DB_NAME, TEST_TABLE_NAME));
 
     // test drop not existed table
     Assert.assertThrows(

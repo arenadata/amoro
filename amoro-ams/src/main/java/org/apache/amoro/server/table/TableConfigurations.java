@@ -21,6 +21,7 @@ package org.apache.amoro.server.table;
 import org.apache.amoro.config.ConfigHelpers;
 import org.apache.amoro.config.DataExpirationConfig;
 import org.apache.amoro.config.OptimizingConfig;
+import org.apache.amoro.config.PaimonMaintenanceConfig;
 import org.apache.amoro.config.TableConfiguration;
 import org.apache.amoro.config.TagConfiguration;
 import org.apache.amoro.properties.HiveTableProperties;
@@ -106,7 +107,8 @@ public class TableConfigurations {
                     TableProperties.ENABLE_DANGLING_DELETE_FILES_CLEAN_DEFAULT))
         .setOptimizingConfig(parseOptimizingConfig(properties))
         .setExpiringDataConfig(parseDataExpirationConfig(properties))
-        .setTagConfiguration(parseTagConfiguration(properties));
+        .setTagConfiguration(parseTagConfiguration(properties))
+        .setPaimonMaintenanceConfig(PaimonMaintenanceConfig.parse(properties));
   }
 
   /**
