@@ -80,5 +80,10 @@ resources
 !amoro-ams/src/main/resources/
 !amoro-ams/src/main/resources/**
 
+!amoro-optimizer/amoro-optimizer-spark-4.2/src/main/resources/
+!amoro-optimizer/amoro-optimizer-spark-4.2/src/main/resources/**
+!amoro-optimizer/amoro-optimizer-spark/src/main/resources/
+!amoro-optimizer/amoro-optimizer-spark/src/main/resources/**
+
 !dist/src/main/amoro-bin/bin/
 !dist/src/main/amoro-bin/conf/

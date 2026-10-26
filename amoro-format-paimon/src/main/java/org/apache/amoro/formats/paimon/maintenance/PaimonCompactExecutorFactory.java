@@ -18,6 +18,7 @@
 
 package org.apache.amoro.formats.paimon.maintenance;
 
+import org.apache.amoro.hive.HiveMetastoreTokens;
 import org.apache.amoro.paimon.PaimonCompactExecutor;
 import org.apache.amoro.paimon.PaimonCompactInput;
 import org.apache.paimon.CoreOptions;
@@ -51,6 +52,7 @@ public class PaimonCompactExecutorFactory
 
     @Override
     public byte[] execute(PaimonCompactInput input) throws Exception {
+      HiveMetastoreTokens.publishToCurrentUser();
       CatalogLoader loader = PaimonCommitMessages.deserializeLoader(input.getCatalogLoaderBytes());
       try (Catalog catalog = loader.load()) {
         FileStoreTable table = open(catalog, input);

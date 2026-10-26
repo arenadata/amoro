@@ -21,8 +21,14 @@ package org.apache.amoro.serialization;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class SimpleSerializer<R> implements ResourceSerde<R> {
 
@@ -46,11 +52,79 @@ public class SimpleSerializer<R> implements ResourceSerde<R> {
       return null;
     }
     try (ByteArrayInputStream bis = new ByteArrayInputStream(input)) {
-      try (ObjectInputStream ois = new ObjectInputStream(bis)) {
+      try (ObjectInputStream ois = new ResolvingObjectInputStream(bis)) {
         return (R) ois.readObject();
       }
     } catch (IOException | ClassNotFoundException e) {
       throw new IllegalArgumentException("deserialization error ", e);
+    }
+  }
+
+  /**
+   * Resolves classes from the calling optimizer code, not only from Spark's thread context loader.
+   * In YARN client mode {@code spark.driver.userClassPathFirst} installs a child-first loader that
+   * does not see classes inside the optimizer jar, so the default {@link ObjectInputStream} fails
+   * on {@code PaimonCompactInput}.
+   */
+  private static final class ResolvingObjectInputStream extends ObjectInputStream {
+
+    private ResolvingObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc)
+        throws IOException, ClassNotFoundException {
+      String name = desc.getName();
+      ClassNotFoundException last = null;
+      for (ClassLoader loader : loaders()) {
+        try {
+          return Class.forName(name, false, loader);
+        } catch (ClassNotFoundException e) {
+          last = e;
+        }
+      }
+      try {
+        return super.resolveClass(desc);
+      } catch (ClassNotFoundException e) {
+        if (last != null) {
+          e.addSuppressed(last);
+        }
+        throw e;
+      }
+    }
+
+    private static List<ClassLoader> loaders() {
+      Set<ClassLoader> loaders = new LinkedHashSet<>();
+      ClassLoader context = Thread.currentThread().getContextClassLoader();
+      if (context != null) {
+        loaders.add(context);
+      }
+      addStackLoaders(loaders);
+      ClassLoader self = SimpleSerializer.class.getClassLoader();
+      if (self != null) {
+        loaders.add(self);
+      }
+      ClassLoader system = ClassLoader.getSystemClassLoader();
+      if (system != null) {
+        loaders.add(system);
+      }
+      return new ArrayList<>(loaders);
+    }
+
+    private static void addStackLoaders(Set<ClassLoader> loaders) {
+      try {
+        StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+            .forEach(
+                frame -> {
+                  ClassLoader loader = frame.getDeclaringClass().getClassLoader();
+                  if (loader != null) {
+                    loaders.add(loader);
+                  }
+                });
+      } catch (SecurityException ignored) {
+        // A security manager that refuses stack inspection still leaves the other loaders.
+      }
     }
   }
 }
