@@ -238,7 +238,7 @@ containers:
 #    properties:
 #      spark-home: /opt/spark/                                     # Spark install home
 #      master: yarn                                                # The cluster manager to connect to. See the list of https://spark.apache.org/docs/latest/submitting-applications.html#master-urls.
-#      deploy-mode: cluster                                        # Spark deploy mode, client or cluster
+#      deploy-mode: cluster                                        # Spark optimizers run in cluster mode only
 #      export.JVM_ARGS: -Djava.security.krb5.conf=/opt/krb5.conf   # Spark launch jvm args, like kerberos config when ues kerberos
 #      export.HADOOP_CONF_DIR: /etc/hadoop/conf/                   # Hadoop config dir
 #      export.HADOOP_USER_NAME: hadoop                             # Hadoop user submit on yarn

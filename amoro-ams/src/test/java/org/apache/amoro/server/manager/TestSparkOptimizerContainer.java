@@ -65,7 +65,18 @@ public class TestSparkOptimizerContainer {
   public void testProxyUserByDefault() {
     Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
     String startUpArgs = buildStartupArgs(containerProperties);
+    Assert.assertTrue(startUpArgs.contains("--deploy-mode=cluster "));
     Assert.assertTrue(startUpArgs.contains("--proxy-user hadoop "));
+  }
+
+  @Test
+  public void testClientDeployModeRejected() {
+    Map<String, String> containerProperties = Maps.newHashMap(this.containerProperties);
+    containerProperties.put(SparkOptimizerContainer.SPARK_DEPLOY_MODE, "client");
+    IllegalArgumentException e =
+        Assert.assertThrows(
+            IllegalArgumentException.class, () -> buildStartupArgs(containerProperties));
+    Assert.assertTrue(e.getMessage().contains("cluster"));
   }
 
   @Test
