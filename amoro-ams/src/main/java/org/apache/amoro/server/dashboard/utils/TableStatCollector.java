@@ -19,7 +19,6 @@
 package org.apache.amoro.server.dashboard.utils;
 
 import org.apache.amoro.Constants;
-import org.apache.amoro.server.dashboard.model.SnapshotInfo;
 import org.apache.amoro.server.dashboard.model.TableStatistics;
 import org.apache.amoro.table.KeyedTable;
 import org.apache.amoro.table.MixedTable;
@@ -29,7 +28,6 @@ import org.apache.amoro.table.descriptor.FilesStatistics;
 import org.apache.amoro.table.descriptor.FilesStatisticsBuilder;
 import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.SnapshotSummary;
-import org.apache.iceberg.Table;
 import org.apache.iceberg.exceptions.NoSuchTableException;
 import org.apache.iceberg.util.PropertyUtil;
 import org.slf4j.Logger;
@@ -110,41 +108,6 @@ public class TableStatCollector {
             .addFilesStatistics(baseFs)
             .build());
     return overview;
-  }
-
-  public static SnapshotInfo buildBaseTableSnapshotInfo(Table baseTable) {
-    Snapshot currentSnapshot = baseTable.currentSnapshot();
-    SnapshotInfo snapshotInfo = new SnapshotInfo();
-    if (currentSnapshot != null) {
-      fillSnapshotInfo(snapshotInfo, currentSnapshot);
-    }
-    return snapshotInfo;
-  }
-
-  private static void fillSnapshotInfo(SnapshotInfo info, @Nonnull Snapshot snapshot) {
-    info.setOperation(snapshot.operation());
-    info.setAddedFiles(
-        PropertyUtil.propertyAsInt(snapshot.summary(), SnapshotSummary.ADDED_FILES_PROP, 0));
-    info.setAddedFilesSize(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.ADDED_FILE_SIZE_PROP, 0));
-    info.setAddedRecords(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.ADDED_RECORDS_PROP, 0));
-    info.setRemovedFilesSize(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.REMOVED_FILE_SIZE_PROP, 0));
-    int removedFiles =
-        PropertyUtil.propertyAsInt(snapshot.summary(), SnapshotSummary.DELETED_FILES_PROP, 0)
-            + PropertyUtil.propertyAsInt(
-                snapshot.summary(), SnapshotSummary.REMOVED_DELETE_FILES_PROP, 0);
-    info.setRemovedFiles(removedFiles);
-    info.setRemovedRecords(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.DELETED_RECORDS_PROP, 0));
-    info.setTotalSize(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.TOTAL_FILE_SIZE_PROP, 0));
-    info.setSnapshotId(snapshot.snapshotId());
-    info.setTotalFiles(
-        PropertyUtil.propertyAsInt(snapshot.summary(), SnapshotSummary.TOTAL_DATA_FILES_PROP, 0));
-    info.setTotalRecords(
-        PropertyUtil.propertyAsLong(snapshot.summary(), SnapshotSummary.TOTAL_RECORDS_PROP, 0));
   }
 
   private static void fillTableSnapshotInfo(
