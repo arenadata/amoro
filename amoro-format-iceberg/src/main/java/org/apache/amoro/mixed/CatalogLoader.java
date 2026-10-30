@@ -28,7 +28,6 @@ import org.apache.amoro.api.NoSuchObjectException;
 import org.apache.amoro.client.AmsThriftUrl;
 import org.apache.amoro.properties.CatalogMetaProperties;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Maps;
-import org.apache.amoro.shade.thrift.org.apache.thrift.TException;
 import org.apache.amoro.table.TableMetaStore;
 import org.apache.amoro.utils.CatalogUtil;
 import org.apache.amoro.utils.MixedFormatCatalogUtil;
@@ -40,7 +39,6 @@ import java.util.Map;
 public class CatalogLoader {
 
   public static final String INTERNAL_CATALOG_IMPL = InternalMixedIcebergCatalog.class.getName();
-  public static final String HIVE_CATALOG_IMPL = "org.apache.amoro.hive.catalog.MixedHiveCatalog";
   public static final String MIXED_ICEBERG_CATALOG_IMP = BasicMixedIcebergCatalog.class.getName();
 
   /**
@@ -69,51 +67,20 @@ public class CatalogLoader {
     return load(catalogUri, Maps.newHashMap());
   }
 
-  /**
-   * get mixed-format catalog implement class name
-   *
-   * @param metastoreType - metastore type
-   * @param catalogProperties - catalog properties
-   * @return class name for catalog
-   */
-  private static String catalogImpl(String metastoreType, Map<String, String> catalogProperties) {
-    String catalogImpl;
+  /** Return the mixed-format catalog implementation class name for a metastore type. */
+  private static String catalogImpl(String metastoreType) {
     switch (metastoreType) {
       case CatalogMetaProperties.CATALOG_TYPE_HADOOP:
       case CatalogMetaProperties.CATALOG_TYPE_FILESYSTEM:
       case CatalogMetaProperties.CATALOG_TYPE_GLUE:
       case CatalogMetaProperties.CATALOG_TYPE_REST:
       case CatalogMetaProperties.CATALOG_TYPE_CUSTOM:
-        catalogImpl = MIXED_ICEBERG_CATALOG_IMP;
-        break;
       case CatalogMetaProperties.CATALOG_TYPE_HIVE:
-        catalogImpl = MIXED_ICEBERG_CATALOG_IMP;
-        break;
+        return MIXED_ICEBERG_CATALOG_IMP;
       case CatalogMetaProperties.CATALOG_TYPE_AMS:
-        catalogImpl = INTERNAL_CATALOG_IMPL;
-        break;
+        return INTERNAL_CATALOG_IMPL;
       default:
         throw new IllegalStateException("unsupported metastore type:" + metastoreType);
-    }
-    return catalogImpl;
-  }
-
-  /**
-   * Load catalog meta from metastore.
-   *
-   * @param catalogUri - catalog uri
-   * @return catalog meta
-   */
-  public static CatalogMeta loadMeta(String catalogUri) {
-    AmsThriftUrl url = AmsThriftUrl.parse(catalogUri, Constants.THRIFT_TABLE_SERVICE_NAME);
-    if (url.catalogName() == null || url.catalogName().contains("/")) {
-      throw new IllegalArgumentException("invalid catalog name " + url.catalogName());
-    }
-    AmsClient client = new PooledAmsClient(catalogUri);
-    try {
-      return client.getCatalog(url.catalogName());
-    } catch (TException e) {
-      throw new IllegalStateException("failed when load catalog " + url.catalogName(), e);
     }
   }
 
@@ -159,7 +126,7 @@ public class CatalogLoader {
       String metastoreType,
       Map<String, String> properties,
       TableMetaStore metaStore) {
-    String catalogImpl = catalogImpl(metastoreType, properties);
+    String catalogImpl = catalogImpl(metastoreType);
     MixedFormatCatalog catalog = buildCatalog(catalogImpl);
     if (!properties.containsKey(ICEBERG_CATALOG_TYPE)) {
       properties.put(ICEBERG_CATALOG_TYPE, CatalogUtil.normalizeCatalogType(metastoreType));

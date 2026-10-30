@@ -177,19 +177,6 @@ public class TableFileUtil {
   }
 
   /**
-   * Helper to delete files in parallel
-   *
-   * @param io mixed-format file io
-   * @param files to deleted files
-   * @param workPool executor pool
-   * @return deleted file count
-   */
-  public static int parallelDeleteFiles(
-      AuthenticatedFileIO io, Set<String> files, ExecutorService workPool) {
-    return deleteFiles(io, files, workPool);
-  }
-
-  /**
    * Get the file path after move file to target directory
    *
    * @param newDirectory target directory

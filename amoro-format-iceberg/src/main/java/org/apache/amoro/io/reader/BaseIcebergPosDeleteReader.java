@@ -20,11 +20,9 @@ package org.apache.amoro.io.reader;
 
 import org.apache.amoro.io.AuthenticatedFileIO;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Lists;
-import org.apache.iceberg.Accessor;
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.MetadataColumns;
 import org.apache.iceberg.Schema;
-import org.apache.iceberg.StructLike;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.orc.GenericOrcReader;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
@@ -43,10 +41,6 @@ public class BaseIcebergPosDeleteReader {
 
   private static final Schema POS_DELETE_SCHEMA =
       new Schema(MetadataColumns.DELETE_FILE_PATH, MetadataColumns.DELETE_FILE_POS);
-  private static final Accessor<StructLike> FILENAME_ACCESSOR =
-      POS_DELETE_SCHEMA.accessorForField(MetadataColumns.DELETE_FILE_PATH.fieldId());
-  private static final Accessor<StructLike> POSITION_ACCESSOR =
-      POS_DELETE_SCHEMA.accessorForField(MetadataColumns.DELETE_FILE_POS.fieldId());
 
   protected final AuthenticatedFileIO fileIO;
   protected final EncryptionManager encryptionManager;
@@ -64,14 +58,6 @@ public class BaseIcebergPosDeleteReader {
   public CloseableIterable<Record> readDeletes() {
     List<CloseableIterable<Record>> deletes = Lists.transform(posDeleteFiles, this::readDelete);
     return CloseableIterable.concat(deletes);
-  }
-
-  public String readPath(Record record) {
-    return (String) FILENAME_ACCESSOR.get(record);
-  }
-
-  public Long readPos(Record record) {
-    return (Long) POSITION_ACCESSOR.get(record);
   }
 
   private CloseableIterable<Record> readDelete(DeleteFile deleteFile) {
