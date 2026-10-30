@@ -35,7 +35,6 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,6 +49,10 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
       "org.apache.amoro.optimizer.spark.SparkOptimizer";
   public static final String SPARK_MASTER = "master";
   public static final String SPARK_DEPLOY_MODE = "deploy-mode";
+
+  /** Spark optimizers are submitted in cluster mode only. */
+  private static final String SPARK_DEPLOY_MODE_CLUSTER = "cluster";
+
   public static final String SPARK_JOB_URI = "job-uri";
   public static final String YARN_APPLICATION_ID_PROPERTY = "yarn-application-id";
   public static final String KUBERNETES_SUBMISSION_ID_PROPERTY = "kubernetes-submission-id";
@@ -65,7 +68,6 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
         return null;
       };
   private String sparkMaster;
-  private DeployMode deployMode;
   private String sparkHome;
   private String jobUri;
 
@@ -76,17 +78,8 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
     this.sparkMaster = containerProperties.getOrDefault(SPARK_MASTER, "yarn");
     Preconditions.checkArgument(
         StringUtils.isNotEmpty(sparkMaster), "The property: %s is required", sparkMaster);
-    String runMode =
-        Optional.ofNullable(containerProperties.get(SPARK_DEPLOY_MODE))
-            .orElse(DeployMode.CLIENT.getValue());
-    this.deployMode = DeployMode.valueToEnum(runMode);
+    rejectClientDeployMode(containerProperties.get(SPARK_DEPLOY_MODE));
     String jobUri = containerProperties.get(SPARK_JOB_URI);
-    if (deployMode.equals(DeployMode.CLUSTER.name())) {
-      Preconditions.checkArgument(
-          StringUtils.isNotEmpty(jobUri),
-          "The property: %s is required if running mode in cluster mode.",
-          SPARK_JOB_URI);
-    }
     if (StringUtils.isEmpty(jobUri)) {
       jobUri = amsHome + DEFAULT_JOB_URI;
     }
@@ -100,7 +93,7 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
           StringUtils.isNotEmpty(imageRef),
           "The spark-conf: %s is required if running mode is %s",
           SparkOptimizerContainer.SparkConfKeys.KUBERNETES_IMAGE_REF,
-          deployMode.getValue());
+          SPARK_DEPLOY_MODE_CLUSTER);
     }
   }
 
@@ -173,7 +166,7 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
         "%s/bin/spark-submit --master %s --deploy-mode=%s %s %s--name %s --class %s %s %s",
         sparkHome,
         sparkMaster,
-        deployMode.getValue(),
+        SPARK_DEPLOY_MODE_CLUSTER,
         sparkOptions,
         proxyUserArg,
         String.join(
@@ -342,6 +335,25 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
         sparkHome, submissionId, sparkMaster, sparkOptions);
   }
 
+  /**
+   * Client deploy mode runs the driver in the AMS submit process, where {@code
+   * spark.driver.userClassPathFirst} hides optimizer classes. Spark optimizers are cluster mode
+   * only. An omitted property means cluster; {@code client} is rejected.
+   */
+  private static void rejectClientDeployMode(String runMode) {
+    if (StringUtils.isBlank(runMode) || SPARK_DEPLOY_MODE_CLUSTER.equalsIgnoreCase(runMode)) {
+      return;
+    }
+    throw new IllegalArgumentException(
+        "Spark optimizer deploy-mode '"
+            + runMode
+            + "' is not supported. Set "
+            + SPARK_DEPLOY_MODE
+            + "="
+            + SPARK_DEPLOY_MODE_CLUSTER
+            + ".");
+  }
+
   private String getSparkHome() {
     String sparkHome = getContainerProperties().get(SPARK_HOME_PROPERTY);
     Preconditions.checkNotNull(
@@ -351,28 +363,6 @@ public class SparkOptimizerContainer extends AbstractOptimizerContainer {
 
   private String kubernetesDriverName(Resource resource) {
     return "amoro-optimizer-" + resource.getResourceId();
-  }
-
-  private enum DeployMode {
-    CLIENT("client"),
-    CLUSTER("cluster");
-
-    private final String value;
-
-    DeployMode(String value) {
-      this.value = value;
-    }
-
-    public static DeployMode valueToEnum(String value) {
-      return Arrays.stream(values())
-          .filter(t -> t.value.equalsIgnoreCase(value))
-          .findFirst()
-          .orElseThrow(() -> new IllegalArgumentException("can't parse value: " + value));
-    }
-
-    public String getValue() {
-      return value;
-    }
   }
 
   public static class SparkConfKeys {

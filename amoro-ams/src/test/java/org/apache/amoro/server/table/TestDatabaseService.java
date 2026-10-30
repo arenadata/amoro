@@ -19,20 +19,17 @@
 package org.apache.amoro.server.table;
 
 import static org.apache.amoro.TableTestHelper.TEST_DB_NAME;
-import static org.apache.amoro.catalog.CatalogTestHelper.TEST_CATALOG_NAME;
 
 import org.apache.amoro.BasicTableTestHelper;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TableTestHelper;
 import org.apache.amoro.TestedCatalogs;
+import org.apache.amoro.UnifiedCatalog;
 import org.apache.amoro.catalog.CatalogTestHelper;
-import org.apache.amoro.exception.AlreadyExistsException;
-import org.apache.amoro.exception.IllegalMetadataException;
-import org.apache.amoro.exception.ObjectNotExistsException;
-import org.apache.amoro.server.catalog.InternalCatalog;
 import org.apache.amoro.shade.guava32.com.google.common.collect.Lists;
+import org.apache.iceberg.exceptions.AlreadyExistsException;
+import org.apache.iceberg.exceptions.NoSuchNamespaceException;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -43,7 +40,7 @@ public class TestDatabaseService extends AMSTableTestBase {
   @Parameterized.Parameters(name = "{0}, {1}")
   public static Object[] parameters() {
     return new Object[][] {
-      {TestedCatalogs.internalCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(true, true)}
+      {TestedCatalogs.hadoopCatalog(TableFormat.ICEBERG), new BasicTableTestHelper(false, true)}
     };
   }
 
@@ -53,34 +50,31 @@ public class TestDatabaseService extends AMSTableTestBase {
 
   @Test
   public void testCreateAndDropDatabase() {
-    InternalCatalog catalog = CATALOG_MANAGER.getInternalCatalog(TEST_CATALOG_NAME);
-    // test create database
+    UnifiedCatalog catalog = catalog();
     catalog.createDatabase(TEST_DB_NAME);
 
-    // test create duplicate database
     Assert.assertThrows(AlreadyExistsException.class, () -> catalog.createDatabase(TEST_DB_NAME));
 
-    // test list database
     Assert.assertEquals(Lists.newArrayList(TEST_DB_NAME), catalog.listDatabases());
 
-    // test drop database
     catalog.dropDatabase(TEST_DB_NAME);
     Assert.assertEquals(Lists.newArrayList(), catalog.listDatabases());
 
-    // test drop unknown database
-    Assert.assertThrows(ObjectNotExistsException.class, () -> catalog.dropDatabase(TEST_DB_NAME));
+    Assert.assertThrows(NoSuchNamespaceException.class, () -> catalog.dropDatabase(TEST_DB_NAME));
   }
 
   @Test
   public void testDropDatabaseWithTable() {
-    Assume.assumeTrue(catalogTestHelper().tableFormat().equals(TableFormat.ICEBERG));
-    Assume.assumeTrue(catalogTestHelper().isInternalCatalog());
-    InternalCatalog catalog = CATALOG_MANAGER.getInternalCatalog(TEST_CATALOG_NAME);
+    UnifiedCatalog catalog = catalog();
     catalog.createDatabase(TEST_DB_NAME);
 
     createTable();
-    Assert.assertThrows(IllegalMetadataException.class, () -> catalog.dropDatabase(TEST_DB_NAME));
+    Assert.assertThrows(IllegalStateException.class, () -> catalog.dropDatabase(TEST_DB_NAME));
     dropTable();
     catalog.dropDatabase(TEST_DB_NAME);
+  }
+
+  private UnifiedCatalog catalog() {
+    return catalogTestHelper().buildUnifiedCatalog(catalogMeta());
   }
 }

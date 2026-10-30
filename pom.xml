@@ -108,7 +108,7 @@
         <maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
 
         <iceberg.version>1.10.1.1-4.3.0-3</iceberg.version>
-        <paimon.version>1.2.0</paimon.version>
+        <paimon.version>2.0.0.1-4.4.0-0</paimon.version>
         <hive.version>4.3.0.1-4.3.0-4</hive.version>
         <hadoop.version>3.4.3.1-4.3.0-1</hadoop.version>
         <hadoop-client-api.artifact>hadoop-client-api</hadoop-client-api.artifact>
@@ -2029,8 +2029,6 @@
             <properties>
                 <scala.version>2.13.8</scala.version>
                 <scala.binary.version>2.13</scala.binary.version>
-                <!-- paimon-1.2.0 does not support scala-2.13 and datasource lookup will cause UT failre -->
-                <paimon.version>1.1.1</paimon.version>
             </properties>
         </profile>
         <profile>

@@ -109,6 +109,16 @@ public abstract class AbstractPluginManager<T extends ActivePlugin> implements P
         pluginConfig != null, "Plugin configuration is not found for %s", pluginName);
 
     AtomicBoolean exists = new AtomicBoolean(true);
+    if (foundedPlugins.get(pluginConfig.getName()) == null) {
+      if (pluginConfig.isOptional()) {
+        LOG.warn(
+            "Skip optional plugin {} because no implementation is on the classpath",
+            pluginConfig.getName());
+        return;
+      }
+      throw new LoadingPluginException(
+          "Cannot find an implement class for the plugin:" + pluginConfig.getName());
+    }
     installedPlugins.computeIfAbsent(
         pluginConfig.getName(),
         name -> {

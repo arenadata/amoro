@@ -20,10 +20,12 @@ package org.apache.amoro.server.dashboard.controller;
 
 import io.javalin.http.Context;
 import org.apache.amoro.IcebergActions;
+import org.apache.amoro.PaimonActions;
 import org.apache.amoro.ServerTableIdentifier;
 import org.apache.amoro.TableFormat;
 import org.apache.amoro.TableRuntime;
 import org.apache.amoro.config.Configurations;
+import org.apache.amoro.config.PaimonMaintenanceConfig;
 import org.apache.amoro.config.TableConfiguration;
 import org.apache.amoro.exception.BadRequestException;
 import org.apache.amoro.server.catalog.CatalogManager;
@@ -35,6 +37,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TestTriggerCleanup {
@@ -104,6 +107,36 @@ public class TestTriggerCleanup {
     } catch (BadRequestException expected) {
       Assert.assertTrue(expected.getMessage().contains("already running"));
     }
+  }
+
+  @Test
+  public void testRejectPaimonCleanupOnIceberg() {
+    DefaultTableRuntime runtime = Mockito.mock(DefaultTableRuntime.class);
+    TableController controller = controller(TableFormat.ICEBERG, runtime, null);
+    try {
+      controller.triggerCleanup(context("expire-snapshots-paimon"));
+      Assert.fail("paimon cleanup on an Iceberg table should be rejected");
+    } catch (BadRequestException expected) {
+      Assert.assertTrue(expected.getMessage().contains("expire-snapshots"));
+    }
+  }
+
+  @Test
+  public void testAcceptPaimonExpireSnapshots() {
+    DefaultTableRuntime runtime = Mockito.mock(DefaultTableRuntime.class);
+    Map<String, String> properties = new HashMap<>();
+    properties.put("maintenance.expire-snapshots.enabled", "true");
+    Mockito.when(runtime.getTableConfiguration())
+        .thenReturn(
+            new TableConfiguration()
+                .setPaimonMaintenanceConfig(PaimonMaintenanceConfig.parse(properties)));
+    ProcessService processService = Mockito.mock(ProcessService.class);
+    Mockito.when(processService.isActionScheduled(PaimonActions.EXPIRE_SNAPSHOTS)).thenReturn(true);
+    Mockito.when(processService.hasAliveTableProcess(runtime, PaimonActions.EXPIRE_SNAPSHOTS))
+        .thenReturn(false);
+    TableController controller = controller(TableFormat.PAIMON, runtime, processService);
+    controller.triggerCleanup(context("expire-snapshots-paimon"));
+    Mockito.verify(processService).triggerNow(runtime, PaimonActions.EXPIRE_SNAPSHOTS);
   }
 
   private static TableController controller(

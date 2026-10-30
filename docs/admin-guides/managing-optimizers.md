@@ -108,8 +108,8 @@ Spark container support the following properties:
 |-------------------------|----------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | spark-home              | true     | N/A           | Spark installation location                                                                                                                                                                                                                                                          |
 | master                  | true     | yarn          | The cluster manager to connect to, available values `yarn`, `k8s://HOST:PORT`                                                                                                                                                                                                        |
-| deploy-mode             | true     | client        | Spark job deploy mode, available values `client`, `cluster`                                                                                                                                                                                                                          |
-| job-uri                 | false    | N/A           | The jar uri of spark optimizer job. This is required if deploy mode is cluster mode.                                                                                                                                                                                                 |
+| deploy-mode             | false    | cluster       | Spark optimizers run in cluster mode only. `client` is rejected. Omit the property or set `cluster`.                                                                                                                                                                                |
+| job-uri                 | false    | `${AMORO_HOME}/plugin/optimizer/spark/optimizer-job.jar` | Jar of the Spark optimizer job. Spark 4.2 uses `plugin/optimizer/spark4/optimizer-job.jar`.                                                                                                                          |
 | ams-optimizing-uri      | false    | N/A           | uri of AMS thrift self-optimizing endpoint. This could be used if the ams.server-expose-host is not available                                                                                                                                                                        |
 | export.\<key\>          | false    | N/A           | Environment variables will be exported during job submit                                                                                                                                                                                                                             |
 | export.JAVA_HOME        | false    | N/A           | Java runtime location                                                                                                                                                                                                                                                                |
@@ -143,7 +143,7 @@ kinit'ed ticket cache of the AMS process user with `hadoop.proxyuser.*` privileg
 without a keytab, delegation tokens expire after their maximum lifetime (7 days by default).
 {{< /hint >}}
 
-An example for yarn client mode:
+An example for YARN cluster mode:
 
 ```yaml
 containers:
@@ -151,8 +151,9 @@ containers:
     container-impl: org.apache.amoro.server.manager.SparkOptimizerContainer
     properties:
       spark-home: /opt/spark/                                         # Spark install home
-      master: yarn                                                    # The k8s cluster manager to connect to
-      deploy-mode: client                                             # Spark run as client mode 
+      master: yarn                                                    # Cluster manager to connect to
+      deploy-mode: cluster                                            # Spark optimizers run in cluster mode only
+      job-uri: /opt/amoro/plugin/optimizer/spark/optimizer-job.jar    # Spark 4.2: plugin/optimizer/spark4/optimizer-job.jar
       export.HADOOP_CONF_DIR: /etc/hadoop/conf/                       # Hadoop config dir
       export.HADOOP_USER_NAME: hadoop                                 # Hadoop user submits on yarn
       export.JVM_ARGS: -Djava.security.krb5.conf=/opt/krb5.conf       # Spark launch jvm args, like kerberos config when ues kerberos
@@ -168,7 +169,7 @@ containers:
     properties:
       spark-home: /opt/spark/                                                                 # Spark install home
       master: k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port>                         # The k8s cluster manager to connect to
-      deploy-mode: cluster                                                                    # Spark deploy mode, client or cluster
+      deploy-mode: cluster                                                                    # Spark optimizers run in cluster mode only
       pullPolicy: IfNotPresent                                                                # Specify the imagePullPolicy in the container spec 
       job-uri: "local:///opt/spark/usrlib/optimizer-job.jar"                                  # Optimizer job main jar for kubernetes application
       ams-optimizing-uri: thrift://ams.amoro.service.local:1261                               # AMS optimizing uri 

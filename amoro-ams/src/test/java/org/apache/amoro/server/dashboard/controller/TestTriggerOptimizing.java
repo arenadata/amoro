@@ -46,6 +46,17 @@ public class TestTriggerOptimizing {
   }
 
   @Test
+  public void testRejectPaimonCompactionOnIceberg() {
+    TableController controller = controller(TableFormat.ICEBERG, null);
+    try {
+      controller.triggerOptimizing(context("partial-compact"));
+      Assert.fail("paimon compaction on an Iceberg table should be rejected");
+    } catch (BadRequestException expected) {
+      Assert.assertTrue(expected.getMessage().contains("Paimon"));
+    }
+  }
+
+  @Test
   public void testRejectWhenRuntimeIsNotLoaded() {
     TableController controller = controller(TableFormat.ICEBERG, null);
     try {
@@ -74,11 +85,16 @@ public class TestTriggerOptimizing {
 
   @SuppressWarnings("unchecked")
   private static Context context() {
+    return context("FULL");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Context context(String type) {
     Context ctx = Mockito.mock(Context.class);
     Mockito.when(ctx.pathParam("catalog")).thenReturn("catalog");
     Mockito.when(ctx.pathParam("db")).thenReturn("database");
     Mockito.when(ctx.pathParam("table")).thenReturn("table");
-    Mockito.when(ctx.bodyAsClass(Map.class)).thenReturn(Collections.singletonMap("type", "FULL"));
+    Mockito.when(ctx.bodyAsClass(Map.class)).thenReturn(Collections.singletonMap("type", type));
     return ctx;
   }
 }

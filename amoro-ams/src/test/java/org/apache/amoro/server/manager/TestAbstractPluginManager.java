@@ -129,6 +129,18 @@ public class TestAbstractPluginManager {
   }
 
   @Test
+  public void testOptionalPluginMissingIsSkipped() {
+    List<PluginConfiguration> configs =
+        ImmutableList.of(
+            new PluginConfiguration("missing-paimon", true, true, 0, Maps.newHashMap()));
+    TestPluginManager manager = new TestPluginManager();
+    manager.setConfigs(configs);
+    manager.initialize();
+    Assertions.assertEquals(0, manager.activePlugins());
+    manager.close();
+  }
+
+  @Test
   public void testPluginNotInSpiProvider() {
     List<PluginConfiguration> configs =
         ImmutableList.of(

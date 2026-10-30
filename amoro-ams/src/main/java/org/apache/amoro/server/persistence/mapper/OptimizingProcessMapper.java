@@ -22,6 +22,7 @@ import org.apache.amoro.optimizing.RewriteFilesInput;
 import org.apache.amoro.optimizing.RewriteStageTask;
 import org.apache.amoro.process.StagedTaskDescriptor;
 import org.apache.amoro.server.optimizing.OptimizingTaskMeta;
+import org.apache.amoro.server.optimizing.PaimonCompactQueue;
 import org.apache.amoro.server.optimizing.TaskRuntime;
 import org.apache.amoro.server.persistence.OptimizingProcessState;
 import org.apache.amoro.server.persistence.converter.JsonObjectConverter;
@@ -206,6 +207,32 @@ public interface OptimizingProcessMapper {
 
   @Delete("DELETE FROM task_runtime WHERE table_id = #{tableId} AND process_id < #{expireId}")
   void deleteTaskRuntimesBefore(@Param("tableId") long tableId, @Param("expireId") long expireId);
+
+  @Delete("DELETE FROM task_runtime WHERE process_id = #{processId}")
+  void deleteTaskRuntimesByProcess(@Param("processId") long processId);
+
+  @Insert(
+      "INSERT INTO task_runtime (process_id, task_id, retry_num, table_id, partition_data, start_time, "
+          + "end_time, cost_time, status, fail_reason, optimizer_token, thread_id, metrics_summary, properties) "
+          + "VALUES (#{task.processId}, #{task.taskId}, 0, #{task.tableId}, #{task.partitionData}, "
+          + "#{task.startTime, typeHandler=org.apache.amoro.server.persistence.converter.Long2TsConverter}, "
+          + "#{task.endTime, typeHandler=org.apache.amoro.server.persistence.converter.Long2TsConverter}, "
+          + "#{task.costTime}, #{task.status}, #{task.failReason, jdbcType=VARCHAR}, "
+          + "#{task.optimizerToken, jdbcType=VARCHAR}, #{task.threadId, jdbcType=INTEGER}, '{}', "
+          + "#{task.properties, typeHandler=org.apache.amoro.server.persistence.converter.Map2StringConverter})")
+  void insertPaimonCompactTask(@Param("task") PaimonCompactQueue.TaskRow task);
+
+  @Update(
+      "UPDATE task_runtime SET retry_num = 0, start_time = #{task.startTime, "
+          + "typeHandler=org.apache.amoro.server.persistence.converter.Long2TsConverter}, "
+          + "end_time = #{task.endTime, typeHandler=org.apache.amoro.server.persistence.converter.Long2TsConverter}, "
+          + "cost_time = #{task.costTime}, status = #{task.status}, "
+          + "fail_reason = #{task.failReason, jdbcType=VARCHAR}, "
+          + "optimizer_token = #{task.optimizerToken, jdbcType=VARCHAR}, "
+          + "thread_id = #{task.threadId, jdbcType=INTEGER}, "
+          + "properties = #{task.properties, typeHandler=org.apache.amoro.server.persistence.converter.Map2StringConverter} "
+          + "WHERE process_id = #{task.processId} AND task_id = #{task.taskId}")
+  void updatePaimonCompactTask(@Param("task") PaimonCompactQueue.TaskRow task);
 
   /** Optimizing task quota operations below */
   @Select(

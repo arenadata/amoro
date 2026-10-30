@@ -32,3 +32,18 @@ process-factories:
       auto-create-tags.interval: "1min"
       sync-hive-tables.enabled: "false"
       sync-hive-tables.interval: "10min"
+  - name: paimon
+    enabled: true
+    optional: true
+    priority: 90
+    properties:
+      partial-compact.enabled: "true"
+      partial-compact.interval: "1h"
+      full-compact.enabled: "true"
+      full-compact.interval: "1d"
+      clean-orphan-files-paimon.enabled: "true"
+      clean-orphan-files-paimon.interval: "1d"
+      expire-snapshots-paimon.enabled: "true"
+      expire-snapshots-paimon.interval: "1h"
+      expire-partitions-paimon.enabled: "true"
+      expire-partitions-paimon.interval: "1d"
