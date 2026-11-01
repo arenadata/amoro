@@ -39,7 +39,6 @@ import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.RewriteFiles;
 import org.apache.iceberg.RowDelta;
 import org.apache.iceberg.Snapshot;
-import org.apache.iceberg.StructLike;
 import org.apache.iceberg.Transaction;
 import org.apache.iceberg.util.SnapshotUtil;
 import org.slf4j.Logger;
@@ -241,27 +240,6 @@ public class UnKeyedTableCommit {
       table.io().deleteFile(filePath);
       LOG.warn("Delete orphan file {} when optimize commit failed", filePath);
     }
-  }
-
-  private DataFile moveTargetFiles(DataFile targetFile, String hiveLocation) {
-    String oldFilePath = targetFile.path().toString();
-    String newFilePath = TableFileUtil.getNewFilePath(hiveLocation, oldFilePath);
-
-    if (!table.io().exists(newFilePath)) {
-      if (!table.io().exists(hiveLocation)) {
-        LOG.debug(
-            "{} hive location {} does not exist and need to mkdir before rename",
-            table.id(),
-            hiveLocation);
-        table.io().asFileSystemIO().makeDirectories(hiveLocation);
-      }
-      table.io().asFileSystemIO().rename(oldFilePath, newFilePath);
-      LOG.debug("{} move file from {} to {}", table.id(), oldFilePath, newFilePath);
-    }
-
-    // org.apache.iceberg.BaseFile.set
-    ((StructLike) targetFile).set(1, newFilePath);
-    return targetFile;
   }
 
   private static Set<String> getCommittedDataFilesFromSnapshotId(

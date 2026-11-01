@@ -252,26 +252,6 @@ public class TableMetaStore implements Serializable {
     return Objects.requireNonNull(getUGI()).doAs((PrivilegedAction<T>) () -> call(callable));
   }
 
-  /**
-   * Login with configured catalog user and create a proxy user ugi. Then the operations are
-   * performed within the doAs method of this proxy user ugi.
-   */
-  public <T> T doAsImpersonating(String proxyUser, Callable<T> callable) {
-    // if disableAuth, use process ugi to execute
-    if (disableAuth) {
-      return call(callable);
-    }
-    // create proxy user ugi and execute
-    UserGroupInformation proxyUgi =
-        UserGroupInformation.createProxyUser(proxyUser, Objects.requireNonNull(getUGI()));
-    LOG.debug(
-        "Access through the proxy account {}, proxy ugi {}, original ugi {}.",
-        proxyUser,
-        proxyUgi,
-        getUGI());
-    return proxyUgi.doAs((PrivilegedAction<T>) () -> call(callable));
-  }
-
   private <T> T call(Callable<T> callable) {
     try {
       return callable.call();

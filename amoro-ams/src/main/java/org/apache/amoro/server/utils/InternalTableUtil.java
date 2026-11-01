@@ -50,29 +50,6 @@ public class InternalTableUtil {
   private static final Logger LOG = LoggerFactory.getLogger(InternalTableUtil.class);
 
   /**
-   * Check if this table is created before version 0.7.0
-   *
-   * @param internalTableMetadata table metadata.
-   * @return true if this table is created before version 0.7.0
-   */
-  public static boolean isLegacyMixedIceberg(
-      org.apache.amoro.server.table.TableMetadata internalTableMetadata) {
-    return false;
-  }
-
-  /**
-   * check the table is a keyed mixed-format table
-   *
-   * @param serverTableMetadata server table metadata
-   * @return true if the table is a keyed mixed format
-   */
-  public static boolean isKeyedMixedTable(
-      org.apache.amoro.server.table.TableMetadata serverTableMetadata) {
-    return StringUtils.isNotBlank(serverTableMetadata.getChangeLocation())
-        && StringUtils.isNotBlank(serverTableMetadata.getPrimaryKey());
-  }
-
-  /**
    * create an iceberg file io instance
    *
    * @param meta catalog meta

@@ -18,22 +18,7 @@
 
 package org.apache.amoro.server.utils;
 
-import org.apache.amoro.exception.AlreadyExistsException;
-import org.apache.amoro.exception.ObjectNotExistsException;
-
 public class PreconditionUtils {
-
-  public static void checkExist(boolean exists, String objectName) {
-    if (!exists) {
-      throw new ObjectNotExistsException(objectName);
-    }
-  }
-
-  public static void checkNotExist(boolean exists, String objectName) {
-    if (exists) {
-      throw new AlreadyExistsException(objectName);
-    }
-  }
 
   public static void checkNotNullOrEmpty(CharSequence arg, String argName) {
     if (arg == null) {
