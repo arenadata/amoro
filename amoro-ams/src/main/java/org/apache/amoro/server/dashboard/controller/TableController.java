@@ -18,8 +18,6 @@
 
 package org.apache.amoro.server.dashboard.controller;
 
-import static org.apache.amoro.properties.CatalogMetaProperties.CATALOG_TYPE_HIVE;
-
 import io.javalin.http.Context;
 import org.apache.amoro.Action;
 import org.apache.amoro.AmoroTable;
@@ -100,7 +98,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -610,25 +607,6 @@ public class TableController {
                   }
                 })
             .collect(Collectors.toList());
-    String catalogType = serverCatalog.getMetadata().getCatalogType();
-    if (catalogType.equals(CATALOG_TYPE_HIVE)) {
-      CatalogMeta catalogMeta = serverCatalog.getMetadata();
-      TableMetaStore tableMetaStore = CatalogUtil.buildMetaStore(catalogMeta);
-      HMSClientPool hmsClientPool =
-          new CachedHiveClientPool(tableMetaStore, catalogMeta.getCatalogProperties());
-
-      List<String> hiveTables;
-      try {
-        hiveTables = hmsClientPool.run(client -> client.getAllTables(db));
-      } catch (Exception e) {
-        throw new IllegalStateException("Failed to list Hive tables in " + db, e);
-      }
-      Set<String> knownTables = tables.stream().map(TableMeta::getName).collect(Collectors.toSet());
-      hiveTables.stream()
-          .filter(e -> !knownTables.contains(e))
-          .sorted(String::compareTo)
-          .forEach(e -> tables.add(new TableMeta(e, TableMeta.TableType.HIVE.toString())));
-    }
 
     ctx.json(
         OkResponse.of(
